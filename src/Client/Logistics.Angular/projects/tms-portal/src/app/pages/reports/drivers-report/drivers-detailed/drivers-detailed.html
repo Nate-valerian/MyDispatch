@@ -1,0 +1,143 @@
+<ui-page-header
+  title="Drivers Report"
+  subtitle="Detailed driver performance and statistics"
+>
+  <input
+    pInputText
+    id="search"
+    type="text"
+    (change)="onSearch($event)"
+    name="search"
+    placeholder="Search drivers..."
+    style="width: 200px"
+  />
+  <ui-date-range-picker (datesChange)="onDateRangeChange($event)" />
+</ui-page-header>
+
+<!-- Drivers Table -->
+<p-card class="border-0 p-2 shadow-sm">
+  <ng-template #header>
+    <ui-stack direction="row" align="center" gap="2">
+      <ui-icon name="users" color="info" />
+      <ui-typography variant="h5" tag="h5" color="primary">
+        Driver Performance Details
+      </ui-typography>
+    </ui-stack>
+  </ng-template>
+
+  <p-table
+    [value]="data()"
+    [loading]="isLoading()"
+    [tableStyle]="{ 'min-width': '50rem' }"
+    [size]="'small'"
+    [showLoader]="true"
+    [lazy]="true"
+    [paginator]="true"
+    [showCurrentPageReport]="true"
+    (onLazyLoad)="onLazyLoad($event)"
+    [rows]="10"
+    [(first)]="first"
+    [totalRecords]="totalRecords()"
+    [loading]="isLoading()"
+    [rowsPerPageOptions]="[10, 25, 50]"
+  >
+    <ng-template #header>
+      <tr>
+        <th>Driver</th>
+        <th>Truck</th>
+        <th>Type</th>
+        <th pSortableColumn="LoadsDelivered">
+          Loads Delivered
+          <p-sortIcon field="LoadsDelivered" />
+        </th>
+        <th pSortableColumn="DistanceDriven">
+          Distance Driven
+          <p-sortIcon field="DistanceDriven" />
+        </th>
+        <th pSortableColumn="GrossEarnings">
+          Total Earnings
+          <p-sortIcon field="GrossEarnings" />
+        </th>
+        <th pSortableColumn="AverageEarningsPerLoad">
+          Avg per Load
+          <p-sortIcon field="AverageEarningsPerLoad" />
+        </th>
+        <th pSortableColumn="Efficiency">
+          Efficiency
+          <p-sortIcon field="Efficiency" />
+        </th>
+        <th>Performance</th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-driver>
+      <tr>
+        <td>
+          <ui-stack direction="row" align="center" gap="2">
+            <div class="bg-info/10 flex h-9 w-9 items-center justify-center rounded-full">
+              <ui-icon name="user" color="info" />
+            </div>
+            <div>
+              <ui-typography variant="body" weight="medium" color="primary" tag="div">
+                {{ driver.driverName }}
+              </ui-typography>
+              <ui-typography variant="caption" color="muted">
+                ID: {{ driver.driverId }}
+              </ui-typography>
+            </div>
+          </ui-stack>
+        </td>
+        <td>
+          <span class="bg-secondary text-inverse rounded px-2 py-1 text-sm">
+            {{ driver.truckNumber }}
+          </span>
+        </td>
+        <td>
+          <p-tag
+            [value]="driver.isMainDriver ? 'Main Driver' : 'Secondary Driver'"
+            [severity]="getDriverTypeSeverity(driver.isMainDriver)"
+          />
+        </td>
+        <td>
+          <span class="font-medium">{{ driver.loadsDelivered | number }}</span>
+        </td>
+        <td>
+          <span class="font-medium">
+            {{ driver.distanceDriven | number: "1.0-0" }} {{ distanceUnitLabel }}
+          </span>
+        </td>
+        <td>
+          <span class="text-success font-medium">
+            {{ driver.grossEarnings | currencyFormat }}
+          </span>
+        </td>
+        <td>
+          <ui-typography variant="body-sm" color="muted" tag="span">
+            {{ driver.averageEarningsPerLoad | currencyFormat }}
+          </ui-typography>
+        </td>
+        <td>
+          <span class="font-medium">{{ driver.efficiency | number: "1.1-1" }} loads/day</span>
+        </td>
+        <td>
+          <p-tag
+            [value]="getPerformanceLevel(driver.efficiency)"
+            [severity]="getPerformanceSeverity(driver.efficiency)"
+          />
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="9" class="py-4 text-center">
+          <ui-stack align="center" gap="2">
+            <i class="pi pi-users text-muted text-5xl" aria-hidden="true"></i>
+            <ui-typography variant="h6" tag="h6" color="muted">No drivers found</ui-typography>
+            <ui-typography variant="body" color="muted">
+              Try adjusting your search criteria or date range
+            </ui-typography>
+          </ui-stack>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</p-card>

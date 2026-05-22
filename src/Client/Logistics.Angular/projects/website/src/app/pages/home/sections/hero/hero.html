@@ -1,0 +1,132 @@
+<section class="bg-ink relative min-h-screen overflow-hidden">
+  <web-hero-background />
+
+  <!-- Content -->
+  <div
+    class="relative mx-auto flex min-h-screen max-w-7xl items-center px-6 py-24 lg:px-8 lg:py-32"
+  >
+    <div class="grid w-full items-center gap-12 lg:grid-cols-2">
+      <!-- Left: Text content -->
+      <div>
+        <!-- Eyebrow -->
+        <p class="font-body text-steel text-sm font-medium tracking-[0.2em] uppercase">
+          AI-Powered Fleet Management
+        </p>
+
+        <!-- Headline -->
+        <h1
+          class="font-display text-paper mt-6 text-5xl leading-[0.95] font-extrabold tracking-tight sm:text-6xl lg:text-7xl"
+        >
+          Your Fleet,
+          <span class="text-accent">Dispatched by AI</span>
+        </h1>
+
+        <!-- Subheadline -->
+        <p class="text-steel mt-8 max-w-xl text-lg leading-relaxed">
+          An AI agent picks the truck for a load, checks HOS, and plans the route. It works
+          for any fleet — dry van, reefer, flatbed, intermodal — across the US and Europe.
+        </p>
+
+        <!-- CTA Buttons -->
+        <div class="mt-12 flex flex-wrap items-center gap-6">
+          <p-button
+            label="Request a Demo"
+            icon="pi pi-arrow-right"
+            iconPos="right"
+            (onClick)="openDemoDialog()"
+            size="large"
+            styleClass="bg-accent border-accent hover:bg-accent-dark hover:border-accent-dark font-display"
+          />
+          <div class="flex flex-col items-start gap-1.5">
+            <a
+              href="https://tms.logisticsx.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              pTooltip="Login: owner@test.com / Test12345#"
+              tooltipPosition="bottom"
+              class="bg-paper/10 hover:bg-paper/20 border-paper/20 font-display text-paper inline-flex items-center gap-2.5 rounded-lg border px-6 py-3 text-base font-semibold backdrop-blur-sm transition-all"
+            >
+              <i class="pi pi-external-link text-accent text-sm"></i>
+              View Test Product
+            </a>
+            <span class="block text-xs text-white/50 lg:hidden">
+              Login: owner&#64;test.com / Test12345#
+            </span>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="mt-16 flex flex-wrap gap-12 lg:gap-16">
+          @for (stat of stats; track stat.label) {
+            <div class="border-accent relative border-l-2 pl-5">
+              <span class="font-display text-paper text-3xl font-extrabold lg:text-4xl">
+                {{ stat.value }}
+              </span>
+              <p class="text-steel mt-1 text-sm">{{ stat.label }}</p>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Right: Screenshot with play button -->
+      <div class="hidden lg:block" style="perspective: 1200px">
+        <div class="group relative" style="transform: rotateY(-8deg)">
+          <web-browser-frame
+            src="images/screenshots/ai-dispatch-sessions.png"
+            alt="AI Dispatch dashboard with fleet map, pending decisions, and session history"
+          />
+          <!-- Play button overlay -->
+          <button
+            type="button"
+            class="absolute inset-0 flex cursor-pointer items-center justify-center rounded-xl bg-black/20 transition-colors group-hover:bg-black/30"
+            aria-label="Play demo video"
+            (click)="showVideo.set(true)"
+          >
+            <div
+              class="bg-accent flex h-16 w-16 items-center justify-center rounded-full shadow-lg transition-transform group-hover:scale-110"
+            >
+              <i class="pi pi-play ml-1 text-2xl text-white"></i>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Video modal -->
+      @if (showVideo()) {
+        <div
+          class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          role="dialog"
+          tabindex="-1"
+          aria-modal="true"
+          aria-label="Demo video"
+          (click)="showVideo.set(false)"
+          (keydown.escape)="showVideo.set(false)"
+        >
+          <div
+            class="relative w-full max-w-5xl px-6"
+            role="document"
+            (click)="$event.stopPropagation()"
+            (keydown)="$event.stopPropagation()"
+          >
+            <button
+              type="button"
+              class="absolute -top-10 right-6 text-white/70 hover:text-white"
+              aria-label="Close video"
+              (click)="showVideo.set(false)"
+            >
+              <i class="pi pi-times text-2xl"></i>
+            </button>
+            <video class="w-full rounded-xl shadow-2xl" autoplay controls playsinline>
+              <source src="demo-video.mp4" type="video/mp4" />
+            </video>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Scroll indicator -->
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+      <i class="pi pi-chevron-down text-steel text-2xl"></i>
+    </div>
+  </div>
+</section>

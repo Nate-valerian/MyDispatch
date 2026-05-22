@@ -1,0 +1,179 @@
+# Docker-based deployment to VPS
+#
+# Required GitHub Secrets:
+# - SSH_HOST: VPS IP address or hostname
+# - SSH_USER: SSH username
+# - SSH_KEY: SSH private key for VPS access
+# - GHCR_PAT: Personal Access Token with read:packages, write:packages scope
+# - DOCKER_ENV: Full .env file content for docker-compose (includes all config)
+# - FIREBASE_CREDENTIALS_JSON: Firebase Admin SDK service account JSON (for push notifications)
+#
+# Setup instructions:
+# 1. Create PAT: GitHub Settings -> Developer settings -> Personal access tokens with read:packages, write:packages scope
+# 2. On VPS: mkdir -p /deploy/logistics
+# 3. Add DOCKER_ENV secret with all environment variables
+# 4. Add FIREBASE_CREDENTIALS_JSON secret with the contents of firebase-adminsdk-key.json
+
+name: Build and Deploy
+
+on:
+  push:
+    branches: [prod]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  APP_DIR: ~/deploy/logistics
+
+jobs:
+  build:
+    name: Build ${{ matrix.image }}
+    runs-on: ubuntu-latest
+    concurrency:
+      group: build-${{ matrix.image }}
+      cancel-in-progress: true
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: api
+            context: .
+            file: ./src/Presentation/Logistics.API/Dockerfile
+          - image: identity
+            context: .
+            file: ./src/Presentation/Logistics.IdentityServer/Dockerfile
+          - image: admin-portal
+            context: .
+            file: ./src/Client/Logistics.Angular/deploy/Dockerfile.admin
+          - image: tms-portal
+            context: .
+            file: ./src/Client/Logistics.Angular/deploy/Dockerfile.tms
+          - image: customer-portal
+            context: .
+            file: ./src/Client/Logistics.Angular/deploy/Dockerfile.customer
+          - image: website
+            context: .
+            file: ./src/Client/Logistics.Angular/deploy/Dockerfile.website
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set lowercase repository name
+        id: repo
+        run: echo "name=${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}
+
+      - name: Write Firebase credentials
+        if: matrix.image == 'api'
+        run: echo '${{ secrets.FIREBASE_CREDENTIALS_JSON }}' > ./src/Presentation/Logistics.API/firebase-adminsdk-key.json
+
+      - name: Build and push ${{ matrix.image }}
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.file }}
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ steps.repo.outputs.name }}/${{ matrix.image }}:latest
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ steps.repo.outputs.name }}/${{ matrix.image }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ steps.repo.outputs.name }}/${{ matrix.image }}:buildcache,mode=max
+
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+    needs: build
+    concurrency:
+      group: deploy-prod
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Copy docker-compose to VPS
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "src/Aspire/Logistics.Aspire.AppHost/aspire-output/docker-compose.yaml"
+          target: ${{ env.APP_DIR }}
+          strip_components: 4
+
+      - name: Deploy with Docker Compose
+        uses: appleboy/ssh-action@v1.2.4
+        env:
+          DOCKER_ENV: ${{ secrets.DOCKER_ENV }}
+          GHCR_PAT: ${{ secrets.GHCR_PAT }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          IMAGE_TAG: latest
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          envs: DOCKER_ENV,GHCR_PAT,GITHUB_REPOSITORY,IMAGE_TAG
+          script: |
+            # Navigate to app directory
+            cd ${{ env.APP_DIR }}
+
+            # Create .env file from secret
+            echo "$DOCKER_ENV" > .env
+
+            # Add required variables for docker-compose (lowercase repo name)
+            REPO_LOWER=$(echo "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')
+            echo "GITHUB_REPOSITORY=$REPO_LOWER" >> .env
+            echo "IMAGE_TAG=$IMAGE_TAG" >> .env
+
+            # Login to GitHub Container Registry
+            echo "$GHCR_PAT" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # Create proxy network if it doesn't exist
+            docker network create proxy 2>/dev/null || true
+
+            # Pull latest images BEFORE stopping anything (minimizes downtime)
+            docker compose pull
+
+            # Recreate containers in-place with new images (no down/up cycle)
+            docker compose up -d --force-recreate --remove-orphans
+
+            # Clean up old images after new containers are running
+            docker image prune -f
+
+            # Show running containers
+            echo "=== Running Containers ==="
+            docker compose ps
+
+            # Show container health
+            echo "=== Container Health ==="
+            docker compose ps --format "table {{.Name}}\t{{.Status}}"
+
+      - name: Health check
+        uses: appleboy/ssh-action@v1.2.4
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            echo "Waiting for services to start..."
+            sleep 30
+
+            echo "=== API Health Check ==="
+            curl -sf http://localhost:7000/health || echo "API not responding yet"
+
+            echo "=== Container Status ==="
+            docker compose -f ${{ env.APP_DIR }}/docker-compose.yaml ps --format "table {{.Name}}\t{{.Status}}"
+
+            echo "=== Recent Logs ==="
+            docker compose -f ${{ env.APP_DIR }}/docker-compose.yaml logs --tail=10 2>/dev/null || true

@@ -1,0 +1,80 @@
+root = true
+
+# All Files
+[*]
+indent_style = space
+indent_size = 4
+end_of_line = lf
+charset = utf-8
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# C# Files
+[*.cs]
+csharp_style_namespace_declarations = file_scoped:warning
+
+# Private instance fields: camelCase without underscore prefix
+dotnet_naming_rule.private_fields_camel_case.symbols = private_fields
+dotnet_naming_rule.private_fields_camel_case.style = camel_case_style
+dotnet_naming_rule.private_fields_camel_case.severity = warning
+
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+dotnet_naming_symbols.private_fields.required_modifiers =
+
+dotnet_naming_style.camel_case_style.capitalization = camel_case
+
+# Private static readonly fields: PascalCase (default C# convention for readonly cache/state)
+dotnet_naming_rule.private_static_readonly_fields_pascal_case.symbols = private_static_readonly_fields
+dotnet_naming_rule.private_static_readonly_fields_pascal_case.style = pascal_case_style
+dotnet_naming_rule.private_static_readonly_fields_pascal_case.severity = warning
+
+dotnet_naming_symbols.private_static_readonly_fields.applicable_kinds = field
+dotnet_naming_symbols.private_static_readonly_fields.applicable_accessibilities = private
+dotnet_naming_symbols.private_static_readonly_fields.required_modifiers = static, readonly
+
+# Private const fields: PascalCase (default C# convention)
+dotnet_naming_rule.private_const_fields_pascal_case.symbols = private_const_fields
+dotnet_naming_rule.private_const_fields_pascal_case.style = pascal_case_style
+dotnet_naming_rule.private_const_fields_pascal_case.severity = warning
+
+dotnet_naming_symbols.private_const_fields.applicable_kinds = field
+dotnet_naming_symbols.private_const_fields.applicable_accessibilities = private
+dotnet_naming_symbols.private_const_fields.required_modifiers = const
+
+dotnet_naming_style.pascal_case_style.capitalization = pascal_case
+
+# Web Files (TypeScript, JavaScript, HTML, CSS, JSON)
+[*.{ts,tsx,js,jsx,mjs,cjs,html,css,scss,sass,less,json}]
+indent_size = 2
+
+# YAML
+[*.{yml,yaml}]
+indent_size = 2
+
+# XML and Project Files
+[*.{xml,csproj,props,targets,ruleset,config,nuspec,resx}]
+indent_size = 2
+
+# Markdown
+[*.{md,mdx}]
+trim_trailing_whitespace = false
+indent_size = 2
+
+# Liquid Templates
+[*.liquid]
+indent_size = 2
+
+# Shell Scripts
+[*.{sh,bash,zsh}]
+indent_size = 2
+
+[*.{cmd,bat,ps1}]
+end_of_line = crlf
+
+# Kotlin
+[*.{kt,kts}]
+
+# Solution Files
+[*.sln]
+indent_style = tab

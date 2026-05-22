@@ -1,0 +1,123 @@
+<ui-page-header title="Expenses" addRoute="/expenses/add" addTooltip="Add a new expense">
+  <p-button
+    icon="pi pi-chart-bar"
+    label="Analytics"
+    [routerLink]="['/expenses/analytics']"
+    [outlined]="true"
+  />
+</ui-page-header>
+
+<p-card>
+  <div class="mb-4">
+    <ui-search-input (searchChange)="onSearch($event)" />
+  </div>
+
+  <ui-data-container
+    [loading]="store.isLoading()"
+    [error]="store.error()"
+    [isEmpty]="store.isEmpty()"
+    skeletonVariant="table"
+    [skeletonRows]="10"
+    emptyTitle="No expenses found"
+    emptyMessage="Try adjusting your search or add a new expense."
+    (retry)="store.retry()"
+  >
+    <p-table
+      [value]="store.data()"
+      dataKey="id"
+      [scrollable]="true"
+      [lazy]="true"
+      [paginator]="true"
+      [showCurrentPageReport]="true"
+      (onLazyLoad)="store.onLazyLoad($event)"
+      [rows]="store.pageSize()"
+      [first]="store.first()"
+      [totalRecords]="store.totalRecords()"
+      [loading]="store.isLoading()"
+      [rowsPerPageOptions]="[10, 25, 50]"
+    >
+      <ng-template #header>
+        <tr>
+          <th pSortableColumn="Number" class="w-24">
+            #
+            <p-sortIcon field="Number" />
+          </th>
+          <th pSortableColumn="Type" class="w-28">
+            Type
+            <p-sortIcon field="Type" />
+          </th>
+          <th>Category</th>
+          <th>Vendor</th>
+          <th pSortableColumn="Amount" class="w-32">
+            Amount
+            <p-sortIcon field="Amount" />
+          </th>
+          <th pSortableColumn="ExpenseDate" class="w-36">
+            Date
+            <p-sortIcon field="ExpenseDate" />
+          </th>
+          <th pSortableColumn="Status" class="w-28">
+            Status
+            <p-sortIcon field="Status" />
+          </th>
+          <th class="w-24">Receipt</th>
+          <th class="w-24">Action</th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-expense>
+        <tr class="hover:bg-hover cursor-pointer" (click)="selectedRow.set(expense)">
+          <td>
+            <span class="font-mono text-sm">{{ expense.number }}</span>
+          </td>
+          <td>
+            <app-expense-type-tag [type]="expense.type" />
+          </td>
+          <td>
+            <span class="text-sm">{{ getCategoryLabel(expense) }}</span>
+          </td>
+          <td>
+            <span class="text-sm">{{ expense.vendorName || "N/A" }}</span>
+          </td>
+          <td>
+            <span class="font-medium">
+              {{ expense.amount?.amount | currencyFormat }}
+            </span>
+          </td>
+          <td>{{ expense.expenseDate | dateFormat: "mediumDate" }}</td>
+          <td>
+            <app-expense-status-tag [status]="expense.status" />
+          </td>
+          <td>
+            @if (expense.receiptBlobPath) {
+              <p-button
+                icon="pi pi-file"
+                pTooltip="View receipt"
+                aria-label="View receipt"
+                severity="success"
+                [text]="true"
+                size="small"
+                (click)="viewReceipt(expense, $event)"
+              />
+            } @else {
+              <ui-icon name="file" color="muted" pTooltip="No receipt" />
+            }
+          </td>
+          <td>
+            <p-button
+              icon="pi pi-ellipsis-v"
+              (click)="openActionMenu(expense, menu, $event); $event.stopPropagation()"
+              [text]="true"
+              aria-label="Show actions menu"
+            />
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </ui-data-container>
+</p-card>
+
+<!-- Context menu for actions -->
+<p-menu #menu [model]="actionMenuItems()" [popup]="true" />
+
+<!-- Reject dialog -->
+<app-reject-expense-dialog />

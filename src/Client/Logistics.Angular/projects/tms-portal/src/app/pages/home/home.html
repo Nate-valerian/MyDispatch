@@ -1,0 +1,239 @@
+<div class="animate-fadein">
+  <ui-page-header [title]="greeting()" [subtitle]="currentDate | dateFormat: 'EEEE, MMMM d, yyyy'">
+    <ui-typography variant="body-sm" color="muted" class="whitespace-nowrap">
+      Updated {{ lastUpdated() | dateFormat: "shortTime" }}
+    </ui-typography>
+    <p-button
+      icon="pi pi-refresh"
+      [rounded]="true"
+      [text]="true"
+      severity="secondary"
+      (click)="refreshData()"
+      pTooltip="Refresh data"
+      tooltipPosition="bottom"
+    />
+    <p-button
+      icon="pi pi-th-large"
+      [rounded]="true"
+      [text]="true"
+      severity="secondary"
+      (click)="resetLayout()"
+      pTooltip="Reset Layout"
+      tooltipPosition="bottom"
+    />
+    <p-button
+      label="Quick Actions"
+      icon="pi pi-plus"
+      styleClass="whitespace-nowrap"
+      [outlined]="true"
+      (click)="menu.toggle($event)"
+    />
+    <p-menu #menu [model]="quickActions" [popup]="true" />
+  </ui-page-header>
+
+  <!-- Skeleton during initial load (mirrors panel grid coordinates) -->
+  @if (!initialLoadComplete()) {
+    <app-home-skeleton />
+  }
+
+  <!-- Gridster Dashboard -->
+  @if (gridsterOptions && initialLoadComplete()) {
+    <gridster [options]="gridsterOptions" class="dashboard-grid">
+      @for (panel of dashboardPanels(); track panel.id) {
+        <gridster-item [item]="panel" class="dashboard-panel">
+          @switch (panel.id) {
+            @case ("kpi-weekly-gross") {
+              <app-stat-card
+                class="h-full"
+                icon="pi-dollar"
+                label="Weekly Gross"
+                [value]="(weeklyGross() | currencyFormat) ?? '$0'"
+                color="green"
+                tooltip="Total gross for the past 7 days"
+              />
+            }
+            @case ("kpi-billed-miles") {
+              <app-stat-card
+                class="h-full"
+                icon="pi-map"
+                label="Billed Miles"
+                [value]="(weeklyDistance() | distanceUnit) ?? '0 mi'"
+                color="blue"
+                tooltip="Billable miles driven in the past 7 days"
+              />
+            }
+            @case ("kpi-rate-per-mile") {
+              <app-stat-card
+                class="h-full"
+                icon="pi-chart-line"
+                label="Rate Per Mile"
+                [value]="(weeklyRpm() | currencyFormat) ?? '$0'"
+                color="purple"
+                tooltip="Weekly gross divided by billed miles"
+              />
+            }
+            @case ("kpi-today-gross") {
+              <app-stat-card
+                class="h-full"
+                icon="pi-calendar"
+                label="Today's Gross"
+                [value]="(todayGross() | currencyFormat) ?? '$0'"
+                color="orange"
+                tooltip="Gross earned today"
+              />
+            }
+            @case ("attention-panel") {
+              <app-attention-panel
+                class="h-full"
+                [unassignedLoadsCount]="companyStats()?.unassignedLoadsCount ?? 0"
+                [idleTrucksCount]="companyStats()?.idleTrucksCount ?? 0"
+                [isLoading]="isLoadingCompanyStats()"
+              />
+            }
+            @case ("financial-health") {
+              <app-financial-health-widget
+                class="h-full"
+                [outstandingInvoiceTotal]="companyStats()?.outstandingInvoiceTotal ?? 0"
+                [paymentsReceivedThisWeek]="companyStats()?.paymentsReceivedThisWeek ?? 0"
+                [overdueInvoiceCount]="companyStats()?.overdueInvoiceCount ?? 0"
+                [isLoading]="isLoadingCompanyStats()"
+              />
+            }
+            @case ("top-performers") {
+              <app-top-performers-widget
+                class="h-full"
+                [topTrucks]="companyStats()?.topTrucks ?? []"
+                [isLoading]="isLoadingCompanyStats()"
+              />
+            }
+            @case ("active-loads") {
+              <p-card class="h-full">
+                <ng-template #header>
+                  <ui-stack direction="row" align="center" justify="between" class="py-3 pr-2 pl-4">
+                    <ui-stack direction="row" align="center" gap="2">
+                      <span class="text-accent">
+                        <ui-icon name="box" color="inherit" />
+                      </span>
+                      <ui-typography variant="h4" tag="h4" color="primary">
+                        Active Loads
+                      </ui-typography>
+                    </ui-stack>
+                    <p-button
+                      label="View All"
+                      [text]="true"
+                      [routerLink]="['/loads']"
+                      class="no-drag"
+                    />
+                  </ui-stack>
+                  <p-divider class="m-0" />
+                </ng-template>
+
+                <p-table
+                  [value]="loads()"
+                  [loading]="isLoadingLoadsData()"
+                  [scrollable]="true"
+                  scrollHeight="flex"
+                  class="no-drag"
+                >
+                  <ng-template #header>
+                    <tr>
+                      <th>Load</th>
+                      <th>Status</th>
+                      <th>Route</th>
+                      <th>Progress</th>
+                      <th>Truck</th>
+                    </tr>
+                  </ng-template>
+                  <ng-template #body let-load>
+                    <tr>
+                      <td>
+                        <a
+                          [routerLink]="['/loads', load.id, 'edit']"
+                          class="text-primary font-semibold"
+                        >
+                          #{{ load.number }}
+                        </a>
+                      </td>
+                      <td>
+                        <ui-status-badge [status]="load.status" kind="load" />
+                      </td>
+                      <td>
+                        <ui-stack direction="row" align="center" gap="1" class="text-sm">
+                          <span class="max-w-20 truncate" [pTooltip]="load.originAddress?.city">
+                            {{ load.originAddress?.city || "N/A" }}
+                          </span>
+                          <ui-icon name="arrow-right" size="xs" color="muted" />
+                          <span
+                            class="max-w-20 truncate"
+                            [pTooltip]="load.destinationAddress?.city"
+                          >
+                            {{ load.destinationAddress?.city || "N/A" }}
+                          </span>
+                        </ui-stack>
+                      </td>
+                      <td class="min-w-32">
+                        <app-load-progress-bar [status]="load.status" [compact]="true" />
+                      </td>
+                      <td>
+                        @if (load.assignedTruckId) {
+                          <a [routerLink]="['/trucks', load.assignedTruckId]" class="text-primary">
+                            {{ load.assignedTruckNumber }}
+                          </a>
+                        } @else {
+                          <span class="text-muted">Unassigned</span>
+                        }
+                      </td>
+                    </tr>
+                  </ng-template>
+                  <ng-template #emptymessage>
+                    <tr>
+                      <td colspan="5" class="text-center">
+                        <ui-stack align="center" gap="2" class="text-muted py-8">
+                          <i class="pi pi-inbox text-4xl" aria-hidden="true"></i>
+                          <ui-typography variant="body" color="muted">
+                            No active loads
+                          </ui-typography>
+                        </ui-stack>
+                      </td>
+                    </tr>
+                  </ng-template>
+                </p-table>
+              </p-card>
+            }
+            @case ("recent-activity") {
+              <app-recent-activity
+                class="h-full"
+                [loads]="recentLoads()"
+                [isLoading]="isLoadingLoadsData()"
+              />
+            }
+            @case ("fleet-map") {
+              <p-card class="h-full">
+                <ng-template #header>
+                  <ui-stack direction="row" align="center" gap="2" class="py-3 pr-2 pl-4">
+                    <span class="text-accent">
+                      <ui-icon name="map-marker" color="inherit" />
+                    </span>
+                    <ui-typography variant="h4" tag="h4" color="primary">
+                      Fleet Overview
+                    </ui-typography>
+                  </ui-stack>
+                  <p-divider class="m-0" />
+                </ng-template>
+                <div class="no-drag h-full">
+                  <app-trucks-map height="100%" />
+                </div>
+              </p-card>
+            }
+            @case ("daily-gross-chart") {
+              <app-daily-gross-chart
+                chartClass="no-drag"
+                (dataLoaded)="onChartDataLoaded($event)"
+              />
+            }
+          }
+        </gridster-item>
+      }
+    </gridster>
+  }
+</div>

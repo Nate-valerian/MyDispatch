@@ -1,0 +1,110 @@
+<div class="mx-auto max-w-4xl">
+  <p-card class="shadow-lg">
+    <ng-template #header>
+      <ui-stack
+        direction="row"
+        align="center"
+        justify="between"
+        class="from-primary/5 border-b bg-linear-to-r to-transparent p-5"
+      >
+        <ui-stack direction="row" align="center" gap="3">
+          <ui-icon name="comments" size="lg" color="primary" />
+          <ui-typography variant="h4" tag="h2">Messages</ui-typography>
+        </ui-stack>
+        <ui-stack direction="row" gap="2">
+          <p-button
+            icon="pi pi-users"
+            label="Team Chat"
+            severity="info"
+            [outlined]="true"
+            (onClick)="openTeamChat()"
+          />
+          <p-button
+            icon="pi pi-plus"
+            label="New Conversation"
+            severity="success"
+            (onClick)="createNewConversation()"
+          />
+        </ui-stack>
+      </ui-stack>
+    </ng-template>
+
+    @if (store.loading()) {
+      <div class="space-y-2 p-2">
+        @for (i of [1, 2, 3, 4, 5]; track i) {
+          <div class="bg-hover flex items-center gap-4 rounded-xl p-4">
+            <p-skeleton shape="circle" size="3.5rem" />
+            <div class="flex-1">
+              <p-skeleton width="50%" height="1.25rem" styleClass="mb-2" />
+              <p-skeleton width="75%" height="0.875rem" />
+            </div>
+          </div>
+        }
+      </div>
+    } @else if (store.conversations().length === 0) {
+      <ui-stack align="center" justify="center" gap="4" class="py-16 text-center">
+        <div class="bg-primary/10 mb-2 flex h-24 w-24 items-center justify-center rounded-full">
+          <ui-icon name="comments" size="xl" color="primary" />
+        </div>
+        <ui-typography variant="h5" tag="h3" color="secondary">No conversations yet</ui-typography>
+        <ui-typography variant="body" color="muted" class="max-w-sm">
+          Start a conversation with your team members to collaborate and stay connected
+        </ui-typography>
+        <p-button
+          icon="pi pi-plus"
+          label="Start Conversation"
+          severity="success"
+          size="large"
+          (onClick)="createNewConversation()"
+        />
+      </ui-stack>
+    } @else {
+      <div class="space-y-2 p-2">
+        @for (conversation of store.conversations(); track conversation.id) {
+          <div
+            class="hover:border-primary/20 hover:bg-primary/5 flex cursor-pointer items-center gap-4 rounded-xl border border-transparent p-4 transition-all duration-200 hover:shadow-sm"
+            tabindex="0"
+            role="button"
+            (click)="selectConversation(conversation)"
+            (keydown.enter)="selectConversation(conversation)"
+          >
+            <app-user-avatar [initials]="getInitials(conversation)" size="large" />
+
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-primary truncate font-semibold">
+                  {{ conversation.name || getParticipantNames(conversation) }}
+                </span>
+                @if (conversation.lastMessageAt) {
+                  <span class="text-muted shrink-0 text-xs">
+                    {{ conversation.lastMessageAt | date: "shortTime" }}
+                  </span>
+                }
+              </div>
+
+              <div class="mt-1 flex items-center justify-between gap-2">
+                <p class="text-muted truncate text-sm">
+                  @if (conversation.lastMessage) {
+                    {{ conversation.lastMessage.content }}
+                  } @else {
+                    <span class="italic">No messages yet</span>
+                  }
+                </p>
+
+                @if (conversation.unreadCount && conversation.unreadCount > 0) {
+                  <p-badge
+                    [value]="conversation.unreadCount.toString()"
+                    severity="danger"
+                    styleClass="shrink-0"
+                  />
+                }
+              </div>
+            </div>
+
+            <ui-icon name="angle-right" color="muted" />
+          </div>
+        }
+      </div>
+    }
+  </p-card>
+</div>

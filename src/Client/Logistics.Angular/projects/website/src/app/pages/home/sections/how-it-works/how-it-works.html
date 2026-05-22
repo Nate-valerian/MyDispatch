@@ -1,0 +1,37 @@
+<web-section-container sectionId="how-it-works" background="dark">
+  <div webScrollAnimate="fade-up">
+    <web-section-header
+      label="How It Works"
+      title="Up and running in minutes"
+      subtitle="Four steps from a fresh account to AI dispatch."
+      [dark]="true"
+    />
+  </div>
+
+  <div class="mt-16 grid gap-8 md:grid-cols-4">
+    @for (step of steps; track step.number; let i = $index) {
+      <div webScrollAnimate="fade-up" [delay]="i * 150" class="relative text-center">
+        <!-- Connector Line (hidden on last item and mobile) -->
+        @if (step.number < 4) {
+          <div
+            class="absolute top-12 left-1/2 hidden h-0.5 w-full bg-linear-to-r from-purple-500 to-transparent md:block"
+          ></div>
+        }
+
+        <!-- Step Circle -->
+        <div class="relative mx-auto w-fit">
+          <web-icon-circle [icon]="step.icon" size="lg" gradient="blue-purple" />
+          <div
+            class="absolute -top-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-white text-sm font-bold text-purple-600"
+          >
+            {{ step.number }}
+          </div>
+        </div>
+
+        <!-- Content -->
+        <h3 class="mt-6 text-xl font-semibold text-white">{{ step.title }}</h3>
+        <p class="mt-2 text-purple-200/80">{{ step.description }}</p>
+      </div>
+    }
+  </div>
+</web-section-container>

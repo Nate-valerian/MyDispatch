@@ -1,0 +1,72 @@
+name: Build
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+env:
+  PRESENTATION_PROJECTS_DIR: ./src/Presentation
+  CLIENT_PROJECTS_DIR: ./src/Client
+
+jobs:
+  build-backend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      #- name: Install dependencies
+      #  run: dotnet restore
+
+      #- name: Verify formatting
+      #  run: dotnet format --verify-no-changes --no-restore
+
+      - name: Build Web API
+        run: dotnet build ${{ env.PRESENTATION_PROJECTS_DIR }}/Logistics.API/Logistics.API.csproj
+
+      - name: Build Identity Server
+        run: dotnet build ${{ env.PRESENTATION_PROJECTS_DIR }}/Logistics.IdentityServer/Logistics.IdentityServer.csproj
+
+  build-angular-apps:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        working-directory: ${{ env.CLIENT_PROJECTS_DIR }}/Logistics.Angular
+        run: bun install --force
+
+      - name: Generate API client
+        working-directory: ${{ env.CLIENT_PROJECTS_DIR }}/Logistics.Angular
+        run: bun run gen:api
+
+      - name: Build shared library
+        working-directory: ${{ env.CLIENT_PROJECTS_DIR }}/Logistics.Angular
+        run: bun run build:shared
+
+      - name: Build TMS Portal
+        working-directory: ${{ env.CLIENT_PROJECTS_DIR }}/Logistics.Angular
+        run: bun run build:tms
+
+      - name: Build Admin Portal
+        working-directory: ${{ env.CLIENT_PROJECTS_DIR }}/Logistics.Angular
+        run: bun run build:admin
+
+      - name: Build Customer Portal
+        working-directory: ${{ env.CLIENT_PROJECTS_DIR }}/Logistics.Angular
+        run: bun run build:customer
+
+      - name: Build Website
+        working-directory: ${{ env.CLIENT_PROJECTS_DIR }}/Logistics.Angular
+        run: bun run build:website

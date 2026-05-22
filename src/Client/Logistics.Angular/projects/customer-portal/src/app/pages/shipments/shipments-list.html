@@ -1,0 +1,72 @@
+<div>
+  <ui-stack direction="row" align="center" justify="between" class="mb-6">
+    <ui-typography variant="h2" tag="h1">My Shipments</ui-typography>
+    <p-iconfield>
+      <p-inputicon class="pi pi-search" />
+      <input
+        type="text"
+        pInputText
+        placeholder="Search shipments..."
+        class="w-64"
+        (input)="onSearch($any($event.target).value)"
+      />
+    </p-iconfield>
+  </ui-stack>
+
+  <ui-surface variant="elevated" padding="none">
+    <p-table
+      [value]="loads()"
+      [lazy]="true"
+      [paginator]="true"
+      [rows]="10"
+      [first]="tableFirst()"
+      [totalRecords]="totalRecords()"
+      [loading]="isLoading()"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      [tableStyle]="{ 'min-width': '50rem' }"
+      (onLazyLoad)="onLazyLoad($event)"
+    >
+      <ng-template #header>
+        <tr>
+          <th>Load #</th>
+          <th>Name</th>
+          <th>Origin</th>
+          <th>Destination</th>
+          <th>Status</th>
+          <th>Driver</th>
+          <th></th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-load>
+        <tr>
+          <td class="font-medium">{{ load.number }}</td>
+          <td>{{ load.name || "-" }}</td>
+          <td>{{ formatAddress(load.originAddress) }}</td>
+          <td>{{ formatAddress(load.destinationAddress) }}</td>
+          <td>
+            <ui-status-badge [status]="load.status" kind="load" />
+          </td>
+          <td>{{ load.driverName || "-" }}</td>
+          <td class="text-right">
+            <p-button
+              [routerLink]="['/shipments', load.id]"
+              label="View"
+              [text]="true"
+              icon="pi pi-eye"
+            />
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="7" class="py-12 text-center">
+            <ui-stack align="center" gap="2">
+              <ui-icon name="inbox" size="xl" color="muted" />
+              <ui-typography variant="body" color="muted">No shipments found</ui-typography>
+            </ui-stack>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </ui-surface>
+</div>

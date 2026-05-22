@@ -1,0 +1,143 @@
+using Logistics.API.Extensions;
+using Logistics.Shared.Identity.Policies;
+using Logistics.Shared.Identity.Roles;
+using Logistics.Shared.Models;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using CreateTenantCommand = Logistics.Application.Modules.IdentityAccess.Tenants.Commands.CreateTenantCommand;
+using UpdateTenantCommand = Logistics.Application.Modules.IdentityAccess.Tenants.Commands.UpdateTenantCommand;
+using Logistics.Application.Modules.IdentityAccess.Tenants.Commands;
+using Logistics.Application.Modules.IdentityAccess.Tenants.Queries;
+using Logistics.Application.Modules.Integrations.AiDispatch.Commands;
+using Logistics.Application.Modules.Integrations.AiDispatch.Queries;
+
+namespace Logistics.API.Controllers;
+
+[ApiController]
+[Route("tenants")]
+[Produces("application/json")]
+public class TenantController(IMediator mediator) : ControllerBase
+{
+    #region Tenants
+
+    [HttpGet("{identifier}", Name = "GetTenantById")]
+    [ProducesResponseType(typeof(TenantDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [Authorize]
+    public async Task<IActionResult> GetTenantById(string identifier)
+    {
+        var includeConnectionString = HttpContext.User.HasOneTheseRoles(AppRoles.SuperAdmin, AppRoles.Admin);
+        var result = await mediator.Send(new GetTenantQuery
+        {
+            Id = Guid.TryParse(identifier, out var id) ? id : null,
+            Name = identifier,
+            IncludeConnectionString = includeConnectionString
+        });
+
+        return result.IsSuccess ? Ok(result.Value) : NotFound(ErrorResponse.FromResult(result));
+    }
+
+    [HttpGet(Name = "GetTenants")]
+    [ProducesResponseType(typeof(PagedResponse<TenantDto>), StatusCodes.Status200OK)]
+    [Authorize(Policy = Permission.Tenant.View)]
+    public async Task<IActionResult> GetTenantList([FromQuery] GetTenantsQuery query)
+    {
+        if (User.HasOneTheseRoles(AppRoles.SuperAdmin, AppRoles.Admin))
+        {
+            query.IncludeConnectionStrings = true;
+        }
+
+        var result = await mediator.Send(query);
+        return Ok(PagedResponse<TenantDto>.FromPagedResult(result, query.Page, query.PageSize));
+    }
+
+    [HttpPost(Name = "CreateTenant")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [Authorize(Policy = Permission.Tenant.Manage)]
+    public async Task<IActionResult> CreateTenant([FromBody] CreateTenantCommand request)
+    {
+        var result = await mediator.Send(request);
+        return result.IsSuccess ? NoContent() : BadRequest(ErrorResponse.FromResult(result));
+    }
+
+    [HttpPut("{id:guid}", Name = "UpdateTenant")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [Authorize(Policy = Permission.Tenant.Manage)]
+    public async Task<IActionResult> UpdateTenant(Guid id, [FromBody] UpdateTenantCommand request)
+    {
+        request.Id = id;
+        var result = await mediator.Send(request);
+        return result.IsSuccess ? NoContent() : BadRequest(ErrorResponse.FromResult(result));
+    }
+
+    [HttpDelete("{id:guid}", Name = "DeleteTenant")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [Authorize(Policy = Permission.Tenant.Manage)]
+    public async Task<IActionResult> DeleteTenant(Guid id)
+    {
+        var result = await mediator.Send(new DeleteTenantCommand { Id = id });
+        return result.IsSuccess ? NoContent() : NotFound(ErrorResponse.FromResult(result));
+    }
+
+    [HttpPost("{id:guid}/resend-welcome", Name = "ResendTenantWelcome")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [Authorize(Policy = Permission.Tenant.Manage)]
+    public async Task<IActionResult> ResendWelcome(Guid id)
+    {
+        var result = await mediator.Send(new ResendTenantWelcomeCommand(id));
+        return result.IsSuccess ? Ok() : BadRequest(ErrorResponse.FromResult(result));
+    }
+
+    [HttpPost("{id:guid}/logo", Name = "UploadTenantLogo")]
+    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [Authorize(Policy = Permission.Tenant.Manage)]
+    [RequestSizeLimit(5 * 1024 * 1024)] // 5 MB
+    public async Task<IActionResult> UploadTenantLogo(Guid id, IFormFile file)
+    {
+        if (file.Length == 0)
+        {
+            return BadRequest(new ErrorResponse("No file provided"));
+        }
+
+        var result = await mediator.Send(new UploadTenantLogoCommand
+        {
+            TenantId = id,
+            FileContent = file.OpenReadStream(),
+            FileName = file.FileName,
+            ContentType = file.ContentType,
+            FileSizeBytes = file.Length
+        });
+
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(ErrorResponse.FromResult(result));
+    }
+
+    #endregion
+
+    #region AI Quota Management
+
+    [HttpGet("quotas", Name = "GetTenantQuotaUsages")]
+    [ProducesResponseType(typeof(PagedResponse<TenantQuotaUsageDto>), StatusCodes.Status200OK)]
+    [Authorize(Policy = Permission.Tenant.Manage)]
+    public async Task<IActionResult> GetQuotaUsages([FromQuery] GetTenantQuotaUsagesQuery query)
+    {
+        var result = await mediator.Send(query);
+        return Ok(PagedResponse<TenantQuotaUsageDto>.FromPagedResult(result, query.Page, query.PageSize));
+    }
+
+    [HttpPost("quotas/reset", Name = "ResetTenantQuotas")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [Authorize(Policy = Permission.Tenant.Manage)]
+    public async Task<IActionResult> ResetQuotas([FromBody] ResetTenantQuotasCommand command)
+    {
+        var result = await mediator.Send(command);
+        return result.IsSuccess ? NoContent() : BadRequest(ErrorResponse.FromResult(result));
+    }
+
+    #endregion
+}

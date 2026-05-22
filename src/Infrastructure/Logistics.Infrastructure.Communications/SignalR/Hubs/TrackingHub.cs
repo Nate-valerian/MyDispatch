@@ -1,0 +1,77 @@
+using Logistics.Application.Abstractions.Realtime;
+using Logistics.Infrastructure.Communications.SignalR.Clients;
+using Logistics.Shared.Models;
+using Microsoft.AspNetCore.SignalR;
+
+namespace Logistics.Infrastructure.Communications.SignalR.Hubs;
+
+public class TrackingHub(
+    ITruckGeolocationUpdater geolocationUpdater,
+    TrackingHubContext hubContext) : Hub<ITrackingHubClient>
+{
+    private const string TripGroupPrefix = "trip:";
+
+    public override Task OnConnectedAsync()
+    {
+        hubContext.AddClient(Context.ConnectionId, null);
+        return Task.CompletedTask;
+    }
+
+    public override async Task OnDisconnectedAsync(Exception? exception)
+    {
+        var geolocationData = hubContext.GetGeolocationData(Context.ConnectionId);
+
+        if (geolocationData != null)
+        {
+            await geolocationUpdater.UpdateAsync(geolocationData);
+        }
+
+        hubContext.RemoveClient(Context.ConnectionId);
+    }
+
+    #region Geolocation Methods
+
+    public async Task SendGeolocationData(TruckGeolocationDto truckGeolocation)
+    {
+        await Clients
+            .Group(truckGeolocation.TenantId.ToString())
+            .ReceiveGeolocationData(truckGeolocation);
+        hubContext.UpdateGeolocationData(Context.ConnectionId, truckGeolocation);
+    }
+
+    #endregion
+
+    #region Tenant Subscription
+
+    public async Task RegisterTenant(string tenantId)
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, tenantId);
+    }
+
+    public async Task UnregisterTenant(string tenantId)
+    {
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, tenantId);
+    }
+
+    #endregion
+
+    #region Trip Subscription
+
+    /// <summary>
+    ///     Subscribe to updates for a specific trip.
+    /// </summary>
+    public async Task SubscribeToTrip(string tripId)
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, $"{TripGroupPrefix}{tripId}");
+    }
+
+    /// <summary>
+    ///     Unsubscribe from updates for a specific trip.
+    /// </summary>
+    public async Task UnsubscribeFromTrip(string tripId)
+    {
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"{TripGroupPrefix}{tripId}");
+    }
+
+    #endregion
+}

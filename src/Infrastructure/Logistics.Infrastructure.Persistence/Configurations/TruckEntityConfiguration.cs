@@ -1,0 +1,36 @@
+using Logistics.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace Logistics.Infrastructure.Persistence.Configurations;
+
+internal sealed class TruckEntityConfiguration : IEntityTypeConfiguration<Truck>
+{
+    public void Configure(EntityTypeBuilder<Truck> builder)
+    {
+        builder.ToTable("trucks");
+
+        builder.HasIndex(i => i.Number)
+            .IsUnique();
+
+        builder.ComplexProperty(i => i.AdrEquipment, adr =>
+        {
+            adr.Property(a => a.OrangePlateNumber).HasMaxLength(8);
+        });
+
+        builder.HasOne(i => i.MainDriver)
+            .WithMany()
+            .HasForeignKey(i => i.MainDriverId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(i => i.SecondaryDriver)
+            .WithMany()
+            .HasForeignKey(i => i.SecondaryDriverId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasMany(i => i.Loads)
+            .WithOne(i => i.AssignedTruck)
+            .HasForeignKey(i => i.AssignedTruckId)
+            .OnDelete(DeleteBehavior.SetNull);
+    }
+}

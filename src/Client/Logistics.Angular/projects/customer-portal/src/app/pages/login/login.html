@@ -1,0 +1,26 @@
+<div class="h-screen w-screen bg-gray-50">
+  <ui-stack direction="row" align="center" justify="center" class="h-full">
+    @if (!isAuthenticated() && !isLoading()) {
+      <div class="w-full max-w-md px-6">
+        <ui-surface variant="elevated" padding="lg">
+          <ui-typography variant="h3" tag="h1" align="center" class="mb-2">Customer Portal</ui-typography>
+          <ui-typography variant="body" color="muted" align="center" class="mb-6">
+            Sign in to view your shipments, invoices, and documents
+          </ui-typography>
+          <p-button
+            icon="pi pi-sign-in"
+            label="Sign In"
+            styleClass="w-full"
+            (click)="login()"
+          />
+        </ui-surface>
+      </div>
+    }
+    @if (isLoading()) {
+      <ui-stack align="center" justify="center">
+        <p-progress-spinner strokeWidth="4" />
+        <ui-typography variant="body" weight="medium" class="mt-4">Authenticating...</ui-typography>
+      </ui-stack>
+    }
+  </ui-stack>
+</div>

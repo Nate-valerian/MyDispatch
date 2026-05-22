@@ -1,0 +1,87 @@
+<ui-typography variant="h2" tag="h1">Add Subscription</ui-typography>
+<p-divider />
+
+<div class="flex flex-col justify-center gap-6 md:flex-row">
+  <p-card class="w-full lg:w-2/3">
+    @if (isFetching()) {
+      <ui-stack gap="4">
+        <p-skeleton height="3rem" />
+        <p-skeleton height="3rem" />
+      </ui-stack>
+    } @else {
+      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+        <ui-grid container spacing="4" class="mb-4">
+          <ui-grid [size]="12">
+            <ui-form-field label="Tenant" [required]="true">
+              <p-select
+                formControlName="tenantId"
+                [options]="tenantOptions()"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Select a tenant"
+                [filter]="true"
+                filterPlaceholder="Search tenants..."
+                styleClass="w-full"
+              />
+            </ui-form-field>
+            @if (tenantOptions().length === 0) {
+              <ui-stack direction="row" align="center" gap="2" class="mt-1 text-sm text-orange-500">
+                <ui-icon name="info" size="sm" />
+                <ui-typography variant="body-sm">
+                  All tenants already have active subscriptions.
+                </ui-typography>
+              </ui-stack>
+            }
+          </ui-grid>
+        </ui-grid>
+
+        <ui-grid container spacing="4" class="mb-4">
+          <ui-grid [size]="12">
+            <ui-form-field label="Subscription Plan" [required]="true">
+              <p-select
+                formControlName="planId"
+                [options]="planOptions()"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Select a plan"
+                styleClass="w-full"
+              />
+            </ui-form-field>
+            @if (planOptions().length === 0) {
+              <ui-stack direction="row" align="center" gap="2" class="mt-1 text-sm text-orange-500">
+                <ui-icon name="info" size="sm" />
+                <ui-typography variant="body-sm">
+                  No subscription plans available.
+                  <a routerLink="/subscription-plans/add" class="underline">Create one first.</a>
+                </ui-typography>
+              </ui-stack>
+            }
+          </ui-grid>
+        </ui-grid>
+
+        <ui-validation-summary [form]="form" />
+
+        <ui-stack direction="row" gap="2" class="mt-6">
+          <p-button
+            label="Create Subscription"
+            icon="pi pi-check"
+            type="submit"
+            [loading]="isLoading()"
+            [disabled]="
+              form.invalid ||
+              isLoading() ||
+              tenantOptions().length === 0 ||
+              planOptions().length === 0
+            "
+          />
+          <p-button
+            label="Cancel"
+            icon="pi pi-times"
+            severity="secondary"
+            routerLink="/subscriptions"
+          />
+        </ui-stack>
+      </form>
+    }
+  </p-card>
+</div>

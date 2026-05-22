@@ -1,0 +1,33 @@
+<div class="mb-3" [class.text-center]="centered()">
+  <div class="flex items-center" [class.justify-center]="centered()">
+    @if (backLink()) {
+      <p-button
+        icon="pi pi-arrow-left"
+        [rounded]="true"
+        [text]="true"
+        [routerLink]="[backLink()]"
+        pTooltip="Go back"
+        styleClass="mr-2"
+      />
+    }
+    <h1 class="mb-0 min-w-0 flex-1">{{ title() }}</h1>
+
+    @if (addRoute()) {
+      <p-button
+        styleClass="ml-2"
+        icon="pi pi-plus-circle"
+        size="large"
+        [rounded]="true"
+        [text]="true"
+        [pTooltip]="addTooltip()"
+        [routerLink]="[addRoute()]"
+      />
+    }
+    <div class="ml-auto flex flex-wrap items-center gap-2">
+      <ng-content />
+    </div>
+  </div>
+  @if (subtitle()) {
+    <p class="mb-0 text-gray-500">{{ subtitle() }}</p>
+  }
+</div>

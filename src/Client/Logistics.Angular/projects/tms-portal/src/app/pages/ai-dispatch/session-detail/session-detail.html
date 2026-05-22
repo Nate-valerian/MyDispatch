@@ -1,0 +1,173 @@
+@if (session(); as session) {
+  <div class="animate-fadein">
+    <!-- Header -->
+    <ui-page-header [title]="'Session #' + session.number" backLink="/ai-dispatch">
+      <ui-stack direction="row" align="center" gap="2">
+        <p-tag
+          [value]="session.status ?? ''"
+          [severity]="Labels.dispatchStatusSeverity(session.status ?? '')"
+        />
+        <app-mode-badge [mode]="session.mode" />
+        @if (session.status === "running") {
+          <p-button
+            label="Cancel"
+            icon="pi pi-stop-circle"
+            severity="danger"
+            [outlined]="true"
+            size="small"
+            (onClick)="cancelSession()"
+          />
+        }
+        @if (session.status !== "running" && hasRejectedDecisions()) {
+          <p-button
+            label="Re-plan"
+            icon="pi pi-refresh"
+            severity="help"
+            [outlined]="true"
+            size="small"
+            pTooltip="Start a new session with rejection context"
+            (onClick)="replanSession()"
+          />
+        }
+      </ui-stack>
+    </ui-page-header>
+
+    <!-- Stats -->
+    <ui-surface variant="elevated" [border]="true" class="mb-6 transition-all duration-300">
+      @if (session.status === "running") {
+        <div class="bg-primary/10 -mx-4 -mt-4 mb-4 flex items-center gap-2 rounded-t-lg px-4 py-2">
+          <i class="pi pi-spin pi-spinner text-primary text-sm"></i>
+          <span class="text-primary text-sm font-medium">Agent is running...</span>
+        </div>
+      }
+      <ui-grid container spacing="4">
+        @for (stat of statsItems(); track stat.label) {
+          <ui-grid [size]="{ xs: 6, md: 2 }">
+            <span class="text-muted text-sm">{{ stat.label }}</span>
+            <p class="font-medium" [class.font-mono]="stat.mono">{{ stat.value }}</p>
+          </ui-grid>
+        }
+      </ui-grid>
+    </ui-surface>
+
+    <!-- Instructions -->
+    @if (session.instructions) {
+      <ui-surface variant="subtle" [border]="true" class="mb-6">
+        <ui-stack direction="row" align="center" gap="2" class="mb-2">
+          <ui-icon name="comment" color="primary" />
+          <span class="text-sm font-semibold">Dispatcher Instructions</span>
+        </ui-stack>
+        <p class="text-secondary m-0 text-sm">{{ session.instructions }}</p>
+      </ui-surface>
+    }
+
+    <!-- Agent Summary (markdown) -->
+    @if (session.summary) {
+      <ui-surface
+        variant="elevated"
+        [border]="true"
+        padding="lg"
+        class="animate-fadein mb-6 transition-all duration-300"
+      >
+        <ui-stack direction="row" align="center" gap="2" class="mb-3">
+          <ui-icon name="sparkles" color="primary" />
+          <span class="font-semibold">Agent Summary</span>
+          @if (session.status === "running") {
+            <i class="pi pi-spin pi-spinner text-muted text-xs"></i>
+          }
+        </ui-stack>
+        <div
+          class="prose prose-sm dark:prose-invert max-w-none transition-opacity duration-500"
+          [innerHTML]="session.summary | markdown"
+        ></div>
+      </ui-surface>
+    }
+
+    <!-- Error -->
+    @if (session.errorMessage) {
+      <div class="bg-danger/10 border-danger/20 mb-6 rounded-lg border p-4">
+        <ui-stack direction="row" align="center" gap="2">
+          <ui-icon name="exclamation-triangle" color="danger" />
+          <span class="text-danger font-semibold">Error</span>
+        </ui-stack>
+        <p class="text-danger mt-1 text-sm">{{ session.errorMessage }}</p>
+      </div>
+    }
+
+    <!-- Agent Timeline -->
+    @if (session.decisions?.length) {
+      <ui-typography variant="h5" tag="h2" class="mb-4">Agent Timeline</ui-typography>
+
+      <p-timeline [value]="session.decisions ?? []">
+        <ng-template #content let-decision>
+          <div class="animate-slide-in mb-4 pb-2">
+            <!-- Tool name + time + status -->
+            <div class="mb-1 flex flex-wrap items-center gap-2">
+              <span class="text-sm font-medium">{{ getToolLabel(decision.toolName) }}</span>
+              <span class="text-muted text-xs">
+                {{ decision.createdAt | date: "MMM d, h:mm a" }}
+              </span>
+              @if (isWriteTool(decision.toolName)) {
+                <p-tag
+                  [value]="decision.status"
+                  [severity]="Labels.dispatchStatusSeverity(decision.status)"
+                  [style]="{ fontSize: '0.7rem' }"
+                />
+              }
+            </div>
+
+            <!-- Reasoning (expandable markdown) -->
+            @if (decision.reasoning) {
+              <div class="mb-2">
+                <div
+                  class="prose prose-sm dark:prose-invert max-w-none text-sm leading-relaxed"
+                  [class.line-clamp-3]="!isExpanded(decision.id!)"
+                  [innerHTML]="decision.reasoning | markdown"
+                ></div>
+                @if (decision.reasoning.length > 150) {
+                  <button
+                    class="text-primary mt-1 cursor-pointer border-none bg-transparent p-0 text-xs hover:underline"
+                    (click)="toggleExpand(decision.id!); $event.stopPropagation()"
+                  >
+                    {{ isExpanded(decision.id!) ? "Show less" : "Show more" }}
+                  </button>
+                }
+              </div>
+            }
+
+            <!-- Tool output -->
+            @if (decision.toolOutput) {
+              <div class="bg-subtle rounded-md p-3 text-xs">
+                <app-tool-output-summary [toolOutput]="decision.toolOutput" />
+              </div>
+            }
+
+            <!-- Approve/reject for suggested write-tool decisions -->
+            @if (decision.status === "suggested" && isWriteTool(decision.toolName)) {
+              <div class="mt-2">
+                <app-approve-reject-actions
+                  [decision]="decision"
+                  (approve)="approveDecision(decision)"
+                  (reject)="rejectDecision(decision)"
+                />
+              </div>
+            }
+          </div>
+        </ng-template>
+
+        <ng-template #marker let-decision>
+          <span
+            class="z-10 flex h-7 w-7 items-center justify-center rounded-full shadow-sm"
+            [class]="getToolMarkerClass(decision.toolName)"
+          >
+            <i [class]="getToolIcon(decision.toolName)" class="text-xs"></i>
+          </span>
+        </ng-template>
+      </p-timeline>
+    }
+  </div>
+} @else if (isLoading()) {
+  <ui-stack align="center" justify="center" class="py-20">
+    <i class="pi pi-spin pi-spinner text-4xl"></i>
+  </ui-stack>
+}

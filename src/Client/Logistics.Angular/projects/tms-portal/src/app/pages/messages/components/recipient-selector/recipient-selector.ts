@@ -1,0 +1,71 @@
+import { Component, inject, input, output, signal } from "@angular/core";
+import { Api, getEmployees, type EmployeeDto } from "@logistics/shared/api";
+import { Icon, Stack, Typography } from "@logistics/shared/components";
+import {
+  AutoCompleteModule,
+  type AutoCompleteCompleteEvent,
+  type AutoCompleteSelectEvent,
+} from "primeng/autocomplete";
+import { AvatarModule } from "primeng/avatar";
+import { ButtonModule } from "primeng/button";
+import { TooltipModule } from "primeng/tooltip";
+import { UserAvatar } from "@/shared/components";
+import { Converters } from "@/shared/utils";
+
+@Component({
+  selector: "app-recipient-selector",
+  templateUrl: "./recipient-selector.html",
+  imports: [
+    AvatarModule,
+    AutoCompleteModule,
+    ButtonModule,
+    TooltipModule,
+    UserAvatar,
+    Icon,
+    Stack,
+    Typography,
+  ],
+})
+export class RecipientSelector {
+  private readonly api = inject(Api);
+
+  readonly currentUserId = input<string | null>(null);
+  readonly selected = input<EmployeeDto | null>(null);
+  readonly selectedChange = output<EmployeeDto | null>();
+
+  protected readonly employeeSuggestions = signal<EmployeeDto[]>([]);
+
+  protected async searchEmployees(event: AutoCompleteCompleteEvent): Promise<void> {
+    const query = event.query;
+    if (!query || query.length < 2) {
+      this.employeeSuggestions.set([]);
+      return;
+    }
+
+    try {
+      const result = await this.api.invoke(getEmployees, {
+        Search: query,
+        PageSize: 10,
+      });
+
+      const filtered = (result.items ?? []).filter(
+        (e: EmployeeDto) => e.id !== this.currentUserId(),
+      );
+      this.employeeSuggestions.set(filtered);
+    } catch {
+      this.employeeSuggestions.set([]);
+    }
+  }
+
+  protected onRecipientSelect(event: AutoCompleteSelectEvent): void {
+    this.selectedChange.emit(event.value as EmployeeDto);
+  }
+
+  protected clearRecipient(): void {
+    this.selectedChange.emit(null);
+  }
+
+  protected getInitials(name?: string | null): string {
+    return Converters.getInitials(name);
+  }
+}

@@ -1,0 +1,26 @@
+using Logistics.Domain.Entities;
+using Logistics.Shared.Models;
+
+namespace Logistics.Mappings;
+
+public static class SubscriptionPlanMapper
+{
+    public static SubscriptionPlanDto ToDto(this SubscriptionPlan entity)
+    {
+        return new SubscriptionPlanDto
+        {
+            Id = entity.Id,
+            Name = entity.Name,
+            Description = entity.Description,
+            Tier = entity.Tier,
+            Price = entity.Price,
+            PerTruckPrice = entity.PerTruckPrice,
+            MaxTrucks = entity.MaxTrucks,
+            Interval = entity.Interval,
+            IntervalCount = entity.IntervalCount,
+            WeeklyAiRequestQuota = entity.WeeklyAiRequestQuota,
+            AllowedModelTier = entity.AllowedModelTier,
+            Features = entity.Features.Select(f => f.Feature).ToList()
+        };
+    }
+}

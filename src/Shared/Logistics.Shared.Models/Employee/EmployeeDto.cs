@@ -1,0 +1,24 @@
+using Logistics.Domain.Primitives.Enums;
+using Logistics.Domain.Primitives.ValueObjects;
+
+namespace Logistics.Shared.Models;
+
+public class EmployeeDto
+{
+    public Guid? Id { get; set; }
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    public string? Email { get; set; }
+    public string? PhoneNumber { get; set; }
+    public string? FullName { get; set; }
+    public Address? Address { get; set; }
+    public string? LastKnownLocation { get; set; }
+    public double? LastKnownLocationLat { get; set; }
+    public double? LastKnownLocationLng { get; set; }
+    public decimal Salary { get; set; }
+    public SalaryType SalaryType { get; set; }
+    public EmployeeStatus Status { get; set; }
+    public DateTime JoinedDate { get; set; }
+    public string? StripeConnectedAccountId { get; set; }
+    public RoleDto? Role { get; set; }
+}

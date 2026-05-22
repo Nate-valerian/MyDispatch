@@ -1,0 +1,128 @@
+<!-- Welcome Header -->
+<ui-stack gap="1" class="mb-8">
+  <ui-typography variant="h2" tag="h1">
+    Welcome back{{ profile()?.displayName ? ", " + profile()?.displayName : "" }}
+  </ui-typography>
+  @if (companyName()) {
+    <ui-typography variant="body" color="muted">{{ companyName() }}</ui-typography>
+  }
+</ui-stack>
+
+@if (isLoading()) {
+  <ui-grid container spacing="6">
+    @for (_ of [1, 2, 3]; track $index) {
+      <ui-grid [size]="{ xs: 12, md: 4 }">
+        <ui-surface variant="elevated">
+          <p-skeleton height="1.5rem" width="60%" styleClass="mb-2" />
+          <p-skeleton height="2.5rem" width="40%" />
+        </ui-surface>
+      </ui-grid>
+    }
+  </ui-grid>
+} @else {
+  <!-- Stats Cards -->
+  <ui-grid container spacing="6" class="mb-8">
+    <ui-grid [size]="{ xs: 12, md: 4 }">
+      <a routerLink="/shipments" class="block">
+        <ui-surface variant="elevated" class="block transition-shadow hover:shadow-md">
+          <ui-stack direction="row" align="center" justify="between">
+            <div>
+              <ui-typography variant="caption" color="muted" weight="medium">
+                Active Shipments
+              </ui-typography>
+              <ui-typography variant="stat" class="mt-1">{{ activeLoadCount() }}</ui-typography>
+            </div>
+            <div class="rounded-full bg-blue-100 p-3">
+              <ui-icon name="truck" size="lg" class="text-blue-600" />
+            </div>
+          </ui-stack>
+        </ui-surface>
+      </a>
+    </ui-grid>
+
+    <ui-grid [size]="{ xs: 12, md: 4 }">
+      <a routerLink="/invoices" class="block">
+        <ui-surface variant="elevated" class="block transition-shadow hover:shadow-md">
+          <ui-stack direction="row" align="center" justify="between">
+            <div>
+              <ui-typography variant="caption" color="muted" weight="medium">
+                Pending Invoices
+              </ui-typography>
+              <ui-typography variant="stat" class="mt-1">{{ pendingInvoiceCount() }}</ui-typography>
+            </div>
+            <div class="rounded-full bg-orange-100 p-3">
+              <ui-icon name="receipt" size="lg" class="text-orange-600" />
+            </div>
+          </ui-stack>
+        </ui-surface>
+      </a>
+    </ui-grid>
+
+    <ui-grid [size]="{ xs: 12, md: 4 }">
+      <a routerLink="/documents" class="block">
+        <ui-surface variant="elevated" class="block transition-shadow hover:shadow-md">
+          <ui-stack direction="row" align="center" justify="between">
+            <div>
+              <ui-typography variant="caption" color="muted" weight="medium">
+                Documents
+              </ui-typography>
+              <ui-typography variant="stat" class="mt-1">
+                <ui-icon name="folder-open" />
+              </ui-typography>
+            </div>
+            <div class="rounded-full bg-green-100 p-3">
+              <ui-icon name="file" size="lg" class="text-green-600" />
+            </div>
+          </ui-stack>
+        </ui-surface>
+      </a>
+    </ui-grid>
+  </ui-grid>
+
+  <!-- Recent Shipments -->
+  <ui-surface variant="elevated">
+    <ui-stack direction="row" align="center" justify="between" class="mb-4">
+      <ui-typography variant="h5" tag="h2">Recent Shipments</ui-typography>
+      <a routerLink="/shipments" class="text-primary text-sm font-medium hover:underline">
+        View All
+      </a>
+    </ui-stack>
+
+    @if (recentLoads().length > 0) {
+      <p-table [value]="recentLoads()">
+        <ng-template #header>
+          <tr>
+            <th>Load #</th>
+            <th>Name</th>
+            <th>Status</th>
+            <th>Driver</th>
+            <th></th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-load>
+          <tr>
+            <td class="font-medium">{{ load.number }}</td>
+            <td>{{ load.name || "-" }}</td>
+            <td>
+              <ui-status-badge [status]="load.status" kind="load" />
+            </td>
+            <td>{{ load.driverName || "-" }}</td>
+            <td class="text-right">
+              <a
+                [routerLink]="['/shipments', load.id]"
+                class="text-primary text-sm font-medium hover:underline"
+              >
+                Details
+              </a>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    } @else {
+      <ui-stack align="center" gap="2" class="py-8">
+        <ui-icon name="inbox" size="xl" color="muted" />
+        <ui-typography variant="body" color="muted">No active shipments</ui-typography>
+      </ui-stack>
+    }
+  </ui-surface>
+}

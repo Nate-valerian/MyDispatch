@@ -1,0 +1,168 @@
+import { Component, DestroyRef, inject, signal } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import {
+  FormControl,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from "@angular/forms";
+import { RouterLink } from "@angular/router";
+import {
+  Api,
+  createEmployee,
+  type CreateEmployeeCommand,
+  type RoleDto,
+  type SalaryType,
+  type UserDto,
+} from "@logistics/shared/api";
+import { salaryTypeOptions } from "@logistics/shared/api/enums";
+import { Container, Icon, Stack, Surface, Typography } from "@logistics/shared/components";
+import { AutoCompleteModule } from "primeng/autocomplete";
+import { ButtonModule } from "primeng/button";
+import { ConfirmDialogModule } from "primeng/confirmdialog";
+import { InputGroupModule } from "primeng/inputgroup";
+import { InputGroupAddonModule } from "primeng/inputgroupaddon";
+import { InputTextModule } from "primeng/inputtext";
+import { ProgressSpinnerModule } from "primeng/progressspinner";
+import { SelectModule } from "primeng/select";
+import { ToastModule } from "primeng/toast";
+import { ToastService } from "@/core/services";
+import {
+  CurrencyInput,
+  FormField,
+  PageHeader,
+  UnitInput,
+  ValidationSummary,
+} from "@/shared/components";
+import { UserService } from "../services";
+
+@Component({
+  selector: "app-employee-add",
+  templateUrl: "./employee-add.html",
+  imports: [
+    ToastModule,
+    ConfirmDialogModule,
+    ProgressSpinnerModule,
+    FormsModule,
+    ReactiveFormsModule,
+    AutoCompleteModule,
+    SelectModule,
+    ButtonModule,
+    RouterLink,
+    PageHeader,
+    ValidationSummary,
+    FormField,
+    InputGroupModule,
+    InputGroupAddonModule,
+    InputTextModule,
+    UnitInput,
+    CurrencyInput,
+    Icon,
+    Stack,
+    Surface,
+    Typography,
+    Container,
+  ],
+})
+export class EmployeeAdd {
+  protected readonly form: FormGroup<CreateEmployeeForm>;
+  protected readonly salaryTypes = salaryTypeOptions;
+
+  private readonly api = inject(Api);
+  private readonly toastService = inject(ToastService);
+  private readonly userService = inject(UserService);
+  private readonly destroyRef = inject(DestroyRef);
+
+  protected readonly suggestedUsers = signal<UserDto[]>([]);
+  protected readonly roles = signal<RoleDto[]>([]);
+  protected readonly isLoading = signal<boolean>(false);
+
+  constructor() {
+    this.form = new FormGroup<CreateEmployeeForm>({
+      user: new FormControl(null, { validators: Validators.required }),
+      role: new FormControl(null),
+      salary: new FormControl<number>(0, { validators: Validators.required, nonNullable: true }),
+      salaryType: new FormControl<SalaryType>("none", {
+        validators: Validators.required,
+        nonNullable: true,
+      }),
+    });
+
+    this.fetchRoles();
+  }
+
+  searchUser(event: { query: string }): void {
+    this.userService
+      .searchUser(event.query)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((users) => {
+        if (users) {
+          this.suggestedUsers.set(users);
+        }
+      });
+  }
+
+  clearSelectedRole(): void {
+    this.form.patchValue({
+      role: null,
+    });
+  }
+
+  async submit(): Promise<void> {
+    if (!this.form.valid) {
+      return;
+    }
+
+    const user = this.form.value.user as UserDto;
+
+    if (!user) {
+      this.toastService.showError("Select user");
+      return;
+    }
+
+    const newEmployee: CreateEmployeeCommand = {
+      userId: user.id ?? undefined,
+      role: this.form.value.role?.name,
+      salary: this.form.value.salary ?? 0,
+      salaryType: this.form.value.salaryType ?? "none",
+    };
+
+    this.isLoading.set(true);
+    await this.api.invoke(createEmployee, { body: newEmployee });
+    this.toastService.showSuccess("New employee has been added successfully");
+    this.form.reset();
+
+    this.isLoading.set(false);
+  }
+
+  isShareOfGrossSalary(): boolean {
+    return this.form.value.salaryType === "share_of_gross";
+  }
+
+  isNoneSalary(): boolean {
+    return this.form.value.salaryType === "none";
+  }
+
+  private fetchRoles(): void {
+    this.isLoading.set(true);
+
+    this.userService
+      .fetchRoles()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((roles) => {
+        if (roles) {
+          this.roles.set(roles);
+        }
+
+        this.isLoading.set(false);
+      });
+  }
+}
+
+interface CreateEmployeeForm {
+  user: FormControl<UserDto | null>;
+  role: FormControl<RoleDto | null>;
+  salary: FormControl<number>;
+  salaryType: FormControl<SalaryType>;
+}

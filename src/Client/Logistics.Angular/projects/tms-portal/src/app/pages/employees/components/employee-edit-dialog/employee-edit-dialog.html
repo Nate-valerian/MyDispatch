@@ -1,0 +1,111 @@
+<p-dialog
+  header="Edit Employee"
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '500px' }"
+  [closable]="true"
+  [draggable]="false"
+>
+  <form [formGroup]="form" (ngSubmit)="save()">
+    <ui-form-field label="Status" for="status">
+      <p-select
+        formControlName="status"
+        id="status"
+        class="w-full"
+        [options]="statusOptions"
+        optionLabel="label"
+        optionValue="value"
+      />
+    </ui-form-field>
+
+    <ui-form-field label="Salary Type" for="salaryType" class="mt-4">
+      <p-select
+        formControlName="salaryType"
+        id="salaryType"
+        class="w-full"
+        [options]="salaryTypes"
+        optionLabel="label"
+        optionValue="value"
+      />
+    </ui-form-field>
+
+    <ui-form-field label="Salary" for="salary" class="mt-4">
+      @if (isShareOfGrossSalary()) {
+        <ui-unit-input [control]="form.controls.salary" unit="%" [min]="0" [max]="100" />
+      } @else if (isNoneSalary()) {
+        <input pInputText id="salary" type="text" class="w-full" [disabled]="true" value="N/A" />
+      } @else {
+        <ui-currency-input [control]="form.controls.salary" [min]="0" />
+      }
+    </ui-form-field>
+
+    <ui-form-field label="Role" for="role" class="mt-4">
+      <p-inputgroup>
+        <input
+          pInputText
+          id="role"
+          type="text"
+          class="w-full"
+          [disabled]="true"
+          [value]="employee()?.role?.displayName || 'No role assigned'"
+        />
+        <p-button
+          type="button"
+          label="Change"
+          [disabled]="!canChangeRole()"
+          (click)="openChangeRoleDialog()"
+        />
+      </p-inputgroup>
+    </ui-form-field>
+
+    <ui-form-field
+      label="Address"
+      class="mt-4"
+      hint="Optional. Used for Stripe Connect payout onboarding when the employee's country differs from the company's."
+    >
+      <ui-address-form formControlName="address" [allowedCountries]="allowedCountries()" />
+    </ui-form-field>
+
+    <ui-validation-summary [form]="form" class="mt-4" />
+
+    <ui-stack direction="row" justify="end" gap="2" class="mt-6">
+      <p-button type="button" label="Cancel" [outlined]="true" (click)="close()" />
+      <p-button
+        type="submit"
+        label="Save Changes"
+        icon="pi pi-check"
+        [loading]="isLoading()"
+        [disabled]="!form.valid"
+      />
+    </ui-stack>
+  </form>
+
+  <p-accordion class="mt-6">
+    <p-accordion-panel value="danger">
+      <ng-template #header>
+        <span class="text-danger">Danger Zone</span>
+      </ng-template>
+      <ng-template #content>
+        <p class="text-muted mb-4">
+          Removing an employee will revoke their access to this tenant. This action cannot be
+          undone.
+        </p>
+        <p-button
+          label="Remove Employee"
+          icon="pi pi-trash"
+          severity="danger"
+          (click)="deleted.emit()"
+        />
+      </ng-template>
+    </p-accordion-panel>
+  </p-accordion>
+</p-dialog>
+
+@if (employee()) {
+  <app-change-role-dialog
+    [(visible)]="changeRoleDialogVisible"
+    [userId]="employee()!.id!"
+    [currentRole]="employee()!.role ?? null"
+    (roleChanged)="onRoleChanged()"
+  />
+}

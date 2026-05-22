@@ -1,0 +1,356 @@
+<ui-page-header title="Load Details">
+  <p-button
+    icon="pi pi-link"
+    label="Tracking Link"
+    [outlined]="true"
+    (click)="showTrackingDialog.set(true)"
+  />
+  <p-button icon="pi pi-pencil" label="Edit" [outlined]="true" (click)="onEdit()" />
+  <p-button icon="pi pi-arrow-left" label="Back" [routerLink]="['/loads']" [outlined]="true" />
+</ui-page-header>
+
+@if (isLoading()) {
+  <ui-stack align="center" justify="center" class="py-16">
+    <p-progress-spinner />
+  </ui-stack>
+} @else if (load()) {
+  <!-- Enhanced Header with Load Number -->
+  <ui-surface variant="elevated" [border]="true" class="mb-6">
+    <ui-stack direction="row" align="center" justify="between" class="mb-4">
+      <ui-stack direction="row" align="center" gap="4">
+        <ui-typography variant="h2" tag="span" color="primary" weight="bold">
+          #{{ load()!.number }}
+        </ui-typography>
+        <app-load-status-tag [status]="load()!.status!" />
+        <app-load-type-tag [type]="load()!.type!" />
+      </ui-stack>
+      @if (load()!.name) {
+        <ui-typography variant="h6" class="text-secondary">{{ load()!.name }}</ui-typography>
+      }
+    </ui-stack>
+
+    <!-- Status Stepper -->
+    <app-load-status-stepper
+      [currentStatus]="load()!.status!"
+      [createdAt]="load()!.createdAt"
+      [dispatchedAt]="load()!.dispatchedAt"
+      [pickedUpAt]="load()!.pickedUpAt"
+      [deliveredAt]="load()!.deliveredAt"
+      [cancelledAt]="load()!.cancelledAt"
+    />
+  </ui-surface>
+
+  <p-card>
+    <p-tabs [value]="activeTab()" (valueChange)="onTabChange($event)">
+      <p-tablist>
+        <p-tab [value]="0">
+          <ui-icon name="info-circle" class="mr-2" />
+          Details
+        </p-tab>
+        <p-tab [value]="1">
+          <ui-icon name="folder" class="mr-2" />
+          Documents
+        </p-tab>
+        <p-tab [value]="2">
+          <ui-icon name="file-check" class="mr-2" />
+          POD / BOL
+        </p-tab>
+        <p-tab [value]="3">
+          <ui-icon name="exclamation-triangle" class="mr-2" />
+          Exceptions
+        </p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <!-- Details Tab -->
+        <p-tabpanel [value]="0">
+          <ui-grid container spacing="6" class="pt-4">
+            <!-- Load Info Card -->
+            <ui-grid [size]="{ xs: 12, lg: 6 }">
+              <p-card class="border-default border">
+                <ng-template #header>
+                  <div class="p-4 pb-0">
+                    <ui-typography variant="h5" tag="h3" weight="semibold">
+                      Load Information
+                    </ui-typography>
+                  </div>
+                </ng-template>
+
+                <ui-stack gap="4">
+                  <ui-stack direction="row" align="center" justify="between">
+                    <span>Load #</span>
+                    <span class="font-mono font-semibold">{{ load()!.number }}</span>
+                  </ui-stack>
+
+                  @if (load()!.name) {
+                    <ui-stack direction="row" align="center" justify="between">
+                      <span>Name</span>
+                      <span class="font-medium">{{ load()!.name }}</span>
+                    </ui-stack>
+                  }
+
+                  <p-divider />
+
+                  <ui-stack direction="row" align="center" justify="between">
+                    <span>Type</span>
+                    <app-load-type-tag [type]="load()!.type!" />
+                  </ui-stack>
+
+                  <ui-stack direction="row" align="center" justify="between">
+                    <span>Status</span>
+                    <app-load-status-tag [status]="load()!.status!" />
+                  </ui-stack>
+
+                  <p-divider />
+
+                  <ui-stack direction="row" align="center" justify="between">
+                    <span>Delivery Cost</span>
+                    <ui-typography variant="h6" weight="bold" class="text-success">
+                      {{ load()!.deliveryCost | currencyFormat }}
+                    </ui-typography>
+                  </ui-stack>
+
+                  @if (load()!.distance) {
+                    <ui-stack direction="row" align="center" justify="between">
+                      <span>Distance</span>
+                      <span>{{ load()!.distance | distanceUnit }}</span>
+                    </ui-stack>
+                  }
+
+                  <p-divider />
+
+                  @if (load()!.invoice) {
+                    <ui-stack direction="row" align="center" justify="between">
+                      <span>Invoice</span>
+                      <a
+                        [routerLink]="['/invoices/loads', id(), load()!.invoice!.id]"
+                        class="text-primary flex items-center gap-1 font-medium hover:underline"
+                      >
+                        <ui-icon name="external-link" size="sm" />
+                        #{{ load()!.invoice!.number }}
+                      </a>
+                    </ui-stack>
+                  }
+                </ui-stack>
+              </p-card>
+            </ui-grid>
+
+            <!-- Assignment Card -->
+            <ui-grid [size]="{ xs: 12, lg: 6 }">
+              <p-card class="border-default border">
+                <ng-template #header>
+                  <div class="p-4 pb-0">
+                    <ui-typography variant="h5" tag="h3" weight="semibold">
+                      Assignment
+                    </ui-typography>
+                  </div>
+                </ng-template>
+
+                <ui-stack gap="4">
+                  @if (load()!.customer) {
+                    <ui-stack direction="row" align="center" justify="between">
+                      <span>Customer</span>
+                      <a
+                        [routerLink]="['/customers', load()!.customer!.id]"
+                        class="text-primary font-medium hover:underline"
+                      >
+                        {{ load()!.customer!.name }}
+                      </a>
+                    </ui-stack>
+                  }
+
+                  <p-divider />
+
+                  @if (load()!.assignedTruckNumber) {
+                    <ui-stack direction="row" align="center" justify="between">
+                      <span>Truck</span>
+                      <a
+                        [routerLink]="['/trucks', load()!.assignedTruckId]"
+                        class="text-primary font-medium hover:underline"
+                      >
+                        {{ load()!.assignedTruckNumber }}
+                      </a>
+                    </ui-stack>
+                  }
+
+                  @if (load()!.assignedTruckDriversName?.length) {
+                    <ui-stack direction="row" align="center" justify="between">
+                      <span>Driver(s)</span>
+                      <span>{{ load()!.assignedTruckDriversName!.join(", ") }}</span>
+                    </ui-stack>
+                  }
+
+                  @if (load()!.assignedDispatcherName) {
+                    <ui-stack direction="row" align="center" justify="between">
+                      <span>Dispatcher</span>
+                      <span>{{ load()!.assignedDispatcherName }}</span>
+                    </ui-stack>
+                  }
+
+                  @if (load()!.tripId) {
+                    <p-divider />
+                    <ui-stack direction="row" align="center" justify="between">
+                      <span>Trip</span>
+                      <a
+                        [routerLink]="['/trips', load()!.tripId]"
+                        class="text-primary font-medium hover:underline"
+                      >
+                        {{ load()!.tripName }}
+                      </a>
+                    </ui-stack>
+                  }
+                </ui-stack>
+              </p-card>
+            </ui-grid>
+          </ui-grid>
+
+          <!-- Route Card (full width) -->
+          <p-card class="border-default mt-6 border">
+            <ng-template #header>
+              <div class="p-4 pb-0">
+                <ui-typography variant="h5" tag="h3" weight="semibold">
+                  Route Information
+                </ui-typography>
+              </div>
+            </ng-template>
+
+            <ui-grid container spacing="6">
+              <ui-grid [size]="{ xs: 12, md: 6 }">
+                <ui-stack direction="row" align="center" gap="2" class="mb-2">
+                  <ui-icon name="map-marker" class="text-blue-500" />
+                  <ui-typography variant="body" weight="medium" class="text-info">
+                    Origin
+                  </ui-typography>
+                </ui-stack>
+                <p class="text-secondary">{{ load()!.originAddress | address }}</p>
+              </ui-grid>
+              <ui-grid [size]="{ xs: 12, md: 6 }">
+                <ui-stack direction="row" align="center" gap="2" class="mb-2">
+                  <ui-icon name="flag" class="text-green-500" />
+                  <ui-typography variant="body" weight="medium" class="text-success">
+                    Destination
+                  </ui-typography>
+                </ui-stack>
+                <p class="text-secondary">{{ load()!.destinationAddress | address }}</p>
+              </ui-grid>
+            </ui-grid>
+
+            @if (load()!.currentAddress) {
+              <p-divider />
+              <div>
+                <ui-stack direction="row" align="center" gap="2" class="mb-2">
+                  <ui-icon name="truck" class="text-orange-500" />
+                  <ui-typography variant="body" weight="medium" class="text-warning">
+                    Current Location
+                  </ui-typography>
+                </ui-stack>
+                <p class="text-secondary">{{ load()!.currentAddress | address }}</p>
+              </div>
+            }
+          </p-card>
+
+          <!-- Timeline Card -->
+          <p-card class="border-default mt-6 border">
+            <ng-template #header>
+              <div class="p-4 pb-0">
+                <ui-typography variant="h5" tag="h3" weight="semibold">Timeline</ui-typography>
+              </div>
+            </ng-template>
+
+            <ui-grid container spacing="4">
+              <ui-grid [size]="{ xs: 6, md: 3 }">
+                <ui-typography variant="caption" color="muted">Created</ui-typography>
+                <ui-typography variant="body" weight="medium">
+                  {{ load()!.createdAt | dateFormat: "medium" }}
+                </ui-typography>
+              </ui-grid>
+              @if (load()!.dispatchedAt) {
+                <ui-grid [size]="{ xs: 6, md: 3 }">
+                  <ui-typography variant="caption" color="muted">Dispatched</ui-typography>
+                  <ui-typography variant="body" weight="medium">
+                    {{ load()!.dispatchedAt | dateFormat: "medium" }}
+                  </ui-typography>
+                </ui-grid>
+              }
+              @if (load()!.pickedUpAt) {
+                <ui-grid [size]="{ xs: 6, md: 3 }">
+                  <ui-typography variant="caption" color="muted">Picked Up</ui-typography>
+                  <ui-typography variant="body" weight="medium">
+                    {{ load()!.pickedUpAt | dateFormat: "medium" }}
+                  </ui-typography>
+                </ui-grid>
+              }
+              @if (load()!.deliveredAt) {
+                <ui-grid [size]="{ xs: 6, md: 3 }">
+                  <ui-typography variant="caption" color="muted">Delivered</ui-typography>
+                  <ui-typography variant="body" weight="medium" class="text-success">
+                    {{ load()!.deliveredAt | dateFormat: "medium" }}
+                  </ui-typography>
+                </ui-grid>
+              }
+              @if (load()!.cancelledAt) {
+                <ui-grid [size]="{ xs: 6, md: 3 }">
+                  <ui-typography variant="caption" color="muted">Cancelled</ui-typography>
+                  <ui-typography variant="body" weight="medium" class="text-danger">
+                    {{ load()!.cancelledAt | dateFormat: "medium" }}
+                  </ui-typography>
+                </ui-grid>
+              }
+            </ui-grid>
+          </p-card>
+        </p-tabpanel>
+
+        <!-- Documents Tab -->
+        <p-tabpanel [value]="1">
+          <div class="pt-4">
+            <app-document-manager [loadId]="id()" [types]="loadDocTypes" />
+          </div>
+        </p-tabpanel>
+
+        <!-- POD/BOL Tab -->
+        <p-tabpanel [value]="2">
+          <div class="pt-4">
+            <app-load-pod-content [loadId]="id()" />
+          </div>
+        </p-tabpanel>
+
+        <!-- Exceptions Tab -->
+        <p-tabpanel [value]="3">
+          <div class="pt-4">
+            <app-load-exceptions-content
+              [loadId]="id()"
+              (reportException)="onReportException()"
+              (resolveException)="onResolveException($event)"
+            />
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </p-card>
+
+  <!-- Tracking Link Dialog -->
+  <app-tracking-link-dialog [loadId]="id()" [(visible)]="showTrackingDialog" />
+
+  <!-- Report Exception Dialog -->
+  <app-report-exception-dialog
+    [loadId]="id()"
+    [(visible)]="showReportExceptionDialog"
+    (reported)="onExceptionReported()"
+  />
+
+  <!-- Resolve Exception Dialog -->
+  <app-resolve-exception-dialog
+    [loadId]="id()"
+    [exception]="selectedExceptionToResolve()"
+    [(visible)]="showResolveExceptionDialog"
+    (resolved)="onExceptionResolved()"
+  />
+} @else {
+  <p-card>
+    <ui-stack align="center" gap="4" class="py-16">
+      <ui-icon name="exclamation-circle" size="xl" color="muted" />
+      <ui-typography variant="body" color="muted">Load not found</ui-typography>
+      <p-button label="Back to Loads" [routerLink]="['/loads']" />
+    </ui-stack>
+  </p-card>
+}

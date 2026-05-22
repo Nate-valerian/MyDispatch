@@ -1,0 +1,92 @@
+<ui-page-header title="Expense Analytics" backLink="/expenses">
+  <p-datepicker
+    [ngModel]="store.fromDate()"
+    (ngModelChange)="store.setFromDate($event)"
+    placeholder="From Date"
+    [showIcon]="true"
+    (onSelect)="onDateChange()"
+  />
+  <ui-typography variant="body-sm" color="muted">to</ui-typography>
+  <p-datepicker
+    [ngModel]="store.toDate()"
+    (ngModelChange)="store.setToDate($event)"
+    placeholder="To Date"
+    [showIcon]="true"
+    (onSelect)="onDateChange()"
+  />
+  <p-button
+    icon="pi pi-download"
+    label="Export CSV"
+    [outlined]="true"
+    (click)="store.exportCsv()"
+    [disabled]="!store.stats()"
+  />
+</ui-page-header>
+
+@if (store.isLoading()) {
+  <div class="flex justify-center py-16">
+    <p-progress-spinner />
+  </div>
+} @else if (store.stats(); as stats) {
+  <div class="mb-6">
+    <app-expense-analytics-summary [stats]="stats" />
+  </div>
+
+  <div class="mb-6">
+    <app-expense-analytics-charts
+      [typeData]="store.typeChartData()"
+      [companyCategoryData]="store.companyCategoryChartData()"
+      [truckCategoryData]="store.truckCategoryChartData()"
+      [monthlyTrendData]="store.monthlyTrendChartData()"
+    />
+  </div>
+
+  @if ((stats.topTrucks ?? []).length > 0) {
+    <p-card>
+      <ng-template #header>
+        <div class="p-4 pb-0">
+          <ui-typography variant="h4">Top Trucks by Expense</ui-typography>
+        </div>
+      </ng-template>
+      <p-table [value]="stats.topTrucks ?? []" [scrollable]="true">
+        <ng-template #header>
+          <tr>
+            <th>Rank</th>
+            <th>Truck</th>
+            <th class="text-right">Total Amount</th>
+            <th class="text-right">Expense Count</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-truck let-i="rowIndex">
+          <tr>
+            <td>
+              <span
+                class="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold"
+                [class]="rankBadgeClass(i)"
+              >
+                {{ i + 1 }}
+              </span>
+            </td>
+            <td>
+              <a
+                [routerLink]="['/trucks', truck.truckId, 'edit']"
+                class="text-primary font-medium hover:underline"
+              >
+                {{ truck.truckNumber }}
+              </a>
+            </td>
+            <td class="text-right font-medium">{{ truck.totalAmount | currencyFormat }}</td>
+            <td class="text-right">{{ truck.expenseCount }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </p-card>
+  }
+} @else {
+  <p-card>
+    <div class="py-16 text-center">
+      <i class="pi pi-chart-bar text-muted mb-4 text-4xl"></i>
+      <ui-typography color="muted">No expense data available for the selected period</ui-typography>
+    </div>
+  </p-card>
+}

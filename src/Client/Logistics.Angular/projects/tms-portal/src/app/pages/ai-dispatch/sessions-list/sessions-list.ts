@@ -1,0 +1,237 @@
+import { DatePipe } from "@angular/common";
+import { Component, computed, inject, signal, type OnDestroy, type OnInit } from "@angular/core";
+import { Router } from "@angular/router";
+import { PageHeader } from "@logistics/shared";
+import {
+  Api,
+  approveAiDispatchDecision,
+  getAiDispatchSessions,
+  getAiQuotaStatus,
+  getPendingDecisions,
+  getTrucks,
+  rejectAiDispatchDecision,
+  runAiDispatch,
+  type AiDispatchDecisionDto,
+  type AiDispatchMode,
+  type AiDispatchSessionDto,
+  type AiQuotaStatusDto,
+  type TruckDto,
+} from "@logistics/shared/api";
+import type { TruckGeolocationDto } from "@logistics/shared/api/models";
+import { Icon, Stack, Surface, Typography } from "@logistics/shared/components";
+import { ButtonModule } from "primeng/button";
+import { ConfirmDialogModule } from "primeng/confirmdialog";
+import { TableModule, type TableLazyLoadEvent } from "primeng/table";
+import { TagModule } from "primeng/tag";
+import { TooltipModule } from "primeng/tooltip";
+import {
+  AiDispatchHubService,
+  DispatchBadgeService,
+  TenantService,
+  ToastService,
+} from "@/core/services";
+import { AiQuotaUsage, GeolocationMap } from "@/shared/components";
+import { Labels } from "@/shared/utils";
+import { DecisionCard } from "../components/decision-card/decision-card";
+import { ModeBadge } from "../components/mode-badge/mode-badge";
+import {
+  RunAgentDialog,
+  type RunAgentDialogData,
+} from "../components/run-agent-dialog/run-agent-dialog";
+import { buildDecisionDetail } from "../utils/decision-utils";
+import { stripMarkdown } from "../utils/markdown";
+
+@Component({
+  selector: "app-sessions-list",
+  templateUrl: "./sessions-list.html",
+  imports: [
+    ButtonModule,
+    TableModule,
+    TagModule,
+    TooltipModule,
+    ConfirmDialogModule,
+    DatePipe,
+    PageHeader,
+    AiQuotaUsage,
+    GeolocationMap,
+    DecisionCard,
+    ModeBadge,
+    RunAgentDialog,
+    Icon,
+    Stack,
+    Surface,
+    Typography,
+  ],
+})
+export class SessionsListPage implements OnInit, OnDestroy {
+  private readonly api = inject(Api);
+  private readonly router = inject(Router);
+  private readonly toastService = inject(ToastService);
+  private readonly aiDispatchHub = inject(AiDispatchHubService);
+  private readonly tenantService = inject(TenantService);
+  private readonly dispatchBadgeService = inject(DispatchBadgeService);
+
+  protected readonly Labels = Labels;
+  protected readonly Math = Math;
+  protected readonly stripMarkdown = stripMarkdown;
+
+  protected readonly sessions = signal<AiDispatchSessionDto[]>([]);
+  protected readonly totalRecords = signal(0);
+  protected readonly page = signal(1);
+  protected readonly pageSize = signal(10);
+  protected readonly first = signal(0);
+  protected readonly pendingDecisions = signal<AiDispatchDecisionDto[]>([]);
+  protected readonly quotaStatus = signal<AiQuotaStatusDto | null>(null);
+  protected readonly trucks = signal<TruckDto[]>([]);
+  protected readonly isLoading = signal(false);
+  protected readonly isRunning = signal(false);
+  protected readonly showRunDialog = signal(false);
+  protected readonly runMode = signal<AiDispatchMode>("human_in_the_loop");
+
+  /** Only write-tool decisions (assign, create trip, dispatch) that need approval */
+  protected readonly writeDecisions = computed(() =>
+    this.pendingDecisions().filter((d) => d.type !== "query"),
+  );
+
+  /** Disable run buttons when a session is already running */
+  protected readonly hasRunningSession = computed(() =>
+    this.sessions().some((s) => s.status === "running"),
+  );
+
+  protected readonly truckLocations = computed<TruckGeolocationDto[]>(() => {
+    return this.trucks()
+      .filter((t) => t.currentLocation?.latitude && t.currentLocation?.longitude)
+      .map((t) => ({
+        truckId: t.id,
+        truckNumber: t.number,
+        driversName: [t.mainDriver?.fullName, t.secondaryDriver?.fullName]
+          .filter(Boolean)
+          .join(", "),
+        currentLocation: t.currentLocation,
+        currentAddress: t.currentAddress,
+      }));
+  });
+
+  ngOnInit(): void {
+    this.setupSignalR();
+  }
+
+  ngOnDestroy(): void {
+    const tenant = this.tenantService.getTenantData();
+    if (tenant?.id) {
+      this.aiDispatchHub.unsubscribeFromDispatchBoard(tenant.id);
+    }
+  }
+
+  private async setupSignalR(): Promise<void> {
+    const tenant = this.tenantService.getTenantData();
+    if (!tenant?.id) return;
+
+    this.aiDispatchHub.onReceiveAiDispatchUpdate = () => {
+      this.loadData();
+    };
+
+    this.aiDispatchHub.onReceiveAiDispatchDecision = (decision) => {
+      if (decision.status === "suggested") {
+        this.pendingDecisions.update((list) => [...list, decision]);
+      }
+    };
+
+    await this.aiDispatchHub.connect();
+    await this.aiDispatchHub.subscribeToDispatchBoard(tenant.id);
+  }
+
+  protected async loadData(): Promise<void> {
+    this.isLoading.set(true);
+    try {
+      const [sessionsRes, pending, quota, trucksRes] = await Promise.all([
+        this.api.invoke(getAiDispatchSessions, {
+          Page: this.page(),
+          PageSize: this.pageSize(),
+          OrderBy: "-StartedAt",
+        }),
+        this.api.invoke(getPendingDecisions),
+        this.api.invoke(getAiQuotaStatus),
+        this.api.invoke(getTrucks, { Status: "Available", PageSize: 100 }),
+      ]);
+
+      this.sessions.set(sessionsRes.items ?? []);
+      this.totalRecords.set(sessionsRes.pagination?.total ?? 0);
+      this.pendingDecisions.set(pending ?? []);
+      this.quotaStatus.set(quota);
+      this.trucks.set(trucksRes.items ?? []);
+      this.dispatchBadgeService.pendingCount.set(this.writeDecisions().length);
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  protected onPageChange(event: TableLazyLoadEvent): void {
+    const first = event.first ?? 0;
+    const rows = event.rows ?? this.pageSize();
+    this.page.set(Math.floor(first / rows) + 1);
+    this.pageSize.set(rows);
+    this.first.set(first);
+    this.loadData();
+  }
+
+  protected openRunDialog(mode: AiDispatchMode): void {
+    this.runMode.set(mode);
+    this.showRunDialog.set(true);
+  }
+
+  protected async onRunConfirmed(event: RunAgentDialogData): Promise<void> {
+    this.isRunning.set(true);
+    try {
+      await this.api.invoke(runAiDispatch, {
+        body: { mode: event.mode, instructions: event.instructions },
+      });
+      this.toastService.showSuccess("Agent session started - updates will appear in real-time");
+      await this.loadData();
+    } catch {
+      this.toastService.showError("Failed to start agent session");
+    } finally {
+      this.isRunning.set(false);
+    }
+  }
+
+  protected approveDecision(decision: AiDispatchDecisionDto): void {
+    this.toastService.confirm({
+      message: `Are you sure you want to approve and execute this decision?\n\n${buildDecisionDetail(decision)}`,
+      header: "Approve Decision",
+      icon: "pi pi-check-circle",
+      acceptButtonStyleClass: "p-button-success",
+      accept: async () => {
+        try {
+          await this.api.invoke(approveAiDispatchDecision, { decisionId: decision.id! });
+          this.toastService.showSuccess("Decision approved and executed");
+          await this.loadData();
+        } catch {
+          this.toastService.showError("Failed to approve decision");
+        }
+      },
+    });
+  }
+
+  protected rejectDecision(decision: AiDispatchDecisionDto): void {
+    this.toastService.confirm({
+      message: `Are you sure you want to reject this decision?\n\n${buildDecisionDetail(decision)}`,
+      header: "Reject Decision",
+      icon: "pi pi-exclamation-triangle",
+      acceptButtonStyleClass: "p-button-danger",
+      accept: async () => {
+        try {
+          await this.api.invoke(rejectAiDispatchDecision, { decisionId: decision.id!, body: {} });
+          this.toastService.showSuccess("Decision rejected");
+          await this.loadData();
+        } catch {
+          this.toastService.showError("Failed to reject decision");
+        }
+      },
+    });
+  }
+
+  protected viewSession(session: AiDispatchSessionDto): void {
+    this.router.navigate(["/ai-dispatch", session.id]);
+  }
+}

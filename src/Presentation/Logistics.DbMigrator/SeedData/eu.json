@@ -1,0 +1,134 @@
+{
+  "Eu": {
+    "CustomerPortalUsers": [
+      {
+        "Email": "eu_customer1@test.com",
+        "FirstName": "Sven",
+        "LastName": "Holm",
+        "Password": "Test12345#",
+        "CustomerNames": ["Maersk"]
+      },
+      {
+        "Email": "eu_customer2@test.com",
+        "FirstName": "Camille",
+        "LastName": "Bernard",
+        "Password": "Test12345#",
+        "CustomerNames": ["CMA CGM", "Hapag-Lloyd"]
+      }
+    ],
+    "Customers": [
+      {
+        "Name": "Maersk",
+        "Address": {
+          "Line1": "Esplanaden 50",
+          "City": "Copenhagen",
+          "State": "Capital Region",
+          "ZipCode": "1263",
+          "Country": "DK"
+        }
+      },
+      {
+        "Name": "CMA CGM",
+        "Address": {
+          "Line1": "4 Quai d'Arenc",
+          "City": "Marseille",
+          "State": "Provence-Alpes-Cote d'Azur",
+          "ZipCode": "13002",
+          "Country": "FR"
+        }
+      },
+      {
+        "Name": "Hapag-Lloyd",
+        "Address": {
+          "Line1": "Ballindamm 25",
+          "City": "Hamburg",
+          "State": "Hamburg",
+          "ZipCode": "20095",
+          "Country": "DE"
+        }
+      },
+      {
+        "Name": "MSC",
+        "Address": {
+          "Line1": "Via Balleydier 7",
+          "City": "Genova",
+          "State": "Liguria",
+          "ZipCode": "16149",
+          "Country": "IT"
+        }
+      },
+      {
+        "Name": "DHL Freight",
+        "Address": {
+          "Line1": "Charles-de-Gaulle-Strasse 20",
+          "City": "Bonn",
+          "State": "North Rhine-Westphalia",
+          "ZipCode": "53113",
+          "Country": "DE"
+        }
+      }
+    ],
+    "Users": [
+      {
+        "Email": "eu_owner@test.com",
+        "FirstName": "Lukas",
+        "LastName": "Müller",
+        "Password": "Test12345#"
+      },
+      {
+        "Email": "eu_manager@test.com",
+        "FirstName": "Sophie",
+        "LastName": "Dubois",
+        "Password": "Test12345#"
+      },
+      {
+        "Email": "eu_dispatcher1@test.com",
+        "FirstName": "Marco",
+        "LastName": "Rossi",
+        "Password": "Test12345#"
+      },
+      {
+        "Email": "eu_dispatcher2@test.com",
+        "FirstName": "Anna",
+        "LastName": "Kowalski",
+        "Password": "Test12345#"
+      },
+      {
+        "Email": "eu_dispatcher3@test.com",
+        "FirstName": "Pieter",
+        "LastName": "de Vries",
+        "Password": "Test12345#"
+      },
+      {
+        "Email": "eu_driver1@test.com",
+        "FirstName": "Erik",
+        "LastName": "Andersen",
+        "Password": "Test12345#"
+      },
+      {
+        "Email": "eu_driver2@test.com",
+        "FirstName": "Mateo",
+        "LastName": "García",
+        "Password": "Test12345#"
+      },
+      {
+        "Email": "eu_driver3@test.com",
+        "FirstName": "Jürgen",
+        "LastName": "Schmidt",
+        "Password": "Test12345#"
+      },
+      {
+        "Email": "eu_driver4@test.com",
+        "FirstName": "Henri",
+        "LastName": "Laurent",
+        "Password": "Test12345#"
+      },
+      {
+        "Email": "eu_driver5@test.com",
+        "FirstName": "Klara",
+        "LastName": "Novák",
+        "Password": "Test12345#"
+      }
+    ]
+  }
+}

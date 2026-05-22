@@ -1,0 +1,194 @@
+@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600;700&display=swap");
+@import "primeicons/primeicons.css";
+@import "tailwindcss";
+
+/* Disable dark mode - this project only supports light theme */
+@custom-variant dark (&:where(.dark-theme-disabled));
+
+/* Design System: Route Atlas Editorial */
+:root {
+  /* Primary - Rich Black */
+  --color-ink: #141414;
+  --color-ink-light: #2d2d2d;
+
+  /* Background - Warm Paper */
+  --color-paper: #faf7f2;
+  --color-paper-dark: #f0ebe3;
+
+  /* Accent - Rust/Vermillion */
+  --color-accent: #e85d04;
+  --color-accent-dark: #c44d00;
+
+  /* Supporting */
+  --color-steel: #6b7280;
+
+  /* Typography */
+  --font-display: "Bricolage Grotesque", system-ui, sans-serif;
+  --font-body: "Instrument Sans", system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: var(--color-ink);
+  background-color: var(--color-paper);
+}
+
+/* Typography */
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--color-ink);
+  }
+
+  h1 {
+    font-size: clamp(2.75rem, 6vw, 4.5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+  }
+
+  h2 {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 0;
+    line-height: 1.7;
+    color: var(--color-steel);
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-ink);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-accent);
+  border-radius: 5px;
+  border: 2px solid var(--color-ink);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent-dark);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--color-ink);
+}
+
+/* Firefox scrollbar */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-accent) var(--color-ink);
+}
+
+/* Utility classes for the design system */
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .font-body {
+    font-family: var(--font-body);
+  }
+
+  .text-ink {
+    color: var(--color-ink);
+  }
+
+  .text-paper {
+    color: var(--color-paper);
+  }
+
+  .text-accent {
+    color: var(--color-accent);
+  }
+
+  .text-steel {
+    color: var(--color-steel);
+  }
+
+  .bg-ink {
+    background-color: var(--color-ink);
+  }
+
+  .bg-ink-light {
+    background-color: var(--color-ink-light);
+  }
+
+  .bg-paper {
+    background-color: var(--color-paper);
+  }
+
+  .bg-paper-dark {
+    background-color: var(--color-paper-dark);
+  }
+
+  .bg-accent {
+    background-color: var(--color-accent);
+  }
+
+  .bg-accent-dark {
+    background-color: var(--color-accent-dark);
+  }
+
+  .border-accent {
+    border-color: var(--color-accent);
+  }
+
+  .border-ink {
+    border-color: var(--color-ink);
+  }
+
+  /* Shared design-system tokens used by @logistics/shared components
+     (Surface, Typography, etc.). Map them to the website palette so
+     shared primitives render correctly on this project too. */
+  .bg-elevated {
+    background-color: #ffffff;
+  }
+
+  .bg-subtle {
+    background-color: var(--color-paper-dark);
+  }
+
+  .border-default {
+    border-color: rgba(20, 20, 20, 0.12);
+  }
+
+  .text-muted {
+    color: var(--color-steel);
+  }
+}

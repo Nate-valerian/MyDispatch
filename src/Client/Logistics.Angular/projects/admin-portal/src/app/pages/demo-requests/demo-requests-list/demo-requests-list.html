@@ -1,0 +1,161 @@
+<ui-page-header title="Demo Requests" />
+
+<p-card>
+  <ui-data-container
+    [loading]="store.isLoading()"
+    [error]="store.error()"
+    [isEmpty]="store.isEmpty()"
+    skeletonVariant="table"
+    [skeletonRows]="10"
+    emptyTitle="No demo requests yet"
+    emptyMessage="Demo requests from the website will appear here."
+    (retry)="store.retry()"
+  >
+    <p-table
+      [value]="store.data()"
+      [lazy]="true"
+      [paginator]="true"
+      [showCurrentPageReport]="true"
+      (onLazyLoad)="store.onLazyLoad($event)"
+      [rows]="store.pageSize()"
+      [first]="store.first()"
+      [totalRecords]="store.totalRecords()"
+      [loading]="store.isLoading()"
+      [rowsPerPageOptions]="[10, 25, 50]"
+    >
+      <ng-template #caption>
+        <ui-search-input (searchChange)="search($event)" />
+      </ng-template>
+      <ng-template #header>
+        <tr>
+          <th pSortableColumn="FirstName">
+            Name
+            <p-sortIcon field="FirstName" />
+          </th>
+          <th pSortableColumn="Email">
+            Email
+            <p-sortIcon field="Email" />
+          </th>
+          <th pSortableColumn="Company">
+            Company
+            <p-sortIcon field="Company" />
+          </th>
+          <th>Fleet Size</th>
+          <th pSortableColumn="Status">
+            Status
+            <p-sortIcon field="Status" />
+          </th>
+          <th pSortableColumn="CreatedAt">
+            Submitted
+            <p-sortIcon field="CreatedAt" />
+          </th>
+          <th class="text-center">Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-request>
+        <tr>
+          <td>{{ request.firstName }} {{ request.lastName }}</td>
+          <td>{{ request.email }}</td>
+          <td>{{ request.company }}</td>
+          <td>{{ request.fleetSize ?? "-" }}</td>
+          <td>
+            <p-tag
+              [value]="getStatusLabel(request.status)"
+              [severity]="getStatusSeverity(request.status)"
+            />
+          </td>
+          <td>{{ formatDate(request.createdAt) }}</td>
+          <td class="text-center">
+            <p-button icon="pi pi-eye" pTooltip="View Details" (click)="viewRequest(request)" />
+            <p-button
+              styleClass="ml-2 p-button-danger"
+              icon="pi pi-trash"
+              pTooltip="Delete"
+              (click)="confirmToDelete(request.id)"
+            />
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </ui-data-container>
+</p-card>
+
+<p-dialog
+  header="Demo Request Details"
+  [(visible)]="viewDialogVisible"
+  [modal]="true"
+  [style]="{ width: '600px' }"
+>
+  @if (selectedRequest(); as request) {
+    <ui-stack gap="4">
+      <ui-grid container spacing="4">
+        <ui-grid [size]="6">
+          <ui-typography variant="caption" color="muted" class="mb-1 block">Name</ui-typography>
+          <ui-typography variant="body">{{ request.firstName }} {{ request.lastName }}</ui-typography>
+        </ui-grid>
+        <ui-grid [size]="6">
+          <ui-typography variant="caption" color="muted" class="mb-1 block">Email</ui-typography>
+          <ui-typography variant="body">{{ request.email }}</ui-typography>
+        </ui-grid>
+        <ui-grid [size]="6">
+          <ui-typography variant="caption" color="muted" class="mb-1 block">Company</ui-typography>
+          <ui-typography variant="body">{{ request.company }}</ui-typography>
+        </ui-grid>
+        <ui-grid [size]="6">
+          <ui-typography variant="caption" color="muted" class="mb-1 block">Phone</ui-typography>
+          <ui-typography variant="body">{{ request.phone ?? "-" }}</ui-typography>
+        </ui-grid>
+        <ui-grid [size]="6">
+          <ui-typography variant="caption" color="muted" class="mb-1 block">Fleet Size</ui-typography>
+          <ui-typography variant="body">{{ request.fleetSize ?? "-" }}</ui-typography>
+        </ui-grid>
+        <ui-grid [size]="6">
+          <ui-typography variant="caption" color="muted" class="mb-1 block">Submitted</ui-typography>
+          <ui-typography variant="body">{{ formatDate(request.createdAt) }}</ui-typography>
+        </ui-grid>
+      </ui-grid>
+
+      @if (request.message) {
+        <div>
+          <ui-typography variant="caption" color="muted" class="mb-1 block">Message</ui-typography>
+          <ui-surface variant="subtle" padding="md" radius="md">
+            <ui-typography variant="body">{{ request.message }}</ui-typography>
+          </ui-surface>
+        </div>
+      }
+
+      <form [formGroup]="form" class="mt-2 border-t pt-4">
+        <ui-grid container spacing="4">
+          <ui-grid [size]="{ xs: 12, md: 6 }">
+            <ui-form-field label="Status">
+              <p-select
+                formControlName="status"
+                [options]="statusOptions"
+                optionLabel="label"
+                optionValue="value"
+                class="w-full"
+              />
+            </ui-form-field>
+          </ui-grid>
+
+          <ui-grid [size]="12">
+            <ui-form-field label="Internal Notes">
+              <textarea
+                pInputTextarea
+                formControlName="notes"
+                rows="3"
+                class="w-full"
+                placeholder="Add notes about this lead..."
+              ></textarea>
+            </ui-form-field>
+          </ui-grid>
+        </ui-grid>
+      </form>
+    </ui-stack>
+  }
+
+  <ng-template #footer>
+    <p-button label="Cancel" severity="secondary" (click)="viewDialogVisible.set(false)" />
+    <p-button label="Save Changes" icon="pi pi-check" (click)="saveRequest()" />
+  </ng-template>
+</p-dialog>

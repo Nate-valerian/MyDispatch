@@ -1,0 +1,6 @@
+:host ::ng-deep .p-drawer-content {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}

@@ -1,0 +1,315 @@
+<ui-page-header title="Truck Details">
+  <p-button
+    icon="pi pi-pencil"
+    label="Edit"
+    [outlined]="true"
+    [routerLink]="['/trucks', id(), 'edit']"
+  />
+  <p-button icon="pi pi-arrow-left" label="Back" [routerLink]="['/trucks']" [outlined]="true" />
+</ui-page-header>
+
+@if (isLoading()) {
+  <ui-stack align="center" justify="center" class="py-16">
+    <p-progress-spinner />
+  </ui-stack>
+} @else if (truck()) {
+  <!-- Enhanced Header with Truck Number -->
+  <ui-grid container spacing="4" class="mb-6">
+    <ui-grid [size]="{ xs: 12, lg: 6 }">
+      <ui-surface variant="elevated" [border]="true">
+        <ui-stack direction="row" align="center" justify="between">
+          <ui-stack direction="row" align="center" gap="4">
+            <ui-typography variant="h2" tag="span" color="primary" weight="bold">
+              #{{ truck()!.number }}
+            </ui-typography>
+            <app-truck-status-tag [status]="truck()!.status!" />
+            <app-truck-type-tag [type]="truck()!.type!" />
+          </ui-stack>
+          <div class="text-secondary">
+            @if (truck()!.mainDriver) {
+              <span>{{ truck()!.mainDriver!.fullName }}</span>
+              @if (truck()!.secondaryDriver) {
+                <span class="ml-1">& {{ truck()!.secondaryDriver!.fullName }}</span>
+              }
+            }
+          </div>
+        </ui-stack>
+      </ui-surface>
+    </ui-grid>
+
+    <ui-grid [size]="{ xs: 12, lg: 6 }">
+      <app-document-status-overview [documents]="documents()" />
+    </ui-grid>
+  </ui-grid>
+
+  <p-card>
+    <p-tabs [value]="activeTab()" (valueChange)="onTabChange($event)">
+      <p-tablist>
+        <p-tab [value]="0">
+          <ui-icon name="info-circle" class="mr-2" />
+          Details
+        </p-tab>
+        <p-tab [value]="1">
+          <ui-icon name="box" class="mr-2" />
+          Loads
+          @if (truck()!.loads?.length) {
+            <span
+              class="ml-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+            >
+              {{ truck()!.loads!.length }}
+            </span>
+          }
+        </p-tab>
+        <p-tab [value]="2">
+          <ui-icon name="folder" class="mr-2" />
+          Documents
+        </p-tab>
+        <p-tab [value]="3">
+          <ui-icon name="chart-line" class="mr-2" />
+          Analytics
+        </p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <!-- Details Tab -->
+        <p-tabpanel [value]="0">
+          <ui-grid container spacing="6" class="pt-4">
+            <!-- Truck Info Card -->
+            <ui-grid [size]="{ xs: 12, lg: 6 }">
+              <p-card class="border-default border">
+                <ng-template #header>
+                  <div class="p-4 pb-0">
+                    <ui-typography variant="h5" tag="h3" weight="semibold">
+                      Truck Information
+                    </ui-typography>
+                  </div>
+                </ng-template>
+
+                <ui-stack gap="4">
+                  <ui-stack direction="row" align="center" justify="between">
+                    <span>Truck #</span>
+                    <span class="font-mono font-semibold">{{ truck()!.number }}</span>
+                  </ui-stack>
+
+                  <p-divider />
+
+                  <ui-stack direction="row" align="center" justify="between">
+                    <span>Type</span>
+                    <app-truck-type-tag [type]="truck()!.type!" />
+                  </ui-stack>
+
+                  <ui-stack direction="row" align="center" justify="between">
+                    <span>Status</span>
+                    <app-truck-status-tag [status]="truck()!.status!" />
+                  </ui-stack>
+
+                  @if (truck()!.vehicleCapacity) {
+                    <p-divider />
+                    <ui-stack direction="row" align="center" justify="between">
+                      <span>Vehicle Capacity</span>
+                      <span class="font-semibold">{{ truck()!.vehicleCapacity }} vehicles</span>
+                    </ui-stack>
+                  }
+
+                  @if (truck()!.make || truck()!.model || truck()!.year) {
+                    <p-divider />
+                    @if (truck()!.make) {
+                      <ui-stack direction="row" align="center" justify="between">
+                        <span>Make</span>
+                        <span class="font-semibold">{{ truck()!.make }}</span>
+                      </ui-stack>
+                    }
+                    @if (truck()!.model) {
+                      <ui-stack direction="row" align="center" justify="between">
+                        <span>Model</span>
+                        <span class="font-semibold">{{ truck()!.model }}</span>
+                      </ui-stack>
+                    }
+                    @if (truck()!.year) {
+                      <ui-stack direction="row" align="center" justify="between">
+                        <span>Year</span>
+                        <span class="font-semibold">{{ truck()!.year }}</span>
+                      </ui-stack>
+                    }
+                  }
+
+                  @if (truck()!.vin) {
+                    <p-divider />
+                    <ui-stack direction="row" align="center" justify="between">
+                      <span>VIN</span>
+                      <span class="font-mono font-semibold">{{ truck()!.vin }}</span>
+                    </ui-stack>
+                  }
+
+                  @if (truck()!.licensePlate) {
+                    <p-divider />
+                    <ui-stack direction="row" align="center" justify="between">
+                      <span>License Plate</span>
+                      <span class="font-mono font-semibold">
+                        {{ truck()!.licensePlate }}
+                        @if (truck()!.licensePlateState) {
+                          <span class="text-muted ml-1">({{ truck()!.licensePlateState }})</span>
+                        }
+                      </span>
+                    </ui-stack>
+                  }
+                </ui-stack>
+              </p-card>
+            </ui-grid>
+
+            <!-- Assignment Card -->
+            <ui-grid [size]="{ xs: 12, lg: 6 }">
+              <p-card class="border-default border">
+                <ng-template #header>
+                  <div class="p-4 pb-0">
+                    <ui-typography variant="h5" tag="h3" weight="semibold">
+                      Assignment
+                    </ui-typography>
+                  </div>
+                </ng-template>
+
+                <ui-stack gap="4">
+                  @if (truck()!.mainDriver) {
+                    <ui-stack direction="row" align="center" justify="between">
+                      <span>Main Driver</span>
+                      <a
+                        [routerLink]="['/employees', truck()!.mainDriver!.id]"
+                        class="text-primary font-medium hover:underline"
+                      >
+                        {{ truck()!.mainDriver!.fullName }}
+                      </a>
+                    </ui-stack>
+                  } @else {
+                    <ui-stack direction="row" align="center" justify="between">
+                      <span>Main Driver</span>
+                      <ui-typography variant="body" color="muted">Unassigned</ui-typography>
+                    </ui-stack>
+                  }
+
+                  @if (truck()!.secondaryDriver) {
+                    <ui-stack direction="row" align="center" justify="between">
+                      <span>Secondary Driver</span>
+                      <a
+                        [routerLink]="['/employees', truck()!.secondaryDriver!.id]"
+                        class="text-primary font-medium hover:underline"
+                      >
+                        {{ truck()!.secondaryDriver!.fullName }}
+                      </a>
+                    </ui-stack>
+                  }
+
+                  <p-divider />
+
+                  <ui-stack direction="row" align="center" justify="between">
+                    <span>Active Loads</span>
+                    <span class="font-semibold">{{ truck()!.loads?.length ?? 0 }}</span>
+                  </ui-stack>
+                </ui-stack>
+              </p-card>
+            </ui-grid>
+          </ui-grid>
+
+          <!-- Location Card (full width) -->
+          <p-card class="border-default mt-6 border">
+            <ng-template #header>
+              <div class="p-4 pb-0">
+                <ui-typography variant="h5" tag="h3" weight="semibold">
+                  Current Location
+                </ui-typography>
+              </div>
+            </ng-template>
+
+            <ui-grid container spacing="6">
+              <ui-grid [size]="{ xs: 12, md: 6 }">
+                <ui-stack direction="row" align="center" gap="2" class="mb-2">
+                  <ui-icon name="map-marker" color="primary" />
+                  <ui-typography variant="body" weight="medium">Address</ui-typography>
+                </ui-stack>
+                @if (truck()!.currentAddress) {
+                  <p class="text-secondary">{{ truck()!.currentAddress | address }}</p>
+                } @else {
+                  <ui-typography variant="body" color="muted">
+                    No location data available
+                  </ui-typography>
+                }
+              </ui-grid>
+              <ui-grid [size]="{ xs: 12, md: 6 }">
+                <div class="map-container">
+                  <app-geolocation-map [geolocationData]="truckLocations()" />
+                </div>
+              </ui-grid>
+            </ui-grid>
+          </p-card>
+
+          <!-- Quick Stats Card -->
+          <p-card class="border-default mt-6 border">
+            <ng-template #header>
+              <div class="p-4 pb-0">
+                <ui-typography variant="h5" tag="h3" weight="semibold">
+                  Performance Summary
+                </ui-typography>
+              </div>
+            </ng-template>
+
+            <ui-grid container spacing="4">
+              <ui-grid [size]="{ xs: 6, md: 3 }">
+                <ui-typography variant="caption" color="muted">Gross (30 days)</ui-typography>
+                <ui-typography variant="h6" weight="bold" class="text-success">
+                  {{ dailyGrosses()?.totalGross | currencyFormat }}
+                </ui-typography>
+              </ui-grid>
+              <ui-grid [size]="{ xs: 6, md: 3 }">
+                <ui-typography variant="caption" color="muted">Gross (Year)</ui-typography>
+                <ui-typography variant="h6" weight="bold" class="text-success">
+                  {{ monthlyGrosses()?.totalGross | currencyFormat }}
+                </ui-typography>
+              </ui-grid>
+              <ui-grid [size]="{ xs: 6, md: 3 }">
+                <ui-typography variant="caption" color="muted">Distance (30 days)</ui-typography>
+                <ui-typography variant="h6" weight="bold">
+                  {{ dailyGrosses()?.totalDistance | distanceUnit }}
+                </ui-typography>
+              </ui-grid>
+              <ui-grid [size]="{ xs: 6, md: 3 }">
+                <ui-typography variant="caption" color="muted">RPM (30 days)</ui-typography>
+                <ui-typography variant="h6" weight="bold">
+                  {{ rpmCurrent() | currencyFormat }}
+                </ui-typography>
+              </ui-grid>
+            </ui-grid>
+          </p-card>
+        </p-tabpanel>
+
+        <!-- Loads Tab -->
+        <p-tabpanel [value]="1">
+          <div class="pt-4">
+            <app-truck-loads-list [loads]="truck()!.loads ?? []" />
+          </div>
+        </p-tabpanel>
+
+        <!-- Documents Tab -->
+        <p-tabpanel [value]="2">
+          <div class="pt-4">
+            <app-document-manager [truckId]="id()" [types]="truckDocTypes" />
+          </div>
+        </p-tabpanel>
+
+        <!-- Analytics Tab -->
+        <p-tabpanel [value]="3">
+          <ui-stack gap="6" class="pt-4">
+            <app-truck-gross-linechart [truckId]="id()!" (chartDrawn)="onLineChartDrawn($event)" />
+            <app-gross-barchart [truckId]="id()!" (chartDrawn)="onBarChartDrawn($event)" />
+          </ui-stack>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </p-card>
+} @else {
+  <p-card>
+    <ui-stack align="center" gap="4" class="py-16">
+      <ui-icon name="exclamation-circle" size="xl" color="muted" />
+      <ui-typography variant="body" color="muted">Truck not found</ui-typography>
+      <p-button label="Back to Trucks" [routerLink]="['/trucks']" />
+    </ui-stack>
+  </p-card>
+}

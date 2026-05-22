@@ -1,0 +1,75 @@
+import { DatePipe, DecimalPipe } from "@angular/common";
+import { Component, computed, inject, input, signal, type OnInit } from "@angular/core";
+import { Router, RouterLink } from "@angular/router";
+import { Api, getMaintenanceRecords, type MaintenanceRecordDto } from "@logistics/shared/api";
+import { Grid, Icon, Stack, Typography } from "@logistics/shared/components";
+import { CurrencyFormatPipe } from "@logistics/shared/pipes";
+import { ButtonModule } from "primeng/button";
+import { CardModule } from "primeng/card";
+import { ProgressSpinnerModule } from "primeng/progressspinner";
+import { TagModule } from "primeng/tag";
+import { ToastService } from "@/core/services";
+import { PageHeader } from "@/shared/components";
+
+@Component({
+  selector: "app-service-record-detail",
+  templateUrl: "./service-record-detail.html",
+  imports: [
+    RouterLink,
+    CurrencyFormatPipe,
+    DatePipe,
+    DecimalPipe,
+    ButtonModule,
+    CardModule,
+    ProgressSpinnerModule,
+    TagModule,
+    PageHeader,
+    Grid,
+    Icon,
+    Stack,
+    Typography,
+  ],
+})
+export class ServiceRecordDetailPage implements OnInit {
+  private readonly router = inject(Router);
+  private readonly api = inject(Api);
+  private readonly toastService = inject(ToastService);
+
+  public readonly id = input.required<string>();
+
+  protected readonly isLoading = signal(true);
+  protected readonly record = signal<MaintenanceRecordDto | null>(null);
+
+  protected readonly pageTitle = computed(() => {
+    const rec = this.record();
+    if (!rec) return "Service Record";
+    return `${rec.typeDisplay ?? "Service"} - ${rec.truckNumber ?? "Unknown Truck"}`;
+  });
+
+  async ngOnInit(): Promise<void> {
+    await this.loadRecord();
+  }
+
+  private async loadRecord(): Promise<void> {
+    this.isLoading.set(true);
+    try {
+      // TODO: Use getMaintenanceRecordById once API is regenerated
+      // For now, fetch from list and filter
+      const result = await this.api.invoke(getMaintenanceRecords, {});
+      const found = result?.items?.find((r: MaintenanceRecordDto) => r.id === this.id());
+
+      if (found) {
+        this.record.set(found);
+      } else {
+        this.toastService.showError("Maintenance record not found");
+        this.router.navigateByUrl("/maintenance/records");
+      }
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  protected editRecord(): void {
+    this.router.navigateByUrl(`/maintenance/records/${this.id()}/edit`);
+  }
+}

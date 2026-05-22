@@ -1,0 +1,40 @@
+@if (showAuthLoading()) {
+  <!-- Full-page loading state while auth initializes -->
+  <div class="auth-loading-container">
+    <div class="auth-loading-card">
+      <p-progress-spinner strokeWidth="4" />
+      <p class="auth-loading-text">Loading your workspace...</p>
+    </div>
+  </div>
+} @else if (showLayout()) {
+  <!-- Mobile Header (visible only on mobile) -->
+  <app-mobile-header />
+
+  <!-- Mobile Drawer (slides in from left) -->
+  <app-mobile-drawer />
+
+  <div class="flex h-screen">
+    <!-- Desktop Sidebar (hidden on mobile) -->
+    <div class="hidden md:block">
+      <app-sidebar />
+    </div>
+
+    <!-- Main Content -->
+    <div class="w-full overflow-y-auto pb-10">
+      <div [class.p-2]="layoutService.isMobile()" [class.p-4]="!layoutService.isMobile()">
+        <router-outlet />
+      </div>
+    </div>
+  </div>
+} @else {
+  <router-outlet />
+}
+
+<p-toast key="notification" position="top-right" />
+<p-confirm-dialog
+  key="confirmDialog"
+  position="center"
+  [style]="{ 'max-width': '32rem', 'white-space': 'pre-line' }"
+/>
+<app-command-palette />
+<app-upgrade-dialog />

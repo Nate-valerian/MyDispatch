@@ -1,0 +1,86 @@
+<div
+  class="flex min-h-screen items-center justify-center bg-linear-to-b from-slate-50 to-slate-100 p-4"
+>
+  <div class="w-full max-w-md text-center">
+    <!-- Illustration -->
+    <div class="relative mx-auto mb-10 h-48 w-48">
+      <!-- Background circle -->
+      <div
+        class="absolute inset-0 rounded-full bg-linear-to-br from-amber-100 to-orange-100 opacity-80"
+      ></div>
+
+      <!-- Shield icon container -->
+      <div class="absolute inset-4 flex items-center justify-center">
+        <div class="relative">
+          <!-- Shield shape using SVG -->
+          <svg
+            class="h-24 w-24 text-amber-200"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z" />
+          </svg>
+
+          <!-- Warning icon overlay -->
+          <div class="absolute inset-0 flex items-center justify-center">
+            <ui-icon name="exclamation-triangle" size="lg" class="text-amber-500" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Decorative dots -->
+      <div class="absolute top-2 left-6 h-2 w-2 rounded-full bg-amber-300/60"></div>
+      <div class="absolute top-8 right-4 h-3 w-3 rounded-full bg-orange-200/60"></div>
+      <div class="absolute bottom-6 left-4 h-2.5 w-2.5 rounded-full bg-amber-200/60"></div>
+    </div>
+
+    <!-- Error Code (subtle) -->
+    <p class="mb-2 text-7xl font-extralight tracking-tight text-slate-200">401</p>
+
+    <!-- Title -->
+    <ui-typography variant="h3" tag="h1" align="center" class="mb-3">Access Denied</ui-typography>
+
+    <!-- Description -->
+    <ui-typography variant="body" color="muted" align="center" class="mx-auto mb-8 max-w-sm block">
+      You don't have permission to access this page. This might be because your session has expired
+      or you don't have the required permissions.
+    </ui-typography>
+
+    <!-- Actions -->
+    <ui-stack direction="row" justify="center" gap="3" class="flex-col sm:flex-row">
+      <p-button label="Sign In Again" icon="pi pi-sign-in" severity="success" (click)="login()" />
+      <p-button
+        label="Sign Out"
+        icon="pi pi-sign-out"
+        severity="success"
+        [outlined]="true"
+        (click)="logout()"
+      />
+    </ui-stack>
+
+    <!-- Additional info card -->
+    <ui-surface variant="elevated" [border]="true" padding="md" class="mt-10 block">
+      <ui-typography variant="body-sm" weight="medium" class="mb-3 block">Why am I seeing this?</ui-typography>
+      <ul class="space-y-2.5 text-left text-sm text-slate-500">
+        <li class="flex items-center gap-3">
+          <ui-icon name="clock" color="muted" />
+          <span>Your session may have expired</span>
+        </li>
+        <li class="flex items-center gap-3">
+          <ui-icon name="user" color="muted" />
+          <span>Your account may not have portal access</span>
+        </li>
+        <li class="flex items-center gap-3">
+          <ui-icon name="lock" color="muted" />
+          <span>The resource may require special permissions</span>
+        </li>
+      </ul>
+    </ui-surface>
+
+    <!-- Help text -->
+    <ui-typography variant="body-sm" color="muted" align="center" class="mt-6 block">
+      If you believe this is an error, please contact your company administrator.
+    </ui-typography>
+  </div>
+</div>

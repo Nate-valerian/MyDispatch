@@ -1,0 +1,29 @@
+<div class="flex min-h-screen items-center justify-center bg-canvas p-4">
+  <div class="w-full max-w-md text-center">
+    <div class="rounded-xl bg-surface p-8 shadow-lg">
+      <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-hover">
+        <i class="pi pi-map text-4xl text-muted"></i>
+      </div>
+
+      <h1 class="mb-2 text-6xl text-muted">404</h1>
+      <h2 class="mb-2 text-primary">Page Not Found</h2>
+      <p class="mb-6 text-secondary">
+        The page you're looking for doesn't exist or has been moved.
+      </p>
+
+      <div class="flex flex-col gap-3 sm:flex-row sm:justify-center">
+        <p-button
+          icon="pi pi-home"
+          label="Go to Dashboard"
+          routerLink="/home"
+        />
+        <p-button
+          icon="pi pi-arrow-left"
+          label="Go Back"
+          [outlined]="true"
+          (click)="goBack()"
+        />
+      </div>
+    </div>
+  </div>
+</div>

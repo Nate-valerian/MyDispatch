@@ -1,0 +1,18 @@
+import { Component, inject } from "@angular/core";
+import { Router } from "@angular/router";
+import { CardModule } from "primeng/card";
+import { PageHeader } from "@/shared/components";
+import { MaintenanceRecordForm } from "../components/maintenance-record-form/maintenance-record-form";
+
+@Component({
+  selector: "app-service-record-add",
+  templateUrl: "./service-record-add.html",
+  imports: [CardModule, PageHeader, MaintenanceRecordForm],
+})
+export class ServiceRecordAddPage {
+  private readonly router = inject(Router);
+
+  protected onSave(): void {
+    this.router.navigateByUrl("/maintenance/records");
+  }
+}

@@ -1,0 +1,39 @@
+@if (disabled()) {
+  <ui-stack direction="row" class="mb-4">
+    <p-message severity="info">
+      You cannot edit this trip because it is not in the 'Draft' status. Only the trip name can be
+      edited.
+    </p-message>
+  </ui-stack>
+}
+
+<p-stepper [linear]="true" [value]="activeStep()" (valueChange)="store['goToStep']($event ?? 1)">
+  <p-step-list>
+    <p-step [value]="1">Basic Info</p-step>
+    <p-step [value]="2">Loads</p-step>
+    <p-step [value]="3">Review</p-step>
+  </p-step-list>
+  <p-step-panels>
+    <p-step-panel [value]="1">
+      <ng-template #content>
+        <!-- Basic info form-->
+        <app-trip-wizard-basic [disabled]="disabled()" />
+      </ng-template>
+    </p-step-panel>
+    <p-step-panel [value]="2">
+      <ng-template #content>
+        <!-- Loads table -->
+        <app-trip-wizard-loads [disabled]="disabled()" />
+      </ng-template>
+    </p-step-panel>
+    <p-step-panel [value]="3">
+      <ng-template #content>
+        <!-- Review step -->
+        <app-trip-wizard-review
+          [saveButtonLabel]="mode() === 'create' ? 'Create' : 'Update'"
+          (save)="processStep3()"
+        />
+      </ng-template>
+    </p-step-panel>
+  </p-step-panels>
+</p-stepper>

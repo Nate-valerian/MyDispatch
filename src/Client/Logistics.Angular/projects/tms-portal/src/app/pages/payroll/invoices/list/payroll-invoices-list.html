@@ -1,0 +1,262 @@
+<div class="animate-fadein">
+  <ui-page-header
+    title="Payroll Invoices"
+    addRoute="/payroll/invoices/add"
+    addTooltip="Add a new payroll invoice"
+  >
+    @if (selectedInvoices().length > 0) {
+      <p-button
+        icon="pi pi-check-circle"
+        label="Approve Selected ({{ selectedInvoices().length }})"
+        severity="success"
+        [loading]="isBatchApproving()"
+        (click)="batchApprove()"
+      />
+      <p-button icon="pi pi-times" label="Clear" [text]="true" (click)="clearSelection()" />
+    }
+    <p-button
+      icon="pi pi-download"
+      label="Export CSV"
+      [outlined]="true"
+      [loading]="isExporting()"
+      (click)="exportToCsv()"
+    />
+    <p-button
+      icon="pi pi-chart-bar"
+      label="Dashboard"
+      [outlined]="true"
+      [routerLink]="['/payroll']"
+    />
+  </ui-page-header>
+
+  <!-- Filter Panel -->
+  <p-card class="mb-4">
+    <ui-stack direction="row" align="center" justify="between" class="mb-4">
+      <ui-typography variant="body" color="primary" weight="semibold" class="text-lg">
+        Filters
+      </ui-typography>
+      <ui-stack direction="row" align="center" gap="2">
+        @if (activeFilterCount() > 0) {
+          <ui-typography variant="body-sm" color="muted">
+            {{ activeFilterCount() }} active
+          </ui-typography>
+        }
+        <p-button
+          label="Clear All"
+          icon="pi pi-times"
+          size="small"
+          [text]="true"
+          (click)="clearFilters()"
+          [disabled]="activeFilterCount() === 0"
+        />
+      </ui-stack>
+    </ui-stack>
+
+    <ui-grid container spacing="4">
+      <ui-grid [size]="{ xs: 12, md: 6, lg: 3 }">
+        <ui-form-field label="Search Employee">
+          <ui-search-input
+            class="w-full"
+            placeholder="Search by employee name"
+            (searchChange)="onSearch($event)"
+          />
+        </ui-form-field>
+      </ui-grid>
+
+      <ui-grid [size]="{ xs: 12, md: 6, lg: 3 }">
+        <ui-form-field label="Status">
+          <p-multiselect
+            [options]="statusOptions"
+            [(ngModel)]="selectedStatuses"
+            placeholder="Select status"
+            [showClear]="true"
+            (onChange)="applyFilters()"
+            class="w-full"
+          />
+        </ui-form-field>
+      </ui-grid>
+
+      <ui-grid [size]="{ xs: 12, md: 6, lg: 3 }">
+        <ui-form-field label="Salary Type">
+          <p-multiselect
+            [options]="salaryTypeOptions"
+            [(ngModel)]="selectedSalaryTypes"
+            placeholder="Select salary type"
+            [showClear]="true"
+            (onChange)="applyFilters()"
+            class="w-full"
+          />
+        </ui-form-field>
+      </ui-grid>
+
+      <ui-grid [size]="{ xs: 12, md: 6, lg: 3 }">
+        <ui-form-field label="Date Range">
+          <ui-date-range-picker (datesChange)="onDateRangeChange($event)" />
+        </ui-form-field>
+      </ui-grid>
+    </ui-grid>
+  </p-card>
+
+  <p-card>
+    <ui-data-container
+      [loading]="store.isLoading()"
+      [error]="store.error()"
+      [isEmpty]="store.isEmpty()"
+      skeletonVariant="table"
+      [skeletonRows]="10"
+      emptyTitle="No payroll invoices yet"
+      emptyMessage="Create your first payroll invoice to get started."
+      emptyActionLabel="Add Invoice"
+      (retry)="store.retry()"
+      (emptyAction)="addInvoice()"
+    >
+      <p-table
+        [value]="store.data()"
+        [lazy]="true"
+        [paginator]="true"
+        [showCurrentPageReport]="true"
+        (onLazyLoad)="store.onLazyLoad($event)"
+        [rows]="store.pageSize()"
+        [first]="store.first()"
+        [totalRecords]="store.totalRecords()"
+        [loading]="store.isLoading()"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        [selection]="selectedInvoices()"
+        (selectionChange)="onSelectionChange($event)"
+        dataKey="id"
+      >
+        <ng-template #header>
+          <tr>
+            <th style="width: 3rem">
+              @if (hasSelectableInvoices()) {
+                <p-tableHeaderCheckbox />
+              }
+            </th>
+            <th pSortableColumn="PeriodStart">
+              Period
+              <p-sortIcon field="PeriodStart" />
+            </th>
+            <th pSortableColumn="Employee.FirstName">
+              Employee
+              <p-sortIcon field="Employee.FirstName" />
+            </th>
+            <th pSortableColumn="Employee.SalaryType">
+              Salary Type
+              <p-sortIcon field="Employee.SalaryType" />
+            </th>
+            <th pSortableColumn="Employee.Salary">
+              Employee Salary
+              <p-sortIcon field="Employee.Salary" />
+            </th>
+            <th pSortableColumn="Total">
+              Invoice Total
+              <p-sortIcon field="Total" />
+            </th>
+            <th pSortableColumn="Status">
+              Status
+              <p-sortIcon field="Status" />
+            </th>
+            <th style="width: 10rem">Actions</th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-invoice>
+          <tr>
+            <td>
+              @if (invoice.status === "pending_approval") {
+                <p-tableCheckbox [value]="invoice" />
+              }
+            </td>
+            <td>
+              {{ invoice.periodStart | date: "MMM d" }} -
+              {{ invoice.periodEnd | date: "mediumDate" }}
+            </td>
+            <td>{{ invoice.employee?.fullName ?? "-" }}</td>
+            <td>{{ getSalaryTypeDesc(invoice.employee?.salaryType) }}</td>
+            <td class="text-right">
+              @if (invoice.employee?.salaryType === "share_of_gross") {
+                {{ invoice.employee?.salary | percent }}
+              } @else {
+                {{ invoice.employee?.salary | currencyFormat }}
+              }
+            </td>
+            <td class="text-right">{{ invoice.total?.amount | currencyFormat }}</td>
+            <td>
+              <app-invoice-status-tag [status]="invoice.status" />
+            </td>
+            <td>
+              <ui-stack direction="row" align="center" gap="1">
+                <p-button
+                  icon="pi pi-eye"
+                  [rounded]="true"
+                  [text]="true"
+                  pTooltip="View details"
+                  tooltipPosition="bottom"
+                  [routerLink]="['/payroll/invoices', invoice.id]"
+                />
+                @if (invoice.status === "pending_approval") {
+                  <p-button
+                    icon="pi pi-check"
+                    [rounded]="true"
+                    [text]="true"
+                    severity="success"
+                    pTooltip="Approve"
+                    tooltipPosition="bottom"
+                    (click)="approveInvoice(invoice)"
+                  />
+                  <p-button
+                    icon="pi pi-times"
+                    [rounded]="true"
+                    [text]="true"
+                    severity="danger"
+                    pTooltip="Reject"
+                    tooltipPosition="bottom"
+                    (click)="openRejectDialog(invoice)"
+                  />
+                }
+                @if (invoice.status === "draft") {
+                  <p-button
+                    icon="pi pi-pen-to-square"
+                    [rounded]="true"
+                    [text]="true"
+                    pTooltip="Edit"
+                    tooltipPosition="bottom"
+                    [routerLink]="['/payroll/invoices', invoice.id, 'edit']"
+                  />
+                }
+              </ui-stack>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </ui-data-container>
+  </p-card>
+
+  <!-- Reject Dialog -->
+  <p-dialog
+    header="Reject Payroll"
+    [(visible)]="showRejectDialog"
+    [modal]="true"
+    [style]="{ width: '400px' }"
+  >
+    <ui-stack gap="4">
+      <p>Please provide a reason for rejecting this payroll invoice.</p>
+      <textarea
+        pInputTextarea
+        [(ngModel)]="rejectionReason"
+        rows="3"
+        class="w-full"
+        placeholder="Enter rejection reason..."
+      ></textarea>
+    </ui-stack>
+    <ng-template #footer>
+      <p-button label="Cancel" [text]="true" (click)="showRejectDialog.set(false)" />
+      <p-button
+        label="Reject"
+        severity="danger"
+        [loading]="isRejecting()"
+        (click)="confirmReject()"
+      />
+    </ng-template>
+  </p-dialog>
+</div>

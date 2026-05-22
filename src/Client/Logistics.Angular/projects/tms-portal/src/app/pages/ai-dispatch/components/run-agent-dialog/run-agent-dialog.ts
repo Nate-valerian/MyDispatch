@@ -1,0 +1,55 @@
+import { Component, computed, input, model, output } from "@angular/core";
+import { FormsModule } from "@angular/forms";
+import type { AiDispatchMode, AiQuotaStatusDto } from "@logistics/shared/api";
+import { ButtonModule } from "primeng/button";
+import { DialogModule } from "primeng/dialog";
+import { MessageModule } from "primeng/message";
+import { TextareaModule } from "primeng/textarea";
+
+export interface RunAgentDialogData {
+  mode: AiDispatchMode;
+  instructions?: string;
+}
+
+@Component({
+  selector: "app-run-agent-dialog",
+  templateUrl: "./run-agent-dialog.html",
+  imports: [DialogModule, ButtonModule, FormsModule, TextareaModule, MessageModule],
+})
+export class RunAgentDialog {
+  public readonly visible = model(false);
+  public readonly mode = input<AiDispatchMode>("human_in_the_loop");
+  public readonly quotaStatus = input<AiQuotaStatusDto | null>(null);
+  public readonly run = output<RunAgentDialogData>();
+
+  protected readonly instructions = model("");
+
+  protected readonly isOverQuota = computed(() => this.quotaStatus()?.isOverQuota === true);
+  protected readonly charsRemaining = computed(() => 500 - this.instructions().length);
+
+  protected get modeLabel(): string {
+    return this.mode() === "human_in_the_loop" ? "Run (Suggestions)" : "Run (Autonomous)";
+  }
+
+  protected get modeIcon(): string {
+    return this.mode() === "human_in_the_loop" ? "pi pi-play" : "pi pi-bolt";
+  }
+
+  protected get modeSeverity(): "primary" | "warn" {
+    return this.mode() === "human_in_the_loop" ? "primary" : "warn";
+  }
+
+  protected confirm(): void {
+    this.run.emit({
+      mode: this.mode(),
+      instructions: this.instructions().trim(),
+    });
+    this.instructions.set("");
+    this.visible.set(false);
+  }
+
+  protected cancel(): void {
+    this.instructions.set("");
+    this.visible.set(false);
+  }
+}

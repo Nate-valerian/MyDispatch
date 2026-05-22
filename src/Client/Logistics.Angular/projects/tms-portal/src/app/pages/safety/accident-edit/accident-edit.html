@@ -1,0 +1,86 @@
+<ui-page-header title="Edit Accident Report" backLink="/safety/accidents" />
+
+@if (isLoading()) {
+  <div class="flex justify-center py-16">
+    <p-progress-spinner />
+  </div>
+} @else {
+  <p-card>
+    <p-stepper [linear]="true" [value]="activeStep()" (valueChange)="goToStep($event ?? 1)">
+      <p-step-list>
+        <p-step [value]="1">Incident Details</p-step>
+        <p-step [value]="2">Injuries & Damage</p-step>
+        <p-step [value]="3">Review & Save</p-step>
+      </p-step-list>
+
+      <p-step-panels>
+        <!-- Step 1: Incident Details -->
+        <p-step-panel [value]="1">
+          <ng-template #content>
+            <app-accident-incident-form [form]="step1Form" />
+
+            <div class="flex justify-end gap-2 py-4">
+              <p-button
+                label="Next"
+                icon="pi pi-arrow-right"
+                iconPos="right"
+                (click)="nextStep()"
+              />
+            </div>
+          </ng-template>
+        </p-step-panel>
+
+        <!-- Step 2: Injuries & Damage -->
+        <p-step-panel [value]="2">
+          <ng-template #content>
+            <app-accident-injuries-damage-form [form]="step2Form" />
+
+            <div class="flex justify-between py-4">
+              <p-button
+                label="Back"
+                icon="pi pi-arrow-left"
+                [outlined]="true"
+                (click)="prevStep()"
+              />
+              <p-button
+                label="Next"
+                icon="pi pi-arrow-right"
+                iconPos="right"
+                (click)="nextStep()"
+              />
+            </div>
+          </ng-template>
+        </p-step-panel>
+
+        <!-- Step 3: Review & Save -->
+        <p-step-panel [value]="3">
+          <ng-template #content>
+            <div class="py-4">
+              <h3 class="mb-4 text-lg font-semibold">Review Changes</h3>
+
+              <app-accident-review-summary
+                [incidentForm]="step1Form"
+                [injuriesDamageForm]="step2Form"
+              />
+
+              <div class="mt-6 flex justify-between">
+                <p-button
+                  label="Back"
+                  icon="pi pi-arrow-left"
+                  [outlined]="true"
+                  (click)="prevStep()"
+                />
+                <p-button
+                  label="Save Changes"
+                  icon="pi pi-check"
+                  [loading]="isSaving()"
+                  (click)="submit()"
+                />
+              </div>
+            </div>
+          </ng-template>
+        </p-step-panel>
+      </p-step-panels>
+    </p-stepper>
+  </p-card>
+}

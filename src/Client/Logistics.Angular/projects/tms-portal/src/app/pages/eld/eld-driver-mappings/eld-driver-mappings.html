@@ -1,0 +1,163 @@
+<ui-page-header
+  title="Driver Mappings"
+  [subtitle]="headerSubtitle()"
+  backLink="/eld/providers"
+/>
+
+@if (loading()) {
+  <ui-stack align="center" justify="center" class="p-10">
+    <p-progressSpinner />
+  </ui-stack>
+} @else if (error()) {
+  <ui-error-state [message]="error()!" (retry)="loadData()" />
+} @else {
+  <ui-grid container spacing="6">
+    <!-- Current Mappings -->
+    <ui-grid [size]="12">
+      <ui-dashboard-card [title]="mappingsCardTitle()" icon="pi-link" iconColor="blue">
+        @if (mappings().length === 0) {
+          <ui-empty-state
+            title="No mappings yet"
+            message="Select an ELD driver and TMS employee below to create a mapping."
+            icon="users"
+          />
+        } @else {
+          <p-table [value]="mappings()" [size]="'small'">
+            <ng-template #header>
+              <tr>
+                <th>TMS Employee</th>
+                <th>ELD Driver</th>
+                <th>Sync Enabled</th>
+                <th>Last Synced</th>
+                <th>Actions</th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-mapping>
+              <tr>
+                <td>
+                  <ui-stack direction="row" align="center" gap="2">
+                    <ui-icon name="user" color="info" />
+                    <span class="font-medium">{{ mapping.employeeName }}</span>
+                  </ui-stack>
+                </td>
+                <td>
+                  <ui-stack direction="row" align="center" gap="2">
+                    <ui-icon name="id-card" color="success" />
+                    <div>
+                      <div>{{ mapping.externalDriverName || mapping.externalDriverId }}</div>
+                      <small class="text-muted">{{ mapping.externalDriverId }}</small>
+                    </div>
+                  </ui-stack>
+                </td>
+                <td>
+                  @if (mapping.isSyncEnabled) {
+                    <p-tag value="Enabled" severity="success" />
+                  } @else {
+                    <p-tag value="Disabled" severity="secondary" />
+                  }
+                </td>
+                <td>
+                  @if (mapping.lastSyncedAt) {
+                    <span class="text-muted text-sm">
+                      {{ mapping.lastSyncedAt | date: "short" }}
+                    </span>
+                  } @else {
+                    <span class="text-muted text-sm">Never</span>
+                  }
+                </td>
+                <td>
+                  <p-button
+                    icon="pi pi-trash"
+                    [rounded]="true"
+                    [text]="true"
+                    severity="danger"
+                    pTooltip="Remove Mapping"
+                    aria-label="Remove mapping"
+                    (onClick)="confirmDeleteMapping(mapping)"
+                  />
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        }
+      </ui-dashboard-card>
+    </ui-grid>
+
+    <!-- Create New Mapping -->
+    <ui-grid [size]="12">
+      <ui-dashboard-card title="Create New Mapping" icon="pi-plus-circle" iconColor="green">
+        <ui-grid container spacing="4">
+          <ui-grid [size]="{ xs: 12, md: 5 }">
+            <ui-form-field label="ELD Driver" for="eldDriver">
+              <p-select
+                id="eldDriver"
+                [(ngModel)]="selectedEldDriver"
+                [options]="unmappedEldDrivers()"
+                optionLabel="name"
+                placeholder="Select ELD driver"
+                class="w-full"
+                [style]="{ width: '100%' }"
+                [showClear]="true"
+              >
+                <ng-template #selectedItem let-item>
+                  <ui-stack direction="row" align="center" gap="2">
+                    <ui-icon name="id-card" color="success" />
+                    <span>{{ item.name }} ({{ item.externalDriverId }})</span>
+                  </ui-stack>
+                </ng-template>
+                <ng-template #item let-item>
+                  <div>
+                    <div class="font-medium">{{ item.name }}</div>
+                    <small class="text-muted">ID: {{ item.externalDriverId }}</small>
+                  </div>
+                </ng-template>
+              </p-select>
+            </ui-form-field>
+          </ui-grid>
+
+          <ui-grid [size]="{ xs: 12, md: 2 }" class="flex items-end justify-center">
+            <ui-icon name="arrows-h" size="xl" color="muted" />
+          </ui-grid>
+
+          <ui-grid [size]="{ xs: 12, md: 5 }">
+            <ui-form-field label="TMS Employee" for="employee">
+              <p-select
+                id="employee"
+                [(ngModel)]="selectedEmployee"
+                [options]="unmappedEmployees()"
+                optionLabel="fullName"
+                placeholder="Select employee"
+                class="w-full"
+                [style]="{ width: '100%' }"
+                [showClear]="true"
+              >
+                <ng-template #selectedItem let-item>
+                  <ui-stack direction="row" align="center" gap="2">
+                    <ui-icon name="user" color="info" />
+                    <span>{{ item.fullName }}</span>
+                  </ui-stack>
+                </ng-template>
+                <ng-template #item let-item>
+                  <div>
+                    <div class="font-medium">{{ item.fullName }}</div>
+                    <small class="text-muted">{{ item.email }}</small>
+                  </div>
+                </ng-template>
+              </p-select>
+            </ui-form-field>
+          </ui-grid>
+        </ui-grid>
+
+        <ui-stack direction="row" justify="end" class="mt-4">
+          <p-button
+            label="Create Mapping"
+            icon="pi pi-link"
+            (onClick)="createMapping()"
+            [loading]="saving()"
+            [disabled]="!selectedEldDriver || !selectedEmployee"
+          />
+        </ui-stack>
+      </ui-dashboard-card>
+    </ui-grid>
+  </ui-grid>
+}

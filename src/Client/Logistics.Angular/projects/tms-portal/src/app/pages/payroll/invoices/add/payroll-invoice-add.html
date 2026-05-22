@@ -1,0 +1,213 @@
+<ui-page-header title="Add New Payroll" [centered]="true" backLink="/payroll/invoices" />
+
+<div class="mx-auto max-w-4xl">
+  <p-card>
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <ui-validation-summary [form]="form" />
+
+      <!-- Mode Toggle -->
+      <ui-form-field label="Creation Mode">
+        <p-select-button
+          [options]="modeOptions"
+          [ngModel]="mode()"
+          [ngModelOptions]="{ standalone: true }"
+          (onChange)="onModeChange($event.value)"
+          optionLabel="label"
+          optionValue="value"
+        >
+          <ng-template #item let-item>
+            <ui-stack direction="row" align="center" gap="2">
+              <i [class]="item.icon"></i>
+              <span>{{ item.label }}</span>
+            </ui-stack>
+          </ng-template>
+        </p-select-button>
+      </ui-form-field>
+
+      <!-- Date Range Section -->
+      <ui-form-field label="Pay Period" [control]="form.controls.dateRange">
+        <ui-date-range-picker
+          [dates]="form.value.dateRange ?? []"
+          (datesChange)="onDateRangeChange($event)"
+        />
+      </ui-form-field>
+
+      <!-- Single Mode: Employee Selection -->
+      @if (mode() === "single") {
+        <ui-form-field label="Employee" [control]="form.controls.employee" [required]="true">
+          <p-autocomplete
+            formControlName="employee"
+            class="w-full"
+            inputStyleClass="w-full"
+            placeholder="Type employee's name"
+            optionLabel="fullName"
+            [minLength]="2"
+            [suggestions]="suggestedEmployees()"
+            (completeMethod)="searchEmployee($event)"
+            (onSelect)="handleAutoCompleteSelectEvent($event)"
+          />
+        </ui-form-field>
+
+        <!-- Single Mode Preview -->
+        @if (selectedEmployee() && previewPayrollInvoice()) {
+          <p-divider />
+          <ui-typography variant="h4" tag="h4" color="primary" weight="semibold" class="mb-4">
+            Preview Payroll Invoice
+          </ui-typography>
+
+          <ui-surface variant="subtle" padding="md" radius="lg" class="mb-6 block">
+            <ui-grid container spacing="4">
+              <ui-grid [size]="6">
+                <ui-typography variant="caption" color="muted">Employee</ui-typography>
+                <p class="text-primary font-medium">{{ selectedEmployee()!.fullName }}</p>
+              </ui-grid>
+              <ui-grid [size]="6">
+                <ui-typography variant="caption" color="muted">Role</ui-typography>
+                <p class="text-primary font-medium">
+                  {{ selectedEmployee()!.role?.displayName ?? "N/A" }}
+                </p>
+              </ui-grid>
+              <ui-grid [size]="6">
+                <ui-typography variant="caption" color="muted">Salary Type</ui-typography>
+                <p class="text-primary font-medium">
+                  {{ getSalaryTypeDesc(selectedEmployee()!.salaryType) }}
+                </p>
+              </ui-grid>
+              <ui-grid [size]="6">
+                <ui-typography variant="caption" color="muted">Rate</ui-typography>
+                <p class="text-primary font-medium">
+                  @if (selectedEmployee()!.salaryType === "share_of_gross") {
+                    {{ selectedEmployee()!.salary | percent }}
+                  } @else {
+                    {{ selectedEmployee()!.salary | currencyFormat }}
+                  }
+                </p>
+              </ui-grid>
+              <ui-grid [size]="12">
+                <ui-typography variant="caption" color="muted">
+                  Expected Invoice Total
+                </ui-typography>
+                <p class="text-success text-xl font-bold">
+                  {{ previewPayrollInvoice()!.total?.amount | currencyFormat }}
+                </p>
+              </ui-grid>
+            </ui-grid>
+          </ui-surface>
+        }
+
+        <ui-stack direction="row" gap="2">
+          <p-button
+            type="submit"
+            icon="pi pi-plus"
+            label="Create Payroll"
+            [loading]="isLoading()"
+            [disabled]="!form.valid || previewPayrollInvoice()?.total?.amount === 0"
+          />
+          <p-button
+            type="button"
+            icon="pi pi-arrow-left"
+            label="Back to list"
+            [routerLink]="['/payroll/invoices']"
+          />
+        </ui-stack>
+      }
+
+      <!-- Bulk Mode: Multiple Employees -->
+      @if (mode() === "bulk") {
+        <ui-form-field label="Select Employees">
+          <p-multi-select
+            [options]="allEmployees()"
+            [ngModel]="selectedEmployees()"
+            [ngModelOptions]="{ standalone: true }"
+            (ngModelChange)="onSelectedEmployeesChange($event)"
+            optionLabel="fullName"
+            placeholder="Select employees"
+            [filter]="true"
+            filterPlaceHolder="Search employees..."
+            [showClear]="true"
+            display="chip"
+            class="w-full"
+          />
+        </ui-form-field>
+
+        <!-- Bulk Preview Table -->
+        @if (bulkPreviews().length > 0) {
+          <p-divider />
+          <ui-stack direction="row" align="center" justify="between" class="mb-4">
+            <ui-typography variant="h4" tag="h4" color="primary" weight="semibold">
+              Preview ({{ bulkPreviews().length }} employees)
+            </ui-typography>
+            <div class="text-right">
+              <ui-typography variant="caption" color="muted">Total Amount</ui-typography>
+              <p class="text-success text-xl font-bold">
+                {{ getBulkTotalAmount() | currencyFormat }}
+              </p>
+            </div>
+          </ui-stack>
+
+          <p-table
+            [value]="bulkPreviews()"
+            [tableStyle]="{ 'min-width': '50rem' }"
+            [scrollable]="true"
+          >
+            <ng-template #header>
+              <tr>
+                <th>Employee</th>
+                <th>Role</th>
+                <th>Salary Type</th>
+                <th class="text-right">Amount</th>
+                <th class="text-center">Status</th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-item>
+              <tr>
+                <td>{{ item.employee.fullName }}</td>
+                <td>{{ item.employee.role?.displayName ?? "N/A" }}</td>
+                <td>{{ getSalaryTypeDesc(item.employee.salaryType) }}</td>
+                <td class="text-right">
+                  @if (item.loading) {
+                    <i class="pi pi-spin pi-spinner"></i>
+                  } @else if (item.error) {
+                    <span class="text-danger">Error</span>
+                  } @else {
+                    {{ item.preview?.total?.amount | currencyFormat }}
+                  }
+                </td>
+                <td class="text-center">
+                  @if (item.loading) {
+                    <i class="pi pi-spin pi-spinner text-primary"></i>
+                  } @else if (item.error) {
+                    <i class="pi pi-times-circle text-danger" [pTooltip]="item.error"></i>
+                  } @else {
+                    <i class="pi pi-check-circle text-success"></i>
+                  }
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template #emptymessage>
+              <tr>
+                <td colspan="5" class="text-muted text-center">No employees selected</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        }
+
+        <ui-stack direction="row" gap="2" class="mt-6">
+          <p-button
+            type="submit"
+            icon="pi pi-plus"
+            [label]="'Create ' + selectedEmployees().length + ' Payroll(s)'"
+            [loading]="isBulkCreating()"
+            [disabled]="isBulkCreateDisabled()"
+          />
+          <p-button
+            type="button"
+            icon="pi pi-arrow-left"
+            label="Back to list"
+            [routerLink]="['/payroll/invoices']"
+          />
+        </ui-stack>
+      }
+    </form>
+  </p-card>
+</div>

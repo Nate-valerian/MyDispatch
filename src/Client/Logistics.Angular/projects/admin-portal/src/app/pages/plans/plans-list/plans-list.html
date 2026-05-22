@@ -1,0 +1,86 @@
+<ui-page-header
+  title="Subscription Plans"
+  addRoute="/subscription-plans/add"
+  addTooltip="Add a new subscription plan"
+/>
+
+<p-card>
+  <ui-data-container
+    [loading]="store.isLoading()"
+    [error]="store.error()"
+    [isEmpty]="store.isEmpty()"
+    skeletonVariant="table"
+    [skeletonRows]="10"
+    emptyTitle="No subscription plans yet"
+    emptyMessage="Add your first subscription plan to get started."
+    emptyActionLabel="Add Plan"
+    (retry)="store.retry()"
+    (emptyAction)="addPlan()"
+  >
+    <p-table
+      [value]="store.data()"
+      [lazy]="true"
+      [paginator]="true"
+      [showCurrentPageReport]="true"
+      (onLazyLoad)="store.onLazyLoad($event)"
+      [rows]="store.pageSize()"
+      [first]="store.first()"
+      [totalRecords]="store.totalRecords()"
+      [loading]="store.isLoading()"
+      [rowsPerPageOptions]="[10, 25, 50]"
+    >
+      <ng-template #caption>
+        <ui-search-input (searchChange)="search($event)" />
+      </ng-template>
+      <ng-template #header>
+        <tr>
+          <th pSortableColumn="Name">
+            Name
+            <p-sortIcon field="Name" />
+          </th>
+          <th pSortableColumn="Tier">
+            Tier
+            <p-sortIcon field="Tier" />
+          </th>
+          <th pSortableColumn="Price">
+            Base Fee
+            <p-sortIcon field="Price" />
+          </th>
+          <th>Per Truck</th>
+          <th>Max Trucks</th>
+          <th>Billing Interval</th>
+          <th class="w-16"></th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-plan>
+        <tr>
+          <td>
+            <div>
+              <span class="font-medium">{{ plan.name }}</span>
+              @if (plan.description) {
+                <p class="mt-1 text-sm text-gray-500">{{ plan.description }}</p>
+              }
+            </div>
+          </td>
+          <td>
+            <p-tag [value]="formatTier(plan.tier)" [severity]="tierSeverity(plan.tier)" />
+          </td>
+          <td>{{ plan.price | currency }}/mo</td>
+          <td>{{ plan.perTruckPrice | currency }}/truck</td>
+          <td>{{ plan.maxTrucks ?? "Unlimited" }}</td>
+          <td>{{ formatInterval(plan.interval, plan.intervalCount) | titlecase }}</td>
+          <td>
+            <p-button
+              icon="pi pi-ellipsis-v"
+              [text]="true"
+              (click)="openActionMenu($event, plan)"
+              aria-label="Show actions menu"
+            />
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </ui-data-container>
+</p-card>
+
+<p-menu #actionMenu [model]="actionMenuItems()" [popup]="true" />

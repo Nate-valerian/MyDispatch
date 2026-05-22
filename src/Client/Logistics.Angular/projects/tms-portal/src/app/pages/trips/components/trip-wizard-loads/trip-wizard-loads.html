@@ -1,0 +1,201 @@
+<ui-stack gap="4">
+  <ui-stack direction="row" align="center" gap="2">
+    <ui-typography variant="h6" tag="h4" weight="semibold">Assigned Loads</ui-typography>
+    <p-tag [value]="getAssignedLoadsCount()" severity="info" />
+  </ui-stack>
+
+  <p-table
+    #dataTable
+    [value]="rows()"
+    [dataKey]="'id'"
+    [scrollable]="true"
+    [globalFilterFields]="['number', 'name', 'customerName', 'origin', 'destination', 'status']"
+  >
+    <ng-template #empty>
+      <ui-stack align="center" gap="2" class="p-6 text-center">
+        <ui-icon name="truck" size="xl" color="muted" class="opacity-60" />
+        <div class="font-medium">No loads yet</div>
+        <small class="opacity-70">Attach an existing load or create a new one.</small>
+      </ui-stack>
+    </ng-template>
+
+    <ng-template #caption>
+      <ui-stack direction="row" align="center" gap="2">
+        <!-- Display search bar when there are loads -->
+        @if (rows().length) {
+          <p-icon-field>
+            <p-inputicon class="pi pi-search" />
+            <input
+              pInputText
+              type="text"
+              placeholder="Search loads"
+              (input)="applyFilter($event)"
+            />
+          </p-icon-field>
+        }
+
+        <p-button
+          icon="pi pi-link"
+          label="Attach Existing"
+          variant="outlined"
+          [disabled]="disabled()"
+          (click)="attachLoadDialogVisible.set(true)"
+        />
+        <p-button
+          icon="pi pi-plus"
+          label="Create New"
+          variant="outlined"
+          [disabled]="disabled()"
+          (click)="tripLoadDialogVisible.set(true)"
+        />
+      </ui-stack>
+    </ng-template>
+
+    <ng-template #header>
+      <tr>
+        <th pSortableColumn="name">Load <p-sortIcon field="name" /></th>
+        <th pSortableColumn="customerName">Customer <p-sortIcon field="customerName" /></th>
+        <th pSortableColumn="origin">Origin <p-sortIcon field="origin" /></th>
+        <th pSortableColumn="destination">Destination <p-sortIcon field="destination" /></th>
+        <th pSortableColumn="status">Status <p-sortIcon field="status" /></th>
+        <th pSortableColumn="distance" class="text-right">
+          Distance <p-sortIcon field="distance" />
+        </th>
+        <th pSortableColumn="deliveryCost" class="text-right">
+          Cost <p-sortIcon field="deliveryCost" />
+        </th>
+        <th></th>
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-row>
+      <tr [class.opacity-70]="row.pendingDetach">
+        <td>
+          <ui-stack direction="row" align="center" gap="2">
+            <span class="font-medium">{{ row.name }}</span>
+            @if (row.kind === "new") {
+              <p-tag value="New" severity="success" [rounded]="true" />
+            } @else if (row.pendingDetach) {
+              <p-tag value="Detach" severity="danger" [rounded]="true" />
+            }
+          </ui-stack>
+        </td>
+        <td>
+          <span class="truncate" [title]="row.customer?.name">{{ row.customer?.name ?? "-" }}</span>
+        </td>
+        <td>
+          <span class="truncate" [title]="row.originAddress | address">
+            {{ row.originAddress?.city }}, {{ row.originAddress?.state }}
+          </span>
+        </td>
+        <td>
+          <span class="truncate" [title]="row.destinationAddress | address">
+            {{ row.destinationAddress?.city }}, {{ row.destinationAddress?.state }}
+          </span>
+        </td>
+        <td>
+          @if (row.kind === "existing") {
+            <app-load-status-tag [status]="row.status" />
+          } @else {
+            <p-tag value="Draft" severity="warn" [rounded]="true" />
+          }
+        </td>
+        <td class="text-right font-medium">{{ row.distance | distanceUnit: "mi" }}</td>
+        <td class="text-right font-medium">{{ row.deliveryCost | currencyFormat }}</td>
+        <td>
+          <ui-stack direction="row" justify="end" gap="1">
+            @if (row.kind === "existing") {
+              <p-button
+                icon="pi pi-pencil"
+                pTooltip="Edit load"
+                tooltipPosition="bottom"
+                variant="text"
+                size="small"
+                [routerLink]="['/loads', row.id, 'edit']"
+                [disabled]="row.pendingDetach || disabled()"
+              />
+              @if (row.pendingDetach) {
+                <p-button
+                  icon="pi pi-undo"
+                  pTooltip="Undo detach"
+                  tooltipPosition="bottom"
+                  variant="text"
+                  size="small"
+                  (click)="undoDetachLoad(row.id)"
+                  [disabled]="disabled()"
+                />
+              } @else {
+                <p-button
+                  icon="pi pi-times"
+                  severity="danger"
+                  pTooltip="Detach"
+                  tooltipPosition="bottom"
+                  variant="text"
+                  size="small"
+                  (click)="detachLoad(row.id)"
+                  [disabled]="disabled()"
+                />
+              }
+            } @else {
+              <p-button
+                icon="pi pi-times"
+                severity="danger"
+                pTooltip="Remove"
+                variant="text"
+                size="small"
+                (click)="removeNewLoad(row.id)"
+                [disabled]="disabled()"
+              />
+            }
+          </ui-stack>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template #footer>
+      <tr>
+        <td colspan="5" class="font-bold">Totals</td>
+        <td class="text-right font-bold">
+          {{ store["totalDistanceFromLoads"]() | distanceUnit: "mi" }}
+        </td>
+        <td class="text-right font-bold">{{ store["totalCostFromLoads"]() | currencyFormat }}</td>
+        <td></td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <ui-stack direction="row" justify="between" class="pt-6">
+    <p-button type="button" label="Back" icon="pi pi-arrow-left" (click)="goToPreviousStep()" />
+    <p-button
+      type="button"
+      icon="pi pi-arrow-right"
+      iconPos="right"
+      label="Next"
+      (click)="goToNextStep()"
+    />
+  </ui-stack>
+</ui-stack>
+
+<!-- Attach existing load dialog -->
+<app-attach-load-dialog
+  [(visible)]="attachLoadDialogVisible"
+  [excludeLoadIds]="excludeLoadIds()"
+  (loadAttached)="attachExistingLoad($event)"
+/>
+
+<!-- Initialize dialog component only when it's visible to avoid unnecessary mapbox rendering on background -->
+@if (tripLoadDialogVisible()) {
+  <p-dialog
+    header="Create a new load for this trip"
+    [modal]="true"
+    [(visible)]="tripLoadDialogVisible"
+    [style]="{ width: '90vw', maxWidth: '1200px' }"
+  >
+    <app-load-form
+      [initial]="initialLoadData()"
+      [mode]="'create'"
+      [canChangeAssignedTruck]="false"
+      (save)="addNewLoad($event)"
+    />
+  </p-dialog>
+}

@@ -1,0 +1,237 @@
+import { DatePipe } from "@angular/common";
+import {
+  Component,
+  computed,
+  inject,
+  input,
+  signal,
+  type OnDestroy,
+  type OnInit,
+} from "@angular/core";
+import { PageHeader } from "@logistics/shared";
+import {
+  Api,
+  approveAiDispatchDecision,
+  cancelAiDispatchSession,
+  getAiDispatchSessionById,
+  rejectAiDispatchDecision,
+  replanAiDispatchSession,
+  type AiDispatchDecisionDto,
+  type AiDispatchSessionDto,
+} from "@logistics/shared/api";
+import { Grid, Icon, Stack, Surface, Typography } from "@logistics/shared/components";
+import { ButtonModule } from "primeng/button";
+import { ConfirmDialogModule } from "primeng/confirmdialog";
+import { TagModule } from "primeng/tag";
+import { TimelineModule } from "primeng/timeline";
+import { AiDispatchHubService, TenantService, ToastService } from "@/core/services";
+import { DateUtils, Labels } from "@/shared/utils";
+import { ApproveRejectActions } from "../components/approve-reject-actions/approve-reject-actions";
+import { ModeBadge } from "../components/mode-badge/mode-badge";
+import { ToolOutputSummary } from "../components/tool-output-summary/tool-output-summary";
+import {
+  buildDecisionDetail,
+  getToolIcon,
+  getToolLabel,
+  getToolMarkerClass,
+  isWriteTool,
+} from "../utils/decision-utils";
+import { MarkdownPipe } from "../utils/markdown";
+
+@Component({
+  selector: "app-session-detail",
+  templateUrl: "./session-detail.html",
+  styleUrl: "./session-detail.css",
+  imports: [
+    ButtonModule,
+    TagModule,
+    TimelineModule,
+    ConfirmDialogModule,
+    DatePipe,
+    PageHeader,
+    MarkdownPipe,
+    ModeBadge,
+    ToolOutputSummary,
+    ApproveRejectActions,
+    Grid,
+    Icon,
+    Stack,
+    Surface,
+    Typography,
+  ],
+})
+export class SessionDetailPage implements OnInit, OnDestroy {
+  private readonly api = inject(Api);
+  private readonly toastService = inject(ToastService);
+  private readonly aiDispatchHub = inject(AiDispatchHubService);
+  private readonly tenantService = inject(TenantService);
+
+  public readonly id = input.required<string>();
+
+  protected readonly session = signal<AiDispatchSessionDto | null>(null);
+  protected readonly isLoading = signal(false);
+
+  protected readonly Labels = Labels;
+  protected readonly getToolLabel = getToolLabel;
+  protected readonly getToolIcon = getToolIcon;
+  protected readonly getToolMarkerClass = getToolMarkerClass;
+  protected readonly isWriteTool = isWriteTool;
+
+  protected readonly expandedDecisions = signal<Set<string>>(new Set());
+
+  protected readonly duration = computed(() => {
+    const s = this.session();
+    return DateUtils.formatDuration(s?.startedAt, s?.completedAt);
+  });
+
+  protected readonly hasRejectedDecisions = computed(() => {
+    const s = this.session();
+    return s?.decisions?.some((d) => d.status === "rejected") ?? false;
+  });
+
+  protected readonly statsItems = computed(() => {
+    const s = this.session();
+    if (!s) return [];
+    const datePipe = new DatePipe("en-US");
+    const items = [
+      { label: "Started", value: datePipe.transform(s.startedAt, "medium") ?? "-" },
+      {
+        label: "Completed",
+        value: s.completedAt ? datePipe.transform(s.completedAt, "medium") : "-",
+      },
+      { label: "Duration", value: this.duration() ?? "-" },
+      { label: "Decisions", value: String(s.decisionCount ?? 0) },
+      { label: "Model", value: s.modelUsed ?? "-", mono: true },
+      { label: "Tokens Used", value: (s.totalTokensUsed ?? 0).toLocaleString(), mono: true },
+    ];
+    return items;
+  });
+
+  protected toggleExpand(decisionId: string): void {
+    this.expandedDecisions.update((set) => {
+      const next = new Set(set);
+      if (next.has(decisionId)) {
+        next.delete(decisionId);
+      } else {
+        next.add(decisionId);
+      }
+      return next;
+    });
+  }
+
+  protected isExpanded(decisionId: string): boolean {
+    return this.expandedDecisions().has(decisionId);
+  }
+
+  ngOnInit(): void {
+    this.loadSession();
+    this.setupSignalR();
+  }
+
+  ngOnDestroy(): void {
+    const tenant = this.tenantService.getTenantData();
+    if (tenant?.id) {
+      this.aiDispatchHub.unsubscribeFromDispatchBoard(tenant.id);
+    }
+  }
+
+  private async setupSignalR(): Promise<void> {
+    const tenant = this.tenantService.getTenantData();
+    if (!tenant?.id) return;
+
+    this.aiDispatchHub.onReceiveAiDispatchUpdate = (update) => {
+      if (update.sessionId === this.id()) {
+        this.loadSession();
+      }
+    };
+
+    this.aiDispatchHub.onReceiveAiDispatchDecision = (decision) => {
+      if (decision.sessionId === this.id()) {
+        this.session.update((s) => {
+          if (!s) return s;
+          const decisions = [...(s.decisions ?? []), decision];
+          return { ...s, decisions, decisionCount: decisions.length };
+        });
+      }
+    };
+
+    await this.aiDispatchHub.connect();
+    await this.aiDispatchHub.subscribeToDispatchBoard(tenant.id);
+  }
+
+  protected async loadSession(): Promise<void> {
+    this.isLoading.set(true);
+    try {
+      const session = await this.api.invoke(getAiDispatchSessionById, { sessionId: this.id() });
+      this.session.set(session);
+    } catch {
+      this.toastService.showError("Failed to load session");
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  protected approveDecision(decision: AiDispatchDecisionDto): void {
+    this.toastService.confirm({
+      message: `Are you sure you want to approve and execute this decision?\n\n${buildDecisionDetail(decision)}`,
+      header: "Approve Decision",
+      icon: "pi pi-check-circle",
+      acceptButtonStyleClass: "p-button-success",
+      accept: async () => {
+        try {
+          await this.api.invoke(approveAiDispatchDecision, { decisionId: decision.id! });
+          this.toastService.showSuccess("Decision approved and executed");
+          await this.loadSession();
+        } catch {
+          this.toastService.showError("Failed to approve decision");
+        }
+      },
+    });
+  }
+
+  protected rejectDecision(decision: AiDispatchDecisionDto): void {
+    this.toastService.confirm({
+      message: `Are you sure you want to reject this decision?\n\n${buildDecisionDetail(decision)}`,
+      header: "Reject Decision",
+      icon: "pi pi-exclamation-triangle",
+      acceptButtonStyleClass: "p-button-danger",
+      accept: async () => {
+        try {
+          await this.api.invoke(rejectAiDispatchDecision, { decisionId: decision.id!, body: {} });
+          this.toastService.showSuccess("Decision rejected");
+          await this.loadSession();
+        } catch {
+          this.toastService.showError("Failed to reject decision");
+        }
+      },
+    });
+  }
+
+  protected async replanSession(): Promise<void> {
+    const session = this.session();
+    if (!session) return;
+
+    try {
+      await this.api.invoke(replanAiDispatchSession, {
+        sessionId: session.id!,
+        body: {},
+      });
+      this.toastService.showSuccess("Re-plan session started with rejection context");
+    } catch {
+      this.toastService.showError("Failed to start re-plan session");
+    }
+  }
+
+  protected async cancelSession(): Promise<void> {
+    const session = this.session();
+    if (!session) return;
+
+    try {
+      await this.api.invoke(cancelAiDispatchSession, { sessionId: session.id! });
+      this.toastService.showSuccess("Session cancelled");
+      await this.loadSession();
+    } catch {
+      this.toastService.showError("Failed to cancel session");
+    }
+  }
+}

@@ -1,0 +1,51 @@
+<Solution>
+  <Folder Name="/Test/">
+    <Project Path="test/Logistics.Application.Tests/Logistics.Application.Tests.csproj" />
+    <Project Path="test/Logistics.Architecture.Tests/Logistics.Architecture.Tests.csproj" />
+    <Project Path="test/Logistics.Infrastructure.AI.Tests/Logistics.Infrastructure.AI.Tests.csproj" />
+    <Project Path="test/Logistics.Infrastructure.Payments.Tests/Logistics.Infrastructure.Payments.Tests.csproj" />
+    <Project Path="test/Logistics.Infrastructure.Persistence.Tests/Logistics.Infrastructure.Persistence.Tests.csproj" />
+    <Project Path="test/Logistics.Infrastructure.Routing.Tests/Logistics.Infrastructure.Routing.Tests.csproj" />
+    <Project Path="test/Logistics.Infrastructure.Tax.Tests/Logistics.Infrastructure.Tax.Tests.csproj" />
+    <Project Path="test/Logistics.Infrastructure.Vin.Tests/Logistics.Infrastructure.Vin.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Core/">
+    <Project Path="src/Core/Logistics.Domain/Logistics.Domain.csproj" />
+    <Project Path="src/Core/Logistics.Application.Abstractions/Logistics.Application.Abstractions.csproj" />
+    <Project Path="src/Core/Logistics.Application/Logistics.Application.csproj" />
+    <Project Path="src/Core/Logistics.Mappings/Logistics.Mappings.csproj" />
+    <Project Path="src/Core/Logistics.Domain.Primitives/Logistics.Domain.Primitives.csproj" />
+  </Folder>
+  <Folder Name="/Shared/">
+    <Project Path="src/Shared/Logistics.Shared.Models/Logistics.Shared.Models.csproj" />
+    <Project Path="src/Shared/Logistics.Shared.Identity/Logistics.Shared.Identity.csproj" />
+    <Project Path="src/Shared/Logistics.Shared.Geo/Logistics.Shared.Geo.csproj" />
+  </Folder>
+  <Folder Name="/Docs/">
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/Infrastructure/">
+    <Project Path="src/Infrastructure/Logistics.Infrastructure.Communications/Logistics.Infrastructure.Communications.csproj" />
+    <Project Path="src/Infrastructure/Logistics.Infrastructure.Documents/Logistics.Infrastructure.Documents.csproj" />
+    <Project Path="src/Infrastructure/Logistics.Infrastructure.Integrations.Eld/Logistics.Infrastructure.Integrations.Eld.csproj" />
+    <Project Path="src/Infrastructure/Logistics.Infrastructure.Integrations.LoadBoard/Logistics.Infrastructure.Integrations.LoadBoard.csproj" />
+    <Project Path="src/Infrastructure/Logistics.Infrastructure.Payments/Logistics.Infrastructure.Payments.csproj" />
+    <Project Path="src/Infrastructure/Logistics.Infrastructure.Persistence/Logistics.Infrastructure.Persistence.csproj" />
+    <Project Path="src/Infrastructure/Logistics.Infrastructure.Routing/Logistics.Infrastructure.Routing.csproj" />
+    <Project Path="src/Infrastructure/Logistics.Infrastructure.Storage/Logistics.Infrastructure.Storage.csproj" />
+    <Project Path="src/Infrastructure/Logistics.Infrastructure.AI/Logistics.Infrastructure.AI.csproj" />
+    <Project Path="src/Infrastructure/Logistics.Infrastructure.Tax/Logistics.Infrastructure.Tax.csproj" />
+    <Project Path="src/Infrastructure/Logistics.Infrastructure.Vin/Logistics.Infrastructure.Vin.csproj" />
+  </Folder>
+  <Folder Name="/Presentation/">
+    <Project Path="src/Presentation/Logistics.API/Logistics.API.csproj" />
+    <Project Path="src/Presentation/Logistics.IdentityServer/Logistics.IdentityServer.csproj" />
+    <Project Path="src/Presentation/Logistics.DbMigrator/Logistics.DbMigrator.csproj" />
+    <Project Path="src/Presentation/Logistics.McpServer/Logistics.McpServer.csproj" />
+    <Project Path="src/Presentation/Logistics.TelegramBot/Logistics.TelegramBot.csproj" />
+  </Folder>
+  <Folder Name="/Aspire/">
+    <Project Path="src/Aspire/Logistics.Aspire.AppHost/Logistics.Aspire.AppHost.csproj" />
+    <Project Path="src/Aspire/Logistics.Aspire.ServiceDefaults/Logistics.Aspire.ServiceDefaults.csproj" />
+  </Folder>
+</Solution>

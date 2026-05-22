@@ -1,0 +1,72 @@
+/* PrimeNG drawer overrides - can't be done with Tailwind */
+:host ::ng-deep {
+  .mobile-nav-drawer {
+    width: 300px !important;
+    max-width: 85vw;
+  }
+  .mobile-nav-drawer .p-drawer-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-subtle);
+    background: linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--primary-500) 6%, transparent) 0%,
+      transparent 50%
+    );
+  }
+  .mobile-nav-drawer .p-drawer-content {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--bg-surface);
+  }
+  .mobile-nav-drawer .p-drawer-close-button {
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--radius-md);
+    transition: background-color var(--transition-fast);
+  }
+  .mobile-nav-drawer .p-drawer-close-button:hover {
+    background-color: var(--bg-hover);
+  }
+}
+
+.mobile-nav-menu {
+  background: var(--bg-surface);
+}
+.mobile-nav-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.mobile-nav-logo {
+  height: 2.25rem;
+  width: auto;
+  object-fit: contain;
+}
+.mobile-nav-company {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+/* Search trigger */
+.mobile-search-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font: 0.875rem var(--font-sans);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+.mobile-search-trigger:hover {
+  border-color: var(--primary-500);
+  color: var(--text-secondary);
+}

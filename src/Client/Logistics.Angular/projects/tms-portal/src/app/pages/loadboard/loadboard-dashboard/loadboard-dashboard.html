@@ -1,0 +1,157 @@
+<ui-page-header
+  title="Load Board"
+  subtitle="Search available loads, post trucks, and manage load board integrations"
+>
+  <ui-stack direction="row" align="center" gap="2">
+    <p-button
+      label="Search Loads"
+      icon="pi pi-search"
+      styleClass="whitespace-nowrap"
+      (onClick)="searchLoads()"
+    />
+    <p-button
+      label="Post Truck"
+      icon="pi pi-truck"
+      styleClass="whitespace-nowrap"
+      (onClick)="managePostedTrucks()"
+    />
+  </ui-stack>
+</ui-page-header>
+
+@if (store.error()) {
+  <ui-error-state
+    title="Failed to load dashboard"
+    [message]="store.error()!"
+    (retry)="loadDashboardData()"
+  />
+} @else {
+  <ui-grid container spacing="4" class="mb-6">
+    <ui-grid [size]="{ xs: 12, md: 3 }">
+      <app-stat-card
+        label="Active Providers"
+        [value]="store.activeProviders().length"
+        icon="pi-link"
+        color="blue"
+      />
+    </ui-grid>
+    <ui-grid [size]="{ xs: 12, md: 3 }">
+      <app-stat-card
+        label="Available Loads"
+        [value]="availableLoads()"
+        icon="pi-box"
+        color="green"
+      />
+    </ui-grid>
+    <ui-grid [size]="{ xs: 12, md: 3 }">
+      <app-stat-card
+        label="Posted Trucks"
+        [value]="store.activePostedTrucksCount()"
+        icon="pi-truck"
+        color="purple"
+      />
+    </ui-grid>
+    <ui-grid [size]="{ xs: 12, md: 3 }">
+      <app-stat-card
+        label="Total Providers"
+        [value]="store.providers().length"
+        icon="pi-cog"
+        color="orange"
+      />
+    </ui-grid>
+  </ui-grid>
+
+  <ui-grid container spacing="6">
+    <ui-grid [size]="{ xs: 12, lg: 6 }">
+      <ui-dashboard-card title="Configured Providers" icon="pi-link">
+        @if (store.providers().length === 0) {
+          <ui-empty-state
+            title="No providers configured"
+            message="Add your first load board provider to start searching for freight."
+            icon="link"
+            actionLabel="Add Provider"
+            (action)="configureProviders()"
+          />
+        } @else {
+          <p-table [value]="store.providers()" [scrollable]="true" scrollHeight="250px">
+            <ng-template #header>
+              <tr>
+                <th>Provider</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-provider>
+              <tr>
+                <td>
+                  <span class="font-medium">
+                    {{ provider.providerName || provider.providerType }}
+                  </span>
+                </td>
+                <td>
+                  <p-tag
+                    [value]="provider.isActive ? 'Active' : 'Inactive'"
+                    [severity]="provider.isActive ? 'success' : 'danger'"
+                  />
+                </td>
+                <td>
+                  <p-button
+                    icon="pi pi-cog"
+                    [rounded]="true"
+                    [text]="true"
+                    pTooltip="Configure"
+                    aria-label="Configure provider"
+                    (onClick)="configureProviders()"
+                  />
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        }
+      </ui-dashboard-card>
+    </ui-grid>
+
+    <ui-grid [size]="{ xs: 12, lg: 6 }">
+      <ui-dashboard-card title="Your Posted Trucks" icon="pi-truck">
+        @if (store.postedTrucks().length === 0) {
+          <ui-empty-state
+            title="No trucks posted"
+            message="Post your available trucks to advertise capacity to brokers."
+            icon="truck"
+            actionLabel="Post a Truck"
+            (action)="managePostedTrucks()"
+          />
+        } @else {
+          <p-table [value]="store.postedTrucks()" [scrollable]="true" scrollHeight="250px">
+            <ng-template #header>
+              <tr>
+                <th>Truck</th>
+                <th>Provider</th>
+                <th>Available From</th>
+                <th>Status</th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-truck>
+              <tr>
+                <td>
+                  <span class="font-medium">{{ truck.truckNumber || "N/A" }}</span>
+                </td>
+                <td>{{ truck.providerName }}</td>
+                <td>{{ truck.availableFrom | date: "shortDate" }}</td>
+                <td>
+                  <p-tag
+                    [value]="truck.status"
+                    [severity]="truck.status === 'available' ? 'success' : 'secondary'"
+                  />
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        }
+      </ui-dashboard-card>
+    </ui-grid>
+  </ui-grid>
+
+  <div class="mt-6">
+    <app-loadboard-quick-actions />
+  </div>
+}

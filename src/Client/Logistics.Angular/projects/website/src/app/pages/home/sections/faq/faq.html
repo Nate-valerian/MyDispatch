@@ -1,0 +1,26 @@
+<web-section-container sectionId="faq" background="light" maxWidth="3xl">
+  <div webScrollAnimate="fade-up">
+    <web-section-header
+      label="FAQ"
+      title="Frequently asked questions"
+      subtitle="If your question isn't here, send us a note."
+    />
+  </div>
+
+  <div webScrollAnimate="fade-up" [delay]="200" class="mt-12">
+    @defer {
+      <p-accordion [multiple]="true" [value]="[]" class="faq-accordion">
+        @for (faq of faqs; track faq.question; let i = $index) {
+          <p-accordion-panel [value]="'panel-' + i">
+            <p-accordion-header>
+              <span class="font-display text-ink font-semibold">{{ faq.question }}</span>
+            </p-accordion-header>
+            <p-accordion-content>
+              <p class="text-steel leading-relaxed">{{ faq.answer }}</p>
+            </p-accordion-content>
+          </p-accordion-panel>
+        }
+      </p-accordion>
+    }
+  </div>
+</web-section-container>

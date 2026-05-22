@@ -1,0 +1,15 @@
+@if (showLayout()) {
+  <adm-mobile-header />
+  <adm-mobile-drawer />
+  <div class="flex min-h-screen">
+    <adm-sidebar />
+    <main class="w-full flex-1 bg-gray-50 p-3 md:ml-64 md:p-6">
+      <router-outlet />
+    </main>
+  </div>
+} @else {
+  <router-outlet />
+}
+
+<p-toast key="notification" position="top-right" />
+<p-confirm-dialog key="confirmDialog" position="center" />

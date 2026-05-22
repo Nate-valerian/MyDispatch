@@ -1,0 +1,39 @@
+{
+  "editor.tabSize": 2,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "prettier.configPath": "./prettier.config.js",
+  "editor.formatOnSave": true,
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/.angular": true,
+    "**/bin": true,
+    "**/obj": true,
+    "**/.gradle": true,
+    "**/.idea": true,
+    "**/.kotlin": true,
+    "**/.vs": true,
+    "**/dist": true,
+    "**/out-tsc": true
+  },
+  "VSCodeCounter.exclude": [
+    "bun.lock",
+    "openapi.json",
+    "src/Infrastructure/Logistics.Infrastructure.Persistence/Migrations"
+  ],
+  "VSCodeCounter.languages": {
+    "kotlin": {
+      "aliases": ["Kotlin"],
+      "filenames": [],
+      "extensions": [".kt", ".kts"],
+      "lineComments": ["//"],
+      "blockComments": [["/*", "*/"]],
+      "blockStrings": [["\"\"\"", "\"\"\""]]
+    }
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
+}

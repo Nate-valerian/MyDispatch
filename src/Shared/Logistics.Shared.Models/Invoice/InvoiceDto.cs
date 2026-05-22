@@ -1,0 +1,66 @@
+using Logistics.Domain.Primitives.Enums;
+using Logistics.Domain.Primitives.ValueObjects;
+
+namespace Logistics.Shared.Models;
+
+public record InvoiceDto
+{
+    public Guid Id { get; set; }
+
+    public long Number { get; set; }
+    public InvoiceType Type { get; set; }
+    public InvoiceStatus Status { get; set; }
+    public DateTime CreatedDate { get; set; }
+
+    /// <summary>
+    /// Sum of line item nets (pre-tax) in the invoice currency.
+    /// </summary>
+    public Money Subtotal { get; set; } = null!;
+
+    /// <summary>
+    /// Sum of line item TaxAmounts. Always 0 for ReverseCharge.
+    /// </summary>
+    public Money TaxTotal { get; set; } = null!;
+
+    /// <summary>
+    /// Total inclusive of tax & discounts.
+    /// </summary>
+    public Money Total { get; set; } = null!;
+
+    public TaxBehavior TaxBehavior { get; set; }
+    public IEnumerable<InvoiceTaxLineDto> TaxBreakdown { get; set; } = [];
+
+    public string? Notes { get; set; }
+    public DateTime? DueDate { get; set; }
+    public string? StripeInvoiceId { get; set; }
+
+    public IEnumerable<PaymentDto> Payments { get; set; } = [];
+    public IEnumerable<InvoiceLineItemDto> LineItems { get; set; } = [];
+
+    /// <summary>
+    /// When the invoice was sent to the customer.
+    /// </summary>
+    public DateTime? SentAt { get; set; }
+
+    /// <summary>
+    /// Email address the invoice was sent to.
+    /// </summary>
+    public string? SentToEmail { get; set; }
+
+    // LoadInvoice fields
+    public long LoadNumber { get; set; }
+    public Guid? LoadId { get; set; }
+    public Guid? CustomerId { get; set; }
+    public CustomerDto? Customer { get; set; }
+
+    // PayrollInvoice fields
+    public Guid? EmployeeId { get; set; }
+    public EmployeeDto? Employee { get; set; }
+    public DateTime? PeriodStart { get; set; }
+    public DateTime? PeriodEnd { get; set; }
+
+    // SubscriptionInvoice fields
+    public Guid? SubscriptionId { get; set; }
+    public DateTime? BillingPeriodStart { get; set; }
+    public DateTime? BillingPeriodEnd { get; set; }
+}

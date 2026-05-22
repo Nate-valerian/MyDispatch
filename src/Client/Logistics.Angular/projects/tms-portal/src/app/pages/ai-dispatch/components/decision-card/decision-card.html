@@ -1,0 +1,74 @@
+<ui-surface variant="elevated" [border]="true">
+  <!-- Header -->
+  <ui-stack direction="row" align="center" justify="between" class="mb-3">
+    <ui-stack direction="row" align="center" gap="2">
+      <p-tag [value]="Labels.decisionTypeLabel(decision().type ?? '')" severity="info" />
+      <p-tag
+        [value]="decision().status ?? ''"
+        [severity]="Labels.dispatchStatusSeverity(decision().status ?? '')"
+      />
+    </ui-stack>
+    <span class="text-muted text-xs">{{ toolLabel() }}</span>
+  </ui-stack>
+
+  <!-- Reasoning -->
+  @if (decision().reasoning) {
+    <p class="text-secondary mb-3 line-clamp-3 text-sm leading-relaxed">
+      {{ stripMarkdown(decision().reasoning) }}
+    </p>
+  }
+
+  <!-- Tool input details -->
+  @if (decision().loadId || parsedInput().loadId) {
+    <div class="bg-subtle mb-3 rounded-md p-3 text-sm">
+      <ui-stack direction="row" align="center" gap="2">
+        <ui-icon name="box" size="xs" color="muted" />
+        <span class="text-muted">Load:</span>
+        <span class="font-semibold">{{ decision().loadName ?? parsedInput().loadId }}</span>
+      </ui-stack>
+      @if (decision().truckId || parsedInput().truckId) {
+        <ui-stack direction="row" align="center" gap="2" class="mt-1">
+          <ui-icon name="truck" size="xs" color="muted" />
+          <span class="text-muted">Truck:</span>
+          <span class="font-semibold">{{ decision().truckNumber ?? parsedInput().truckId }}</span>
+        </ui-stack>
+      }
+      @if (parsedInput().reasoning) {
+        <div class="text-secondary mt-2 text-xs italic">"{{ parsedInput().reasoning }}"</div>
+      }
+    </div>
+  }
+
+  <!-- Session link -->
+  @if (showSessionLink()) {
+    <a
+      [routerLink]="['/ai-dispatch', decision().sessionId]"
+      class="text-primary mb-3 inline-flex items-center gap-1 text-xs hover:underline"
+    >
+      <i class="pi pi-external-link text-xs"></i>
+      View session
+    </a>
+  }
+
+  <!-- Actions -->
+  @if (decision().status === "suggested") {
+    <ui-stack direction="row" gap="2">
+      <p-button
+        label="Approve"
+        icon="pi pi-check"
+        severity="success"
+        size="small"
+        [outlined]="true"
+        (onClick)="onApprove()"
+      />
+      <p-button
+        label="Reject"
+        icon="pi pi-times"
+        severity="danger"
+        size="small"
+        [outlined]="true"
+        (onClick)="onReject()"
+      />
+    </ui-stack>
+  }
+</ui-surface>

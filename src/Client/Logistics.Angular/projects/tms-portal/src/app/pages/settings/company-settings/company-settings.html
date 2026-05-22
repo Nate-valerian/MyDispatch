@@ -1,0 +1,252 @@
+<ui-page-header title="Company Settings" [centered]="true" />
+
+<ui-container maxWidth="md">
+  @if (isLoading()) {
+    <ui-stack align="center" justify="center" class="py-8">
+      <p-progress-spinner />
+    </ui-stack>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <ui-stack gap="6">
+        <ui-validation-summary [form]="form" />
+
+        <!-- Branding Section -->
+        <ui-stack tag="section" gap="3">
+          <ui-stack direction="row" gap="2" align="center">
+            <ui-icon name="image" color="secondary" />
+            <ui-typography variant="overline" color="secondary">Branding</ui-typography>
+          </ui-stack>
+          <ui-surface variant="elevated" [border]="true">
+            <ui-form-field label="Company Logo" class="mb-0">
+              <ui-stack direction="row" align="center" gap="4">
+                <div
+                  class="border-default flex h-24 w-24 items-center justify-center overflow-hidden rounded-lg border-2 border-dashed"
+                >
+                  @if (logoPreviewUrl()) {
+                    <img
+                      [src]="logoPreviewUrl()"
+                      alt="Company logo"
+                      class="h-full w-full object-contain"
+                    />
+                  } @else {
+                    <ui-icon name="image" size="xl" color="muted" />
+                  }
+                </div>
+                <div>
+                  <input
+                    type="file"
+                    class="hidden"
+                    #logoInput
+                    accept="image/*"
+                    (change)="onLogoSelected($event)"
+                  />
+                  <p-button
+                    type="button"
+                    icon="pi pi-upload"
+                    label="Upload Logo"
+                    (click)="logoInput.click()"
+                    [loading]="isUploadingLogo()"
+                  />
+                  <ui-typography variant="caption" color="muted" class="mt-1">
+                    PNG, JPG or GIF. Max 5MB.
+                  </ui-typography>
+                </div>
+              </ui-stack>
+            </ui-form-field>
+          </ui-surface>
+        </ui-stack>
+
+        <!-- Company Info Section -->
+        <ui-stack tag="section" gap="3">
+          <ui-stack direction="row" gap="2" align="center">
+            <ui-icon name="building" color="secondary" />
+            <ui-typography variant="overline" color="secondary">Company Info</ui-typography>
+          </ui-stack>
+          <ui-surface variant="elevated" [border]="true">
+            <ui-form-field label="Company Name" for="companyName" [required]="true">
+              <input pInputText formControlName="companyName" id="companyName" class="w-full" />
+            </ui-form-field>
+
+            <ui-form-field label="Phone Number" for="phoneNumber">
+              <ui-phone-input formControlName="phoneNumber" />
+            </ui-form-field>
+
+            <ui-form-field label="Billing Email" for="billingEmail" [required]="true" class="mb-0">
+              <input
+                pInputText
+                formControlName="billingEmail"
+                id="billingEmail"
+                type="email"
+                class="w-full"
+              />
+            </ui-form-field>
+          </ui-surface>
+        </ui-stack>
+
+        <!-- Regulatory & Tax IDs Section -->
+        <ui-stack tag="section" gap="3">
+          <ui-stack direction="row" gap="2" align="center">
+            <ui-icon name="id-card" color="secondary" />
+            <ui-typography variant="overline" color="secondary">
+              Regulatory &amp; Tax IDs
+            </ui-typography>
+          </ui-stack>
+          <ui-surface variant="elevated" [border]="true">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <ui-form-field label="US DOT Number" for="dotNumber" class="mb-0">
+                <input pInputText formControlName="dotNumber" id="dotNumber" class="w-full" />
+              </ui-form-field>
+
+              <ui-form-field
+                label="MC Number"
+                for="mcNumber"
+                hint="US Motor Carrier number"
+                class="mb-0"
+              >
+                <input pInputText formControlName="mcNumber" id="mcNumber" class="w-full" />
+              </ui-form-field>
+
+              <ui-form-field
+                label="VAT Number"
+                for="vatNumber"
+                hint="Required to send invoices for EU tenants"
+                class="mb-0"
+              >
+                <input
+                  pInputText
+                  formControlName="vatNumber"
+                  id="vatNumber"
+                  class="w-full"
+                  placeholder="e.g. DE123456789"
+                />
+              </ui-form-field>
+
+              <ui-form-field
+                label="EORI Number"
+                for="eoriNumber"
+                hint="EU/UK customs ID"
+                class="mb-0"
+              >
+                <input pInputText formControlName="eoriNumber" id="eoriNumber" class="w-full" />
+              </ui-form-field>
+
+              <ui-form-field
+                label="Company Registration Number"
+                for="companyRegistrationNumber"
+                hint="Companies House, Handelsregister, RCS, etc."
+                class="mb-0"
+              >
+                <input
+                  pInputText
+                  formControlName="companyRegistrationNumber"
+                  id="companyRegistrationNumber"
+                  class="w-full"
+                />
+              </ui-form-field>
+
+              <ui-form-field
+                label="Tax Residency Country"
+                for="taxResidencyCountry"
+                hint="ISO-2 code, defaults to billing-address country"
+                class="mb-0"
+              >
+                <input
+                  pInputText
+                  formControlName="taxResidencyCountry"
+                  id="taxResidencyCountry"
+                  class="w-full"
+                  maxlength="2"
+                  placeholder="e.g. DE"
+                />
+              </ui-form-field>
+            </div>
+          </ui-surface>
+        </ui-stack>
+
+        <!-- Address Section -->
+        <ui-stack tag="section" gap="3">
+          <ui-stack direction="row" gap="2" align="center">
+            <ui-icon name="map-marker" color="secondary" />
+            <ui-typography variant="overline" color="secondary">Company Address</ui-typography>
+          </ui-stack>
+          <ui-surface variant="elevated" [border]="true">
+            <ui-form-field label="Address" [required]="true" class="mb-0">
+              <ui-address-form
+                formControlName="companyAddress"
+                [allowedCountries]="allowedCountries()"
+              />
+            </ui-form-field>
+          </ui-surface>
+        </ui-stack>
+
+        <!-- Regional Settings Section -->
+        <ui-stack tag="section" gap="3">
+          <ui-stack direction="row" gap="2" align="center">
+            <ui-icon name="globe" color="secondary" />
+            <ui-typography variant="overline" color="secondary">Regional Settings</ui-typography>
+          </ui-stack>
+          <ui-surface variant="elevated" [border]="true">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <ui-form-field label="Distance Unit" for="distanceUnit" class="mb-0">
+                <p-select
+                  id="distanceUnit"
+                  formControlName="distanceUnit"
+                  [options]="distanceUnitOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [fluid]="true"
+                />
+              </ui-form-field>
+
+              <ui-form-field label="Weight Unit" for="weightUnit" class="mb-0">
+                <p-select
+                  id="weightUnit"
+                  formControlName="weightUnit"
+                  [options]="weightUnitOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [fluid]="true"
+                />
+              </ui-form-field>
+
+              <ui-form-field label="Date Format" for="dateFormat" class="mb-0">
+                <p-select
+                  id="dateFormat"
+                  formControlName="dateFormat"
+                  [options]="dateFormatOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [fluid]="true"
+                />
+              </ui-form-field>
+
+              <ui-form-field label="Timezone" for="timezone" class="mb-0">
+                <p-select
+                  id="timezone"
+                  formControlName="timezone"
+                  [options]="timezoneOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [fluid]="true"
+                  [filter]="true"
+                  filterPlaceholder="Search timezone..."
+                />
+              </ui-form-field>
+            </div>
+          </ui-surface>
+        </ui-stack>
+
+        <!-- Actions -->
+        <ui-stack direction="row" gap="2">
+          <p-button
+            type="submit"
+            icon="pi pi-save"
+            label="Save Changes"
+            [loading]="isSaving()"
+            [disabled]="form.invalid"
+          />
+        </ui-stack>
+      </ui-stack>
+    </form>
+  }
+</ui-container>

@@ -1,0 +1,307 @@
+<div class="animate-fadein">
+  <ui-page-header title="Trips" addRoute="/trips/add" addTooltip="Add a new trip">
+    <p-button
+      icon="pi pi-download"
+      size="large"
+      [rounded]="true"
+      [text]="true"
+      pTooltip="Export to CSV"
+      aria-label="Export to CSV"
+      (click)="exportToCsv()"
+      [disabled]="store.isEmpty()"
+    />
+  </ui-page-header>
+
+  <!-- Summary Stats -->
+  <app-trips-summary-stats
+    [trips]="store.data()"
+    [totalRecords]="store.totalRecords()"
+    [isLoading]="store.isLoading()"
+  />
+
+  <!-- Filter Panel -->
+  <p-card class="mb-4">
+    <ui-stack direction="row" align="center" justify="between" class="mb-4">
+      <ui-typography variant="h6" color="primary" weight="semibold">Filters</ui-typography>
+      <ui-stack direction="row" align="center" gap="2">
+        @if (activeFilterCount() > 0) {
+          <ui-typography variant="body-sm" color="muted">
+            {{ activeFilterCount() }} active
+          </ui-typography>
+        }
+        <p-button
+          label="Clear All"
+          icon="pi pi-times"
+          size="small"
+          [text]="true"
+          (click)="clearFilters()"
+          [disabled]="activeFilterCount() === 0"
+        />
+      </ui-stack>
+    </ui-stack>
+
+    <ui-grid container spacing="4">
+      <ui-grid [size]="{ xs: 12, md: 6, lg: 3 }">
+        <ui-form-field label="Search">
+          <ui-search-input class="w-full" (searchChange)="onSearch($event)" />
+        </ui-form-field>
+      </ui-grid>
+
+      <ui-grid [size]="{ xs: 12, md: 6, lg: 3 }">
+        <ui-form-field label="Status">
+          <p-multiselect
+            [options]="statusOptions"
+            [ngModel]="selectedStatuses()"
+            (ngModelChange)="selectedStatuses.set($event); applyFilters()"
+            placeholder="Select status"
+            [showClear]="true"
+            class="w-full"
+          />
+        </ui-form-field>
+      </ui-grid>
+
+      <ui-grid [size]="{ xs: 12, md: 6, lg: 3 }">
+        <ui-form-field label="Truck">
+          <app-search-truck
+            [selectedTruck]="selectedTruck()"
+            (selectedTruckChange)="selectedTruck.set($event); applyFilters()"
+          />
+        </ui-form-field>
+      </ui-grid>
+
+      <ui-grid [size]="{ xs: 12, md: 6, lg: 3 }">
+        <ui-form-field label="Date Range">
+          <ui-date-range-picker (datesChange)="onDateRangeChange($event)" />
+        </ui-form-field>
+      </ui-grid>
+    </ui-grid>
+
+    <ui-stack direction="row" align="center" gap="2" wrap class="mt-4">
+      <p-checkbox
+        [ngModel]="onlyActiveTrips()"
+        (ngModelChange)="onlyActiveTrips.set($event); applyFilters()"
+        [binary]="true"
+        inputId="activeTripsOnly"
+      />
+      <label for="activeTripsOnly" class="text-secondary cursor-pointer text-sm"
+        >Active trips only</label
+      >
+    </ui-stack>
+  </p-card>
+
+  <p-card>
+    <ui-data-container
+      [loading]="store.isLoading()"
+      [error]="store.error()"
+      [isEmpty]="store.isEmpty()"
+      skeletonVariant="table"
+      [skeletonRows]="10"
+      emptyTitle="No trips yet"
+      emptyMessage="Create your first trip to get started."
+      emptyActionLabel="Add Trip"
+      (retry)="store.retry()"
+      (emptyAction)="addTrip()"
+    >
+      <p-table
+        [value]="store.data()"
+        [dataKey]="'id'"
+        [scrollable]="true"
+        [lazy]="true"
+        [paginator]="true"
+        [showCurrentPageReport]="true"
+        (onLazyLoad)="store.onLazyLoad($event)"
+        [rows]="store.pageSize()"
+        [first]="store.first()"
+        [totalRecords]="store.totalRecords()"
+        [loading]="store.isLoading()"
+        [rowsPerPageOptions]="[10, 25, 50]"
+      >
+        <ng-template #header>
+          <tr>
+            <th></th>
+            <th pSortableColumn="Number">
+              Number
+              <p-sortIcon field="Number" />
+            </th>
+            <th pSortableColumn="Name">
+              Name
+              <p-sortIcon field="Name" />
+            </th>
+            <th pSortableColumn="Truck.Number">
+              Truck
+              <p-sortIcon field="Truck.Number" />
+            </th>
+            <th>Loads</th>
+            <th>Total Revenue</th>
+            <th pSortableColumn="OriginAddress.City">
+              Route
+              <p-sortIcon field="OriginAddress.City" />
+            </th>
+            <th pSortableColumn="TotalDistance">
+              Distance ({{ distanceUnitLabel() }})
+              <p-sortIcon field="TotalDistance" />
+            </th>
+            <th pSortableColumn="Status">
+              Status
+              <p-sortIcon field="Status" />
+            </th>
+            <th>Progress</th>
+            <th>Action</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-trip let-expanded="expanded">
+          <tr
+            class="hover:bg-hover cursor-pointer transition-colors duration-150"
+            (click)="navigateToTrip(trip)"
+          >
+            <td (click)="$event.stopPropagation()">
+              <p-button
+                [pRowToggler]="trip"
+                class="mr-2 text-sm no-underline"
+                [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+                variant="text"
+                aria-label="Toggle trip details"
+              />
+            </td>
+            <td class="text-center font-medium">{{ trip.number }}</td>
+            <td>
+              <span
+                class="block max-w-32 truncate"
+                [pTooltip]="getRouteTooltip(trip)"
+                [showDelay]="500"
+                tooltipPosition="bottom"
+              >
+                {{ trip.name }}
+              </span>
+            </td>
+            <td class="text-center">{{ trip.truckNumber }}</td>
+            <td class="text-center">{{ trip.loadsCount }}</td>
+            <td class="text-right">{{ trip.totalRevenue | currencyFormat }}</td>
+            <td>
+              <app-route-badge
+                [origin]="trip.originAddress"
+                [destination]="trip.destinationAddress"
+              />
+            </td>
+            <td class="text-center">{{ trip.totalDistance | distanceUnit }}</td>
+            <td>
+              <app-trip-status-tag [status]="trip.status" />
+              <div class="text-muted text-xs italic">
+                @switch (trip.status) {
+                  @case ("dispatched") {
+                    {{ trip.dispatchedAt | dateFormat: "mediumDate" }}
+                  }
+                  @case ("completed") {
+                    {{ trip.completedAt | dateFormat: "mediumDate" }}
+                  }
+                }
+              </div>
+            </td>
+            <td>
+              @if (trip.status !== "draft" && trip.status !== "cancelled") {
+                @let progress = getProgressPercentage(trip);
+                <div style="min-width: 110px">
+                  <div class="mb-1 flex items-center justify-between text-xs">
+                    <span class="text-muted">{{ progress }}%</span>
+                    <span class="text-muted">
+                      {{ getCompletedStops(trip) }}/{{ trip.stops?.length ?? 0 }} stops
+                    </span>
+                  </div>
+                  <p-progressBar [value]="progress" [showValue]="false" class="h-2!" />
+                </div>
+              } @else {
+                <span class="text-muted-color text-sm">&mdash;</span>
+              }
+            </td>
+            <td (click)="$event.stopPropagation()">
+              <p-button
+                icon="pi pi-ellipsis-v"
+                [text]="true"
+                (click)="selectedRow.set(trip); menu.toggle($event)"
+                aria-label="Show actions menu"
+              />
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template #expandedrow let-trip>
+          <tr>
+            <td colspan="11">
+              <div class="p-4">
+                <h5 class="mb-4">Loads in this trip</h5>
+                <p-table [value]="trip.loads" [dataKey]="'id'">
+                  <ng-template #header>
+                    <tr>
+                      <th pSortableColumn="number">Load Number <p-sortIcon field="number" /></th>
+                      <th pSortableColumn="name">Load Name <p-sortIcon field="name" /></th>
+                      <th pSortableColumn="type">Load Type <p-sortIcon field="type" /></th>
+                      <th pSortableColumn="customer.name">
+                        Customer <p-sortIcon field="customer.name" />
+                      </th>
+                      <th pSortableColumn="originAddress.line1">
+                        Route <p-sortIcon field="originAddress.line1" />
+                      </th>
+                      <th pSortableColumn="status">Status <p-sortIcon field="status" /></th>
+                      <th pSortableColumn="distance">
+                        Distance ({{ distanceUnitLabel() }}) <p-sortIcon field="distance" />
+                      </th>
+                      <th pSortableColumn="deliveryCost">
+                        Revenue <p-sortIcon field="deliveryCost" />
+                      </th>
+                    </tr>
+                  </ng-template>
+                  <ng-template #body let-load>
+                    <tr>
+                      <td class="text-center">{{ load.number }}</td>
+                      <td>
+                        <span
+                          class="block max-w-32 truncate"
+                          [pTooltip]="load.name"
+                          [showDelay]="500"
+                          tooltipPosition="bottom"
+                        >
+                          {{ load.name }}
+                        </span>
+                      </td>
+                      <td><app-load-type-tag [type]="load.type" /></td>
+                      <td>
+                        <span
+                          class="block max-w-28 truncate"
+                          [pTooltip]="load.customer.name"
+                          [showDelay]="500"
+                          tooltipPosition="bottom"
+                        >
+                          {{ load.customer.name }}
+                        </span>
+                      </td>
+                      <td>
+                        <app-route-badge
+                          [origin]="load.originAddress"
+                          [destination]="load.destinationAddress"
+                        />
+                      </td>
+                      <td><app-load-status-tag [status]="load.status" /></td>
+                      <td class="text-center">{{ load.distance | distanceUnit }}</td>
+                      <td class="text-right">{{ load.deliveryCost | currencyFormat }}</td>
+                    </tr>
+                  </ng-template>
+                  <ng-template #footer>
+                    <tr>
+                      <td colspan="6"></td>
+                      <td class="text-right font-semibold">Total:</td>
+                      <td class="text-right font-semibold">
+                        {{ trip.totalRevenue | currencyFormat }}
+                      </td>
+                    </tr>
+                  </ng-template>
+                </p-table>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </ui-data-container>
+  </p-card>
+
+  <!-- Reusable context menu for the actions button -->
+  <p-menu #menu [model]="actionMenuItems()" [popup]="true" />
+</div>

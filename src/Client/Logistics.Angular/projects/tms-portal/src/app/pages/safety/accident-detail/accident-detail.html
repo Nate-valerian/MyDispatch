@@ -1,0 +1,683 @@
+<ui-page-header [title]="pageTitle()" backLink="/safety/accidents">
+  @if (canEdit()) {
+    <p-button label="Edit" icon="pi pi-pencil" [outlined]="true" (click)="editReport()" />
+  }
+  @if (canSubmit()) {
+    <p-button
+      label="Submit Report"
+      icon="pi pi-send"
+      (click)="submitReport()"
+      [loading]="isSubmitting()"
+    />
+  }
+  @if (canReview()) {
+    <p-button
+      label="Start Review"
+      icon="pi pi-eye"
+      severity="info"
+      [outlined]="true"
+      (click)="openReviewDialog()"
+    />
+  }
+  @if (canResolve()) {
+    <p-button
+      label="Resolve"
+      icon="pi pi-check-circle"
+      severity="success"
+      (click)="openResolveDialog()"
+    />
+  }
+</ui-page-header>
+
+@if (isLoading()) {
+  <div class="flex justify-center py-16">
+    <p-progress-spinner />
+  </div>
+} @else if (report()) {
+  <p-tabs value="0">
+    <p-tablist>
+      <p-tab value="0">Overview</p-tab>
+      <p-tab value="1">Injuries & Damage</p-tab>
+      <p-tab value="2">Third Parties</p-tab>
+      <p-tab value="3">Witnesses</p-tab>
+      <p-tab value="4">Police & Insurance</p-tab>
+      <p-tab value="5">Documents</p-tab>
+    </p-tablist>
+
+    <p-tabpanels>
+      <!-- Overview Tab -->
+      <p-tabpanel value="0">
+        <ui-grid container spacing="4" class="py-4">
+          <ui-grid [size]="{ xs: 12, lg: 8 }">
+            <p-card header="Incident Details">
+              <ui-grid container spacing="4">
+                <ui-grid [size]="{ xs: 6, md: 3 }">
+                  <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                    Status
+                  </ui-typography>
+                  <p-tag
+                    [value]="report()!.statusDisplay ?? 'Unknown'"
+                    [severity]="getStatusSeverity(report()!.status)"
+                  />
+                </ui-grid>
+                <ui-grid [size]="{ xs: 6, md: 3 }">
+                  <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                    Severity
+                  </ui-typography>
+                  <p-tag
+                    [value]="report()!.severityDisplay ?? 'Unknown'"
+                    [severity]="getSeveritySeverity(report()!.severity)"
+                  />
+                </ui-grid>
+                <ui-grid [size]="{ xs: 6, md: 3 }">
+                  <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                    Type
+                  </ui-typography>
+                  <p-tag [value]="report()!.typeDisplay ?? 'Unknown'" severity="info" />
+                </ui-grid>
+                <ui-grid [size]="{ xs: 6, md: 3 }">
+                  <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                    Date & Time
+                  </ui-typography>
+                  <ui-typography variant="body" weight="medium">
+                    {{ report()!.accidentDateTime | date: "medium" }}
+                  </ui-typography>
+                </ui-grid>
+              </ui-grid>
+
+              <ui-grid container spacing="4" class="mt-4">
+                <ui-grid [size]="{ xs: 6 }">
+                  <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                    Truck
+                  </ui-typography>
+                  <a [routerLink]="['/trucks', report()!.truckId]" class="text-primary font-medium">
+                    {{ report()!.truckNumber }}
+                  </a>
+                </ui-grid>
+                <ui-grid [size]="{ xs: 6 }">
+                  <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                    Driver
+                  </ui-typography>
+                  <ui-typography variant="body" weight="medium">
+                    {{ report()!.driverName }}
+                  </ui-typography>
+                </ui-grid>
+              </ui-grid>
+
+              <div class="mt-4">
+                <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                  Location
+                </ui-typography>
+                <ui-stack direction="row" align="center" gap="2">
+                  <ui-icon name="map-marker" color="muted" />
+                  <span>{{ report()!.location ?? "Not specified" }}</span>
+                </ui-stack>
+              </div>
+
+              <div class="mt-4">
+                <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                  Description
+                </ui-typography>
+                <p>{{ report()!.description ?? "No description provided" }}</p>
+              </div>
+
+              <ui-grid container spacing="4" class="mt-4">
+                @if (report()!.weatherConditions) {
+                  <ui-grid [size]="{ xs: 6 }">
+                    <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                      Weather Conditions
+                    </ui-typography>
+                    <div>{{ report()!.weatherConditions }}</div>
+                  </ui-grid>
+                }
+                @if (report()!.roadConditions) {
+                  <ui-grid [size]="{ xs: 6 }">
+                    <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                      Road Conditions
+                    </ui-typography>
+                    <div>{{ report()!.roadConditions }}</div>
+                  </ui-grid>
+                }
+              </ui-grid>
+            </p-card>
+
+            <!-- Review Section -->
+            @if (report()!.reviewedAt) {
+              <p-card header="Review Information" class="mt-4">
+                <ui-grid container spacing="4">
+                  <ui-grid [size]="{ xs: 6 }">
+                    <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                      Reviewed By
+                    </ui-typography>
+                    <ui-typography variant="body" weight="medium">
+                      {{ report()!.reviewedByName }}
+                    </ui-typography>
+                  </ui-grid>
+                  <ui-grid [size]="{ xs: 6 }">
+                    <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                      Reviewed At
+                    </ui-typography>
+                    <div>{{ report()!.reviewedAt | date: "medium" }}</div>
+                  </ui-grid>
+                </ui-grid>
+                @if (report()!.reviewNotes) {
+                  <div class="mt-4">
+                    <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                      Review Notes
+                    </ui-typography>
+                    <p>{{ report()!.reviewNotes }}</p>
+                  </div>
+                }
+              </p-card>
+            }
+          </ui-grid>
+
+          <ui-grid [size]="{ xs: 12, lg: 4 }">
+            <ui-stack gap="4">
+              <app-accident-quick-info [report]="report()!" />
+
+              <p-card header="Record Info">
+                <ui-stack gap="3">
+                  <div>
+                    <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                      Report Created
+                    </ui-typography>
+                    <ui-typography variant="body-sm">
+                      {{ report()!.createdAt | date: "medium" }}
+                    </ui-typography>
+                  </div>
+                  @if (report()!.tripId) {
+                    <div>
+                      <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                        Associated Trip
+                      </ui-typography>
+                      <a [routerLink]="['/trips', report()!.tripId]" class="text-primary text-sm">
+                        View Trip
+                      </a>
+                    </div>
+                  }
+                </ui-stack>
+              </p-card>
+            </ui-stack>
+          </ui-grid>
+        </ui-grid>
+      </p-tabpanel>
+
+      <!-- Injuries & Damage Tab -->
+      <p-tabpanel value="1">
+        <ui-grid container spacing="4" class="py-4">
+          <ui-grid [size]="{ xs: 12, lg: 6 }">
+            <p-card header="Injuries">
+              <ui-stack gap="4">
+                <ui-stack direction="row" align="center" gap="2">
+                  @if (report()!.injuriesReported) {
+                    <ui-icon name="exclamation-triangle" size="xl" color="danger" />
+                    <span class="text-danger text-lg font-semibold">
+                      {{ report()!.numberOfInjuries ?? 0 }} Injuries Reported
+                    </span>
+                  } @else {
+                    <ui-icon name="check-circle" size="xl" color="success" />
+                    <span class="text-success text-lg font-semibold">No Injuries Reported</span>
+                  }
+                </ui-stack>
+                @if (report()!.injuryDescription) {
+                  <div>
+                    <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                      Injury Details
+                    </ui-typography>
+                    <p>{{ report()!.injuryDescription }}</p>
+                  </div>
+                }
+
+                @if (report()!.fatalitiesReported) {
+                  <div class="mt-4 border-t pt-4">
+                    <ui-stack direction="row" align="center" gap="2">
+                      <ui-icon name="exclamation-circle" size="xl" color="danger" />
+                      <span class="text-danger text-lg font-semibold">
+                        {{ report()!.numberOfFatalities ?? 0 }} Fatalities Reported
+                      </span>
+                    </ui-stack>
+                  </div>
+                }
+              </ui-stack>
+            </p-card>
+          </ui-grid>
+
+          <ui-grid [size]="{ xs: 12, lg: 6 }">
+            <p-card header="Damage">
+              <ui-stack gap="4">
+                @if (report()!.estimatedDamage) {
+                  <div>
+                    <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                      Estimated Damage
+                    </ui-typography>
+                    <div class="text-primary text-2xl font-bold">
+                      {{ report()!.estimatedDamage | currencyFormat }}
+                    </div>
+                  </div>
+                }
+
+                @if (report()!.damageDescription) {
+                  <div>
+                    <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                      Damage Description
+                    </ui-typography>
+                    <p>{{ report()!.damageDescription }}</p>
+                  </div>
+                }
+
+                @if (report()!.vehicleTowed) {
+                  <div class="mt-2 border-t pt-4">
+                    <ui-stack direction="row" align="center" gap="2">
+                      <ui-icon name="truck" size="lg" color="warning" />
+                      <span class="font-medium">Vehicle was towed</span>
+                    </ui-stack>
+                    @if (report()!.towCompany) {
+                      <div class="mt-2 text-sm">Tow Company: {{ report()!.towCompany }}</div>
+                    }
+                  </div>
+                }
+
+                @if (report()!.hazmatInvolved) {
+                  <div class="mt-2 border-t pt-4">
+                    <ui-stack direction="row" align="center" gap="2">
+                      <ui-icon name="exclamation-triangle" size="lg" color="danger" />
+                      <span class="text-danger font-semibold">Hazmat Involved</span>
+                    </ui-stack>
+                    @if (report()!.hazmatDescription) {
+                      <div class="mt-2">
+                        <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                          Hazmat Details
+                        </ui-typography>
+                        <p>{{ report()!.hazmatDescription }}</p>
+                      </div>
+                    }
+                  </div>
+                }
+              </ui-stack>
+            </p-card>
+          </ui-grid>
+        </ui-grid>
+      </p-tabpanel>
+
+      <!-- Third Parties Tab -->
+      <p-tabpanel value="2">
+        <div class="py-4">
+          @if (report()!.thirdParties && report()!.thirdParties!.length > 0) {
+            <ui-grid container spacing="4">
+              @for (party of report()!.thirdParties; track party.id; let i = $index) {
+                <ui-grid [size]="{ xs: 12, md: 6 }">
+                  <p-card [header]="'Third Party ' + (i + 1)">
+                    <ui-stack gap="3">
+                      <ui-grid container spacing="3">
+                        <ui-grid [size]="{ xs: 6 }">
+                          <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                            Driver Name
+                          </ui-typography>
+                          <ui-typography variant="body" weight="medium">
+                            {{ party.driverName ?? "Not provided" }}
+                          </ui-typography>
+                        </ui-grid>
+                        <ui-grid [size]="{ xs: 6 }">
+                          <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                            Phone
+                          </ui-typography>
+                          <div>{{ party.driverPhone ?? "Not provided" }}</div>
+                        </ui-grid>
+                      </ui-grid>
+
+                      <ui-grid container spacing="3">
+                        <ui-grid [size]="{ xs: 6 }">
+                          <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                            License
+                          </ui-typography>
+                          <div>
+                            {{ party.driverLicense ?? "-" }} {{ party.driverLicenseState ?? "" }}
+                          </div>
+                        </ui-grid>
+                        <ui-grid [size]="{ xs: 6 }">
+                          <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                            License Plate
+                          </ui-typography>
+                          <div>
+                            {{ party.licensePlate ?? "-" }} {{ party.licensePlateState ?? "" }}
+                          </div>
+                        </ui-grid>
+                      </ui-grid>
+
+                      <div class="border-t pt-3">
+                        <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                          Vehicle
+                        </ui-typography>
+                        <div>
+                          {{ party.vehicleYear ?? "" }} {{ party.vehicleMake ?? "" }}
+                          {{ party.vehicleModel ?? "" }}
+                          @if (party.vehicleColor) {
+                            ({{ party.vehicleColor }})
+                          }
+                        </div>
+                        @if (party.vinNumber) {
+                          <ui-typography variant="body-sm" color="muted" class="mt-1 block">
+                            VIN: {{ party.vinNumber }}
+                          </ui-typography>
+                        }
+                      </div>
+
+                      @if (party.insuranceCompany) {
+                        <div class="border-t pt-3">
+                          <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                            Insurance
+                          </ui-typography>
+                          <div>{{ party.insuranceCompany }}</div>
+                          @if (party.insurancePolicyNumber) {
+                            <div class="text-sm">Policy: {{ party.insurancePolicyNumber }}</div>
+                          }
+                          @if (party.insurancePhone) {
+                            <div class="text-sm">Phone: {{ party.insurancePhone }}</div>
+                          }
+                        </div>
+                      }
+
+                      @if (party.notes) {
+                        <div class="border-t pt-3">
+                          <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                            Notes
+                          </ui-typography>
+                          <p class="text-sm">{{ party.notes }}</p>
+                        </div>
+                      }
+                    </ui-stack>
+                  </p-card>
+                </ui-grid>
+              }
+            </ui-grid>
+          } @else {
+            <ui-stack align="center" justify="center" gap="4" class="py-16 text-center">
+              <ui-icon name="car" size="xl" color="muted" />
+              <ui-typography variant="h4" tag="h3">No Third Parties</ui-typography>
+              <ui-typography variant="body" color="muted">
+                No other vehicles or parties were involved in this incident.
+              </ui-typography>
+            </ui-stack>
+          }
+        </div>
+      </p-tabpanel>
+
+      <!-- Witnesses Tab -->
+      <p-tabpanel value="3">
+        <div class="py-4">
+          @if (report()!.witnesses && report()!.witnesses!.length > 0) {
+            <ui-grid container spacing="4">
+              @for (witness of report()!.witnesses; track witness.id; let i = $index) {
+                <ui-grid [size]="{ xs: 12, md: 6, lg: 4 }">
+                  <p-card [header]="witness.name ?? 'Witness ' + (i + 1)">
+                    <ui-stack gap="3">
+                      @if (witness.phone) {
+                        <div>
+                          <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                            Phone
+                          </ui-typography>
+                          <div>{{ witness.phone }}</div>
+                        </div>
+                      }
+                      @if (witness.email) {
+                        <div>
+                          <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                            Email
+                          </ui-typography>
+                          <div>{{ witness.email }}</div>
+                        </div>
+                      }
+                      @if (witness.address) {
+                        <div>
+                          <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                            Address
+                          </ui-typography>
+                          <div class="text-sm">{{ witness.address }}</div>
+                        </div>
+                      }
+                      @if (witness.statement) {
+                        <div class="border-t pt-3">
+                          <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                            Statement
+                          </ui-typography>
+                          <p class="text-sm">{{ witness.statement }}</p>
+                          @if (witness.statementDate) {
+                            <ui-typography variant="caption" color="muted" class="mt-1 block">
+                              Dated: {{ witness.statementDate | date: "mediumDate" }}
+                            </ui-typography>
+                          }
+                        </div>
+                      }
+                    </ui-stack>
+                  </p-card>
+                </ui-grid>
+              }
+            </ui-grid>
+          } @else {
+            <ui-stack align="center" justify="center" gap="4" class="py-16 text-center">
+              <ui-icon name="users" size="xl" color="muted" />
+              <ui-typography variant="h4" tag="h3">No Witnesses</ui-typography>
+              <ui-typography variant="body" color="muted">
+                No witnesses have been recorded for this incident.
+              </ui-typography>
+            </ui-stack>
+          }
+        </div>
+      </p-tabpanel>
+
+      <!-- Police & Insurance Tab -->
+      <p-tabpanel value="4">
+        <ui-grid container spacing="4" class="py-4">
+          <ui-grid [size]="{ xs: 12, lg: 6 }">
+            <p-card header="Police Report">
+              @if (report()!.policeReportFiled) {
+                <ui-stack gap="3">
+                  <ui-stack direction="row" align="center" gap="2">
+                    <ui-icon name="check-circle" size="lg" color="success" />
+                    <span class="font-medium">Police report filed</span>
+                  </ui-stack>
+                  @if (report()!.policeReportNumber) {
+                    <div>
+                      <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                        Report Number
+                      </ui-typography>
+                      <ui-typography variant="body" weight="medium">
+                        {{ report()!.policeReportNumber }}
+                      </ui-typography>
+                    </div>
+                  }
+                  @if (report()!.policeDepartment) {
+                    <div>
+                      <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                        Department
+                      </ui-typography>
+                      <div>{{ report()!.policeDepartment }}</div>
+                    </div>
+                  }
+                  @if (report()!.policeOfficerName) {
+                    <div>
+                      <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                        Officer Name
+                      </ui-typography>
+                      <div>{{ report()!.policeOfficerName }}</div>
+                    </div>
+                  }
+                </ui-stack>
+              } @else {
+                <ui-stack align="center" gap="2" class="py-8 text-center">
+                  <ui-icon name="times-circle" size="xl" color="muted" />
+                  <ui-typography variant="body" color="muted">No police report filed</ui-typography>
+                </ui-stack>
+              }
+            </p-card>
+          </ui-grid>
+
+          <ui-grid [size]="{ xs: 12, lg: 6 }">
+            <p-card header="Insurance">
+              @if (report()!.insuranceClaimNumber || report()!.insuranceNotifiedAt) {
+                <ui-stack gap="3">
+                  @if (report()!.insuranceClaimNumber) {
+                    <div>
+                      <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                        Claim Number
+                      </ui-typography>
+                      <ui-typography variant="body" weight="medium">
+                        {{ report()!.insuranceClaimNumber }}
+                      </ui-typography>
+                    </div>
+                  }
+                  @if (report()!.insuranceNotifiedAt) {
+                    <div>
+                      <ui-typography variant="body-sm" color="muted" class="mb-1 block">
+                        Insurance Notified
+                      </ui-typography>
+                      <div>{{ report()!.insuranceNotifiedAt | date: "medium" }}</div>
+                    </div>
+                  }
+                </ui-stack>
+              } @else {
+                <ui-stack align="center" gap="2" class="py-8 text-center">
+                  <ui-icon name="clock" size="xl" color="muted" />
+                  <ui-typography variant="body" color="muted">
+                    Insurance claim not yet filed
+                  </ui-typography>
+                </ui-stack>
+              }
+            </p-card>
+          </ui-grid>
+        </ui-grid>
+      </p-tabpanel>
+
+      <!-- Documents Tab -->
+      <p-tabpanel value="5">
+        <div class="py-4">
+          <ui-grid container spacing="4">
+            <!-- Photos -->
+            <ui-grid [size]="{ xs: 12, lg: 6 }">
+              <p-card header="Photos">
+                @if (report()!.photos && report()!.photos!.length > 0) {
+                  <div class="grid grid-cols-2 gap-2 md:grid-cols-3">
+                    @for (photo of report()!.photos; track photo.id) {
+                      <div class="bg-subtle aspect-video overflow-hidden rounded-lg">
+                        <img
+                          [src]="photo.blobPath"
+                          [alt]="photo.fileName"
+                          class="h-full w-full object-cover"
+                        />
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <ui-stack align="center" gap="2" class="py-8 text-center">
+                    <ui-icon name="image" size="xl" color="muted" />
+                    <ui-typography variant="body" color="muted">No photos uploaded</ui-typography>
+                  </ui-stack>
+                }
+              </p-card>
+            </ui-grid>
+
+            <!-- Documents -->
+            <ui-grid [size]="{ xs: 12, lg: 6 }">
+              <p-card header="Documents">
+                @if (report()!.documents && report()!.documents!.length > 0) {
+                  <ui-stack gap="2">
+                    @for (doc of report()!.documents; track doc.id) {
+                      <ui-stack direction="row" align="center" gap="2" class="rounded p-2">
+                        <ui-icon name="file" color="primary" />
+                        <span>{{ doc.fileName ?? doc.originalFileName ?? "Document" }}</span>
+                      </ui-stack>
+                    }
+                  </ui-stack>
+                } @else {
+                  <ui-stack align="center" gap="2" class="py-8 text-center">
+                    <ui-icon name="folder-open" size="xl" color="muted" />
+                    <ui-typography variant="body" color="muted">
+                      No documents uploaded
+                    </ui-typography>
+                  </ui-stack>
+                }
+              </p-card>
+            </ui-grid>
+          </ui-grid>
+        </div>
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
+}
+
+<!-- Review Dialog -->
+<p-dialog
+  header="Start Review"
+  [modal]="true"
+  [(visible)]="showReviewDialog"
+  [style]="{ width: '450px' }"
+>
+  <ui-stack gap="4">
+    <ui-typography variant="body" color="muted">
+      Starting a review will change the report status to "Under Review". You can add optional notes
+      below.
+    </ui-typography>
+    <div>
+      <label for="reviewNotes" class="mb-2 block font-medium">Review Notes (Optional)</label>
+      <textarea
+        pTextarea
+        id="reviewNotes"
+        [(ngModel)]="reviewNotes"
+        rows="4"
+        class="w-full"
+        placeholder="Add any notes about this review..."
+      ></textarea>
+    </div>
+  </ui-stack>
+  <ng-template #footer>
+    <ui-stack direction="row" justify="end" gap="2">
+      <p-button label="Cancel" [text]="true" (click)="showReviewDialog.set(false)" />
+      <p-button
+        label="Start Review"
+        icon="pi pi-eye"
+        (click)="confirmReview()"
+        [loading]="isSubmitting()"
+      />
+    </ui-stack>
+  </ng-template>
+</p-dialog>
+
+<!-- Resolve Dialog -->
+<p-dialog
+  header="Resolve Accident Report"
+  [modal]="true"
+  [(visible)]="showResolveDialog"
+  [style]="{ width: '450px' }"
+>
+  <ui-stack gap="4">
+    <ui-typography variant="body" color="muted">
+      Resolving this report marks it as complete. You can add resolution notes below.
+    </ui-typography>
+    <div>
+      <label for="resolutionNotes" class="mb-2 block font-medium">
+        Resolution Notes (Optional)
+      </label>
+      <textarea
+        pTextarea
+        id="resolutionNotes"
+        [(ngModel)]="resolutionNotes"
+        rows="4"
+        class="w-full"
+        placeholder="Add any resolution notes..."
+      ></textarea>
+    </div>
+  </ui-stack>
+  <ng-template #footer>
+    <ui-stack direction="row" justify="end" gap="2">
+      <p-button label="Cancel" [text]="true" (click)="showResolveDialog.set(false)" />
+      <p-button
+        label="Resolve"
+        icon="pi pi-check-circle"
+        severity="success"
+        (click)="confirmResolve()"
+        [loading]="isSubmitting()"
+      />
+    </ui-stack>
+  </ng-template>
+</p-dialog>

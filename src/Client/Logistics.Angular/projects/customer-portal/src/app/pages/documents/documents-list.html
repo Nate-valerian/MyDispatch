@@ -1,0 +1,58 @@
+<ui-stack gap="1" class="mb-6">
+  <ui-typography variant="h2" tag="h1">My Documents</ui-typography>
+  <ui-typography variant="body" color="muted">All documents from your shipments</ui-typography>
+</ui-stack>
+
+@if (isLoading()) {
+  <ui-stack direction="row" align="center" justify="center" class="py-12">
+    <p-progress-spinner strokeWidth="4" />
+  </ui-stack>
+} @else {
+  <ui-surface variant="elevated" padding="none">
+    <p-table [value]="documents()" [tableStyle]="{ 'min-width': '50rem' }">
+      <ng-template #header>
+        <tr>
+          <th>Document</th>
+          <th>Type</th>
+          <th>Shipment</th>
+          <th>Date</th>
+          <th></th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-doc>
+        <tr>
+          <td class="font-medium">{{ doc.fileName }}</td>
+          <td>
+            <p-tag [value]="getDocumentTypeLabel(doc.documentType)" severity="info" />
+          </td>
+          <td>
+            @if (doc.loadId) {
+              <a [routerLink]="['/shipments', doc.loadId]" class="text-primary hover:underline">
+                Load #{{ doc.loadNumber }}
+              </a>
+            } @else {
+              -
+            }
+          </td>
+          <td>{{ doc.createdAt | date: "mediumDate" }}</td>
+          <td class="text-right">
+            <p-button icon="pi pi-download" [text]="true" label="Download" />
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="5" class="py-12 text-center">
+            <ui-stack align="center" gap="2">
+              <ui-icon name="file" size="xl" color="muted" />
+              <ui-typography variant="body" color="muted">No documents found</ui-typography>
+              <ui-typography variant="body-sm" color="muted">
+                Documents will appear here when they are added to your shipments
+              </ui-typography>
+            </ui-stack>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </ui-surface>
+}

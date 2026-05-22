@@ -1,0 +1,29 @@
+<ui-container maxWidth="md">
+  <ui-page-header [title]="headerTitle()" [backLink]="'/expenses/' + id()" />
+
+  @if (isLoading()) {
+    <ui-stack align="center" justify="center" class="py-16">
+      <p-progress-spinner />
+    </ui-stack>
+  } @else if (expense(); as e) {
+    <p-card>
+      @switch (e.type) {
+        @case ("company") {
+          <app-company-expense-form mode="edit" [initial]="e" />
+        }
+        @case ("truck") {
+          <app-truck-expense-form mode="edit" [initial]="e" />
+        }
+        @case ("body_shop") {
+          <app-body-shop-expense-form mode="edit" [initial]="e" />
+        }
+      }
+    </p-card>
+  } @else {
+    <p-card>
+      <ui-stack align="center" gap="3" class="py-16">
+        <ui-typography color="muted">Expense not found</ui-typography>
+      </ui-stack>
+    </p-card>
+  }
+</ui-container>

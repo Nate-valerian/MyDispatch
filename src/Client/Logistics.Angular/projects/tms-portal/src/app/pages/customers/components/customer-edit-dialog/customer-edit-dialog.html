@@ -1,0 +1,138 @@
+<p-dialog
+  header="Edit Customer"
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '600px' }"
+  [closable]="true"
+  [draggable]="false"
+>
+  <form [formGroup]="form" (ngSubmit)="save()">
+    <ui-form-field label="Name" for="name" [required]="true">
+      <input
+        pInputText
+        formControlName="name"
+        id="name"
+        class="w-full"
+        placeholder="Customer name"
+      />
+    </ui-form-field>
+
+    <ui-grid container spacing="4" class="mt-4">
+      <ui-grid [size]="{ xs: 12, md: 6 }">
+        <ui-form-field label="Email" for="email">
+          <input
+            pInputText
+            formControlName="email"
+            id="email"
+            type="email"
+            class="w-full"
+            placeholder="email@example.com"
+          />
+        </ui-form-field>
+      </ui-grid>
+
+      <ui-grid [size]="{ xs: 12, md: 6 }">
+        <ui-form-field label="Phone" for="phone">
+          <input
+            pInputText
+            formControlName="phone"
+            id="phone"
+            type="tel"
+            class="w-full"
+            placeholder="(555) 555-5555"
+          />
+        </ui-form-field>
+      </ui-grid>
+    </ui-grid>
+
+    <ui-form-field label="Status" for="status" class="mt-4">
+      <p-select
+        formControlName="status"
+        id="status"
+        class="w-full"
+        [options]="statusOptions"
+        optionLabel="label"
+        optionValue="value"
+      />
+    </ui-form-field>
+
+    <ui-form-field label="Address" class="mt-4">
+      <ui-address-form formControlName="address" [allowedCountries]="allowedCountries()" />
+    </ui-form-field>
+
+    <ui-grid container spacing="4" class="mt-4">
+      <ui-grid [size]="{ xs: 12, md: 6 }">
+        <ui-form-field
+          label="Tax ID / VAT number"
+          for="taxId"
+          [required]="customerIsEu()"
+          [hint]="
+            customerIsEu()
+              ? 'Required for EU customers — enables cross-border B2B reverse charge.'
+              : 'VAT, EIN, GSTIN, ABN, etc. (optional)'
+          "
+        >
+          <input
+            pInputText
+            id="taxId"
+            formControlName="taxId"
+            class="w-full"
+            placeholder="e.g. DE123456789"
+          />
+        </ui-form-field>
+      </ui-grid>
+
+      <ui-grid [size]="{ xs: 12, md: 6 }">
+        <ui-form-field label="Tax status" for="isVatExempt">
+          <div class="flex items-center gap-2 pt-2">
+            <p-checkbox formControlName="isVatExempt" inputId="isVatExempt" [binary]="true" />
+            <label for="isVatExempt">VAT / sales tax exempt</label>
+          </div>
+        </ui-form-field>
+      </ui-grid>
+    </ui-grid>
+
+    <ui-form-field label="Notes" for="notes" class="mt-4">
+      <textarea
+        pInputTextarea
+        formControlName="notes"
+        id="notes"
+        class="w-full"
+        rows="3"
+        placeholder="Additional notes about this customer..."
+      ></textarea>
+    </ui-form-field>
+
+    <ui-validation-summary [form]="form" class="mt-4" />
+
+    <ui-stack direction="row" justify="end" gap="2" class="mt-6">
+      <p-button type="button" label="Cancel" [outlined]="true" (click)="close()" />
+      <p-button
+        type="submit"
+        label="Save Changes"
+        icon="pi pi-check"
+        [loading]="isLoading()"
+        [disabled]="!form.valid"
+      />
+    </ui-stack>
+  </form>
+
+  <p-accordion class="mt-6">
+    <p-accordion-panel value="danger">
+      <ng-template #header>
+        <span class="text-danger">Danger Zone</span>
+      </ng-template>
+      <ng-template #content>
+        <p class="text-muted mb-4">
+          Deleting a customer will remove all associated data. This action cannot be undone.
+        </p>
+        <p-button
+          label="Delete Customer"
+          icon="pi pi-trash"
+          severity="danger"
+          (click)="deleted.emit()"
+        />
+      </ng-template>
+    </p-accordion-panel>
+  </p-accordion>
+</p-dialog>

@@ -1,0 +1,151 @@
+<ui-page-header
+  title="ELD / HOS Dashboard"
+  subtitle="Monitor driver Hours of Service compliance"
+>
+  <p-tag [value]="rules.ruleSetLabel()" severity="info" pTooltip="Active HOS rule set" />
+  <p-button label="Configure Providers" icon="pi pi-cog" (onClick)="configureProviders()" />
+  <p-button
+    label="Sync HOS Data"
+    icon="pi pi-refresh"
+    [loading]="loading()"
+    (onClick)="syncDriversHos()"
+  />
+</ui-page-header>
+
+<!-- Summary Cards Row -->
+<ui-grid container spacing="4" class="mb-6">
+  <ui-grid [size]="{ xs: 12, md: 6, lg: 4 }">
+    <app-stat-card
+      icon="pi-check-circle"
+      label="Available Drivers"
+      [value]="availableDrivers().length"
+      color="green"
+      trend="Ready for dispatch"
+    />
+  </ui-grid>
+
+  <ui-grid [size]="{ xs: 12, md: 6, lg: 4 }">
+    <app-stat-card
+      icon="pi-users"
+      label="Total Drivers"
+      [value]="drivers().length"
+      color="blue"
+      trend="With ELD mapping"
+    />
+  </ui-grid>
+
+  <ui-grid [size]="{ xs: 12, md: 6, lg: 4 }">
+    <app-stat-card
+      icon="pi-exclamation-triangle"
+      label="HOS Violations"
+      [value]="violationCount()"
+      [color]="violationCount() > 0 ? 'red' : 'gray'"
+      [trend]="violationCount() > 0 ? 'Requires attention' : 'All compliant'"
+    />
+  </ui-grid>
+</ui-grid>
+
+<!-- Main Content -->
+<ui-grid container spacing="4">
+  <ui-grid [size]="12">
+    <ui-dashboard-card title="Driver Hours of Service" icon="pi-clock" iconColor="blue">
+      @if (loading()) {
+        <ui-stack align="center" justify="center" class="p-5">
+          <p-progressSpinner />
+        </ui-stack>
+      } @else if (error()) {
+        <ui-error-state [message]="error()!" (retry)="loadDriversHos()" />
+      } @else if (drivers().length === 0) {
+        <ui-empty-state
+          title="No driver HOS data"
+          message="Configure an ELD provider and map your drivers to start tracking HOS."
+          icon="info-circle"
+          severity="info"
+          actionLabel="Configure Providers"
+          actionIcon="pi pi-cog"
+          (action)="configureProviders()"
+        />
+      } @else {
+        <p-table
+          [value]="drivers()"
+          [paginator]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[10, 25, 50]"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="Showing {first} to {last} of {totalRecords} drivers"
+        >
+          <ng-template #header>
+            <tr>
+              <th pSortableColumn="employeeName">
+                Driver
+                <p-sortIcon field="employeeName"></p-sortIcon>
+              </th>
+              <th pSortableColumn="currentDutyStatus">
+                Status
+                <p-sortIcon field="currentDutyStatus"></p-sortIcon>
+              </th>
+              <th>Driving Time Left</th>
+              <th>On-Duty Time Left</th>
+              <th>Cycle Time Left</th>
+              <th pSortableColumn="isAvailableForDispatch">
+                Available
+                <p-sortIcon field="isAvailableForDispatch"></p-sortIcon>
+              </th>
+              <th pSortableColumn="lastUpdatedAt">
+                Last Updated
+                <p-sortIcon field="lastUpdatedAt"></p-sortIcon>
+              </th>
+              <th>Actions</th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-driver>
+            <tr [class.bg-danger/10]="driver.isInViolation">
+              <td>
+                <div class="flex items-center gap-2">
+                  @if (driver.isInViolation) {
+                    <i class="pi pi-exclamation-triangle text-danger" pTooltip="HOS Violation"></i>
+                  }
+                  <span class="font-medium">{{ driver.employeeName }}</span>
+                </div>
+              </td>
+              <td>
+                <p-tag
+                  [value]="driver.currentDutyStatusDisplay"
+                  [severity]="getDutyStatusSeverity(driver.currentDutyStatus)"
+                ></p-tag>
+              </td>
+              <td>
+                <span [class.text-danger]="driver.drivingMinutesRemaining < drivingWarnMinutes()">
+                  {{ driver.drivingTimeRemainingDisplay }}
+                </span>
+              </td>
+              <td>
+                <span [class.text-warning]="driver.onDutyMinutesRemaining < onDutyWarnMinutes()">
+                  {{ driver.onDutyTimeRemainingDisplay }}
+                </span>
+              </td>
+              <td>{{ driver.cycleTimeRemainingDisplay }}</td>
+              <td>
+                @if (driver.isAvailableForDispatch) {
+                  <p-tag value="Available" severity="success"></p-tag>
+                } @else {
+                  <p-tag value="Unavailable" severity="danger"></p-tag>
+                }
+              </td>
+              <td>{{ driver.lastUpdatedAt | date: "short" }}</td>
+              <td>
+                <p-button
+                  icon="pi pi-history"
+                  [rounded]="true"
+                  [text]="true"
+                  pTooltip="View Logs"
+                  (onClick)="viewDriverLogs(driver.employeeId)"
+                ></p-button>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      }
+    </ui-dashboard-card>
+  </ui-grid>
+</ui-grid>

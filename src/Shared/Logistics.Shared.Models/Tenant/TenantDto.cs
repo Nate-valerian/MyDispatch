@@ -1,0 +1,35 @@
+using System.Text.Json.Serialization;
+
+using Logistics.Domain.Primitives.ValueObjects;
+
+namespace Logistics.Shared.Models;
+
+public record TenantDto
+{
+    public Guid? Id { get; set; }
+    public string? Name { get; set; }
+    public string? CompanyName { get; set; }
+    public string? BillingEmail { get; set; }
+    public string? DotNumber { get; set; }
+    public string? McNumber { get; set; }
+    public string? VatNumber { get; set; }
+    public string? EoriNumber { get; set; }
+    public string? CompanyRegistrationNumber { get; set; }
+    public string? TaxResidencyCountry { get; set; }
+    public required Address CompanyAddress { get; set; }
+    public string? StripeCustomerId { get; set; }
+    public string? LogoUrl { get; set; }
+    public string? PhoneNumber { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public string? ConnectionString { get; set; }
+
+    public SubscriptionDto? Subscription { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public int? TruckCount { get; set; }
+
+    public bool IsSubscriptionRequired { get; set; } = true;
+
+    public TenantSettings? Settings { get; set; }
+}

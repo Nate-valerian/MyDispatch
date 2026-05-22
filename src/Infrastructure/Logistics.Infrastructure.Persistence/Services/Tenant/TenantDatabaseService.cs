@@ -1,0 +1,173 @@
+using System.Data.Common;
+using System.Text.RegularExpressions;
+using Logistics.Domain.Entities;
+using Logistics.Domain.Options;
+using Logistics.Infrastructure.Persistence.Data;
+using Logistics.Shared.Identity.Policies;
+using Logistics.Shared.Identity.Roles;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Npgsql;
+using Logistics.Application.Abstractions.Tenancy;
+using CustomClaimTypes = Logistics.Shared.Identity.Claims.CustomClaimTypes;
+
+namespace Logistics.Infrastructure.Persistence.Services;
+
+internal partial class TenantDatabaseService(
+    TenantDbContext context,
+    TenantDatabaseDefaults databaseOptions,
+    ILogger<TenantDatabaseService> logger)
+    : ITenantDatabaseService
+{
+    public string GenerateConnectionString(string tenantName)
+    {
+        if (string.IsNullOrEmpty(databaseOptions.NameTemplate))
+        {
+            throw new InvalidOperationException(
+                "The NameTemplate is not defined in the TenantDatabaseDefaults appsettings.json section");
+        }
+
+        var databaseName = TenantDatabaseNameRegex().Replace(databaseOptions.NameTemplate, tenantName);
+        var connectionString =
+            $"Host={databaseOptions.Host}; Database={databaseName}; Port={databaseOptions.Port}; Username={databaseOptions.UserId}; Password={databaseOptions.Password}";
+        return connectionString;
+    }
+
+    public async Task<bool> CreateDatabaseAsync(string connectionString)
+    {
+        try
+        {
+            context.Database.SetConnectionString(connectionString);
+            await context.Database.MigrateAsync();
+            await AddTenantRoles();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError("Thrown exception in TenantDatabaseService.CreateDatabaseAsync(): {Exception}", ex);
+            return false;
+        }
+    }
+
+    public async Task<bool> DeleteDatabaseAsync(string connectionString)
+    {
+        try
+        {
+            var sourceBuilder = new NpgsqlConnectionStringBuilder(connectionString);
+            var targetDbName = sourceBuilder.Database;
+
+            var masterBuilder = new NpgsqlConnectionStringBuilder
+            {
+                Host = sourceBuilder.Host,
+                Port = sourceBuilder.Port,
+                Username = sourceBuilder.Username,
+                Password = sourceBuilder.Password,
+                Database = "postgres"
+            };
+
+            await using var connection = new NpgsqlConnection(masterBuilder.ConnectionString);
+            await connection.OpenAsync();
+
+            // Terminate all active connections to the target database before dropping
+            await using (var terminateCmd = new NpgsqlCommand(
+                $"SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '{targetDbName}' AND pid <> pg_backend_pid()",
+                connection))
+            {
+                await terminateCmd.ExecuteNonQueryAsync();
+            }
+
+            await using var dropCmd = new NpgsqlCommand($"DROP DATABASE IF EXISTS \"{targetDbName}\"", connection);
+            await dropCmd.ExecuteNonQueryAsync();
+            return true;
+        }
+        catch (DbException ex)
+        {
+            logger.LogError("Thrown exception in TenantDatabaseService.DeleteDatabaseAsync(): {@Exception}", ex);
+            return false;
+        }
+    }
+
+    private async Task AddTenantRoles()
+    {
+        var roles = TenantRoles.GetValues();
+
+        foreach (var tenantRole in roles)
+        {
+            var role = new TenantRole(tenantRole.Value) { DisplayName = tenantRole.DisplayName };
+
+            var existingRole = await context.Set<TenantRole>()
+                .Include(r => r.Claims)
+                .FirstOrDefaultAsync(i => i.Name == role.Name);
+
+            if (existingRole != null)
+            {
+                // Sync role claims - add missing and remove stale
+                await SyncRolePermissionsAsync(existingRole);
+                context.Set<TenantRole>().Update(existingRole);
+                logger.LogInformation("Updated tenant role '{Role}'", existingRole.Name);
+            }
+            else
+            {
+                // Add new role and its claims
+                var basicPermissions = TenantRolePermissions.GetBasicPermissions();
+                var rolePermissions = TenantRolePermissions.GetPermissionsForRole(role.Name);
+                AddRolePermissions(role, basicPermissions.Concat(rolePermissions).Distinct());
+
+                context.Set<TenantRole>().Add(role);
+                logger.LogInformation("Added tenant role '{Role}'", role.Name);
+            }
+        }
+
+        await context.SaveChangesAsync();
+    }
+
+    private Task SyncRolePermissionsAsync(TenantRole role)
+    {
+        var requiredPermissions = TenantRolePermissions.GetPermissionsForRole(role.Name)
+            .Concat(TenantRolePermissions.GetBasicPermissions())
+            .Distinct()
+            .ToList();
+
+        // Add missing permissions
+        foreach (var permission in requiredPermissions)
+        {
+            if (!role.Claims.Any(c => c.ClaimType == CustomClaimTypes.Permission && c.ClaimValue == permission))
+            {
+                role.Claims.Add(new TenantRoleClaim(CustomClaimTypes.Permission, permission));
+                logger.LogInformation("Added permission '{Permission}' to tenant role '{Role}'", permission, role.Name);
+            }
+        }
+
+        // Remove permissions that are no longer in the required list
+        var claimsToRemove = role.Claims
+            .Where(c => c.ClaimType == CustomClaimTypes.Permission && !requiredPermissions.Contains(c.ClaimValue!))
+            .ToList();
+
+        foreach (var claim in claimsToRemove)
+        {
+            role.Claims.Remove(claim);
+            logger.LogInformation("Removed permission '{Permission}' from tenant role '{Role}'", claim.ClaimValue,
+                role.Name);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private void AddRolePermissions(TenantRole role, IEnumerable<string> permissions)
+    {
+        foreach (var permission in permissions)
+        {
+            // Add the claim only if it does not already exist.
+            if (!role.Claims.Any(c => c.ClaimType == CustomClaimTypes.Permission && c.ClaimValue == permission))
+            {
+                role.Claims.Add(new TenantRoleClaim(CustomClaimTypes.Permission, permission));
+
+                logger.LogInformation("Added claim '{ClaimType}' - '{ClaimValue}' to the tenant role '{Role}'",
+                    CustomClaimTypes.Permission, permission, role.Name);
+            }
+        }
+    }
+
+    [GeneratedRegex("{tenant}")]
+    private static partial Regex TenantDatabaseNameRegex();
+}

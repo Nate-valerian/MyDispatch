@@ -1,0 +1,263 @@
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
+using Hangfire;
+using Hangfire.PostgreSql;
+using Logistics.API.Authorization;
+using Logistics.API.Converters;
+using Logistics.API.Extensions;
+using Logistics.API.Jobs;
+using Logistics.API.Middlewares;
+using Logistics.API.ModelBinders;
+using Logistics.Application;
+using Logistics.Domain.Options;
+using Logistics.Infrastructure.Communications;
+using Logistics.Infrastructure.Communications.SignalR.Hubs;
+using Logistics.Infrastructure.Documents;
+using Logistics.Infrastructure.Integrations.Eld;
+using Logistics.Infrastructure.Integrations.LoadBoard;
+using Logistics.Infrastructure.Payments;
+using Logistics.Infrastructure.Persistence;
+using Logistics.Infrastructure.Persistence.Builder;
+using Logistics.Infrastructure.Tax;
+using Logistics.Infrastructure.Vin;
+using Logistics.Infrastructure.Routing;
+using Logistics.Infrastructure.AI;
+using Logistics.Infrastructure.Storage;
+using Logistics.McpServer;
+using Logistics.TelegramBot;
+using Logistics.Shared.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.IdentityModel.Tokens;
+using Serilog;
+using Serilog.Extensions.Logging;
+using Logistics.Application.Abstractions.BackgroundJobs;
+using Logistics.Application.Abstractions.AiDispatch;
+
+namespace Logistics.API;
+
+internal static class Setup
+{
+    public static WebApplication ConfigureServices(this WebApplicationBuilder builder)
+    {
+        var services = builder.Services;
+        var configuration = builder.Configuration;
+
+        var serilogLogger = new SerilogLoggerFactory(Log.Logger)
+            .CreateLogger<IPersistenceInfrastructureBuilder>();
+
+        // Application layers
+        services.AddApplicationLayer();
+
+        // Infrastructure layers
+        services.AddCommunicationsInfrastructure(configuration);
+        services.AddDocumentsInfrastructure();
+        services.AddVinInfrastructure();
+        services.AddEldIntegrations(configuration);
+        services.AddLoadBoardIntegrations(configuration);
+        services.AddPaymentsInfrastructure(configuration);
+        services.AddTaxInfrastructure(configuration);
+        services.AddRoutingInfrastructure(configuration);
+        services.AddAIInfrastructure(configuration);
+        services.AddMcpServerInfrastructure();
+        services.AddTelegramBotInfrastructure(configuration, builder.Environment.IsDevelopment());
+        services.AddStorageInfrastructure(configuration);
+        services.AddPersistenceInfrastructure(configuration)
+            .UseLogger(serilogLogger)
+            .AddMasterDatabase()
+            .AddTenantDatabase()
+            .AddIdentity();
+
+        services.AddHttpContextAccessor();
+        services.AddMemoryCache();
+        services.AddAuthorization();
+        services.AddEndpointsApiExplorer();
+        services.AddSwaggerGen();
+
+        // Impersonation configuration (TmsPortalUrl is also reused by privacy emails)
+        services.Configure<ImpersonationOptions>(configuration.GetSection(ImpersonationOptions.SectionName));
+
+        // Rate limiting configuration
+        services.AddRateLimiter(options =>
+        {
+            options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: context.User.Identity?.Name ?? context.Request.Headers.Host.ToString(),
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        AutoReplenishment = true,
+                        PermitLimit = 100,
+                        Window = TimeSpan.FromMinutes(1)
+                    }));
+
+            // Strict rate limit for impersonation endpoint
+            options.AddPolicy("impersonation", context =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        AutoReplenishment = true,
+                        PermitLimit = 5,
+                        Window = TimeSpan.FromMinutes(15),
+                        QueueLimit = 0
+                    }));
+
+            options.OnRejected = async (context, cancellationToken) =>
+            {
+                context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                await context.HttpContext.Response.WriteAsJsonAsync(
+                    new { error = "Too many requests. Please try again later." },
+                    cancellationToken);
+            };
+        });
+
+        services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+        services.AddScoped<IAuthorizationHandler, PermissionHandler>();
+
+        services.AddScoped<IBackgroundJobRunner<AiDispatchRequest>, HangfireAiDispatchJobRunner>();
+        services.AddScoped<ICommandEnqueuer, HangfireCommandEnqueuer>();
+        services.AddHangfireServer();
+        services.AddHangfire(config => config
+            .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+            .UseSimpleAssemblyNameTypeSerializer()
+            .UseRecommendedSerializerSettings()
+            .UsePostgreSqlStorage(c =>
+                c.UseNpgsqlConnection(configuration.GetConnectionString("MasterDatabase"))));
+
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+            {
+                configuration.Bind("IdentityServer", options);
+
+                // Disable HTTPS requirement in development or when configured (e.g., behind reverse proxy)
+                if (builder.Environment.IsDevelopment() ||
+                    !configuration.GetValue<bool>("IdentityServer:RequireHttpsMetadata"))
+                {
+                    options.RequireHttpsMetadata = false;
+                }
+
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateAudience = true,
+                    ValidateIssuer = true,
+                    ValidIssuers = configuration.GetSection("IdentityServer:ValidIssuers").Get<string[]>(),
+                    ValidAudience = configuration["IdentityServer:Audience"]
+                };
+            });
+
+        services.AddControllers(configure =>
+            {
+                var policy = new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .Build();
+
+                configure.Filters.Add(new AuthorizeFilter(policy));
+
+                // Add custom model binder for snake_case enum query parameters
+                configure.ModelBinderProviders.Insert(0, new SnakeCaseEnumModelBinderProvider());
+            })
+            .ConfigureApiBehaviorOptions(options =>
+            {
+                options.InvalidModelStateResponseFactory = context =>
+                    new BadRequestObjectResult(Result.Fail(GetModelStateErrors(context.ModelState)));
+            })
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.Converters.Add(
+                    new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower)
+                );
+                options.JsonSerializerOptions.Converters.Add(new Iso8601UtcDateTimeConverter());
+                options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+            });
+
+        services.AddCors(options =>
+        {
+            options.AddPolicy("DefaultCors", cors =>
+            {
+                cors.SetIsOriginAllowedToAllowWildcardSubdomains()
+                    .WithOrigins("https://logisticsx.app", "https://*.logisticsx.app")
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+            });
+            options.AddPolicy("AnyCors", cors =>
+            {
+                cors.AllowAnyOrigin()
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+            });
+        });
+        return builder.Build();
+    }
+
+    public static WebApplication ConfigurePipeline(this WebApplication app)
+    {
+        // Serilog must wrap the exception handler so it logs AFTER error body is captured
+        app.UseSerilogRequestLoggingWithErrorDetails();
+        app.UseCustomExceptionHandler();
+
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
+        }
+
+        app.UseHttpsRedirection();
+        app.UseCors(app.Environment.IsDevelopment() ? "AnyCors" : "DefaultCors");
+
+        app.UseLocalStorageStaticFiles();
+
+        app.UseAuthentication();
+        app.UseRateLimiter();
+        app.UseAuthorization();
+        app.UseHangfireDashboard();
+
+        app.MapControllers();
+
+        // MCP Server
+        app.MapMcpEndpoint();
+
+        // Telegram Bot
+        app.MapTelegramWebhook();
+
+        // SignalR Hubs
+        app.MapHub<TrackingHub>("/hubs/tracking");
+        app.MapHub<AiDispatchHub>("/hubs/ai-dispatch");
+        app.MapHub<NotificationHub>("/hubs/notification");
+        app.MapHub<ChatHub>("/hubs/chat");
+        return app;
+    }
+
+    public static WebApplication ScheduleJobs(this WebApplication app)
+    {
+        PayrollGenerationJob.ScheduleJobs();
+        EldSyncJob.ScheduleJobs();
+        LoadBoardSyncJob.ScheduleJobs();
+        MaintenanceReminderJob.ScheduleJobs();
+        LicenseExpiryReminderJob.ScheduleJobs();
+        InvitationExpiryJob.ScheduleJobs();
+        DataExportProcessingJob.ScheduleJobs();
+        DataDeletionJob.ScheduleJobs();
+        DataRetentionJob.ScheduleJobs();
+        DataExportExpiryJob.ScheduleJobs();
+
+        // Remove old stale dispatch agent job if it exists
+        RecurringJob.RemoveIfExists("ai-dispatch");
+        return app;
+    }
+
+    private static string GetModelStateErrors(ModelStateDictionary modelState)
+    {
+        var errors = new StringBuilder();
+        foreach (var error in modelState.Values.SelectMany(modelStateValue => modelStateValue.Errors))
+        {
+            errors.Append($"{error.ErrorMessage} ");
+        }
+
+        return errors.ToString();
+    }
+}

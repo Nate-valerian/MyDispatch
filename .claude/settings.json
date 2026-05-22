@@ -1,0 +1,49 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet:*)",
+      "Bash(bun:*)",
+      "Bash(./gradlew:*)",
+      "Bash(./gradlew.bat:*)",
+      "Bash(gradlew:*)",
+      "Bash(gradlew.bat:*)",
+      "Bash(git:*)",
+      "Bash(gh:*)",
+      "Bash(mkdir:*)",
+      "Bash(dir:*)",
+      "Bash(tree:*)",
+      "Bash(del:*)",
+      "Bash(ren:*)",
+      "Bash(copy:*)",
+      "Bash(move:*)",
+      "Bash(where:*)",
+      "Bash(find:*)",
+      "Bash(findstr:*)",
+      "Bash(grep:*)",
+      "Bash(wc:*)",
+      "Bash(xargs:*)",
+      "Bash(cat:*)",
+      "Bash(test:*)",
+      "Bash(cd:*)",
+      "Bash(set:*)",
+      "Skill(frontend-design:*)",
+      "mcp__plugin_playwright_playwright__*",
+      "mcp__logisticsx__*"
+    ],
+    "deny": [],
+    "ask": []
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/format-file.sh\""
+          }
+        ]
+      }
+    ]
+  }
+}

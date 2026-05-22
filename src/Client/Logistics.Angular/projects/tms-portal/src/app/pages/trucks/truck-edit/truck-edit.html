@@ -1,0 +1,15 @@
+<ui-page-header [title]="pageTitle()" />
+
+@if (isLoading() && !truck()) {
+  <ui-stack align="center" justify="center" class="py-16">
+    <p-progress-spinner />
+  </ui-stack>
+} @else {
+  <app-truck-form
+    [mode]="mode()"
+    [initial]="truck()"
+    [isLoading]="isLoading()"
+    (save)="onSave($event)"
+    (remove)="onRemove()"
+  />
+}

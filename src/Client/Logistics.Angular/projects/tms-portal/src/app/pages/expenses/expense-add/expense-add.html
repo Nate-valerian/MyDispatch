@@ -1,0 +1,24 @@
+<ui-container maxWidth="md">
+  <ui-page-header title="Add Expense" backLink="/expenses" />
+  <p-card>
+    <p-tabs [value]="activeTab()" (valueChange)="onTabChange($event)">
+      <p-tablist>
+        <p-tab [value]="0">Company Expense</p-tab>
+        <p-tab [value]="1">Truck Expense</p-tab>
+        <p-tab [value]="2">Body Shop Expense</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <p-tabpanel [value]="0">
+          <app-company-expense-form mode="add" />
+        </p-tabpanel>
+        <p-tabpanel [value]="1">
+          <app-truck-expense-form mode="add" />
+        </p-tabpanel>
+        <p-tabpanel [value]="2">
+          <app-body-shop-expense-form mode="add" />
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </p-card>
+</ui-container>

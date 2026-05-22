@@ -1,0 +1,102 @@
+<web-section-container sectionId="contact-form" background="white">
+  <div class="mx-auto max-w-2xl">
+    @if (isSubmitted()) {
+      <!-- Success State -->
+      <div class="rounded-2xl bg-green-50 p-8 text-center" webScrollAnimate="scale-up">
+        <div
+          class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100"
+        >
+          <i class="pi pi-check text-3xl text-green-600"></i>
+        </div>
+        <h3 class="mt-6 text-2xl font-bold text-gray-900">Message sent</h3>
+        <p class="mt-2 text-gray-600">
+          Thanks for reaching out. We'll get back to you within 24 hours.
+        </p>
+        <p-button
+          label="Send Another Message"
+          [outlined]="true"
+          [rounded]="true"
+          (onClick)="resetForm()"
+          class="mt-6"
+        />
+      </div>
+    } @else {
+      <!-- Form -->
+      <div webScrollAnimate="fade-up">
+        <h2 class="text-center text-2xl font-bold text-gray-900">Send us a message</h2>
+        <p class="mt-2 text-center text-gray-600">
+          Fill this out and we'll get back to you.
+        </p>
+
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="mt-8">
+          <!-- Name Fields -->
+          <div class="grid gap-4 sm:grid-cols-2">
+            <ui-form-field label="First Name" for="firstName" [required]="true" [control]="form.controls.firstName">
+              <input pInputText id="firstName" formControlName="firstName" placeholder="John" class="w-full" />
+            </ui-form-field>
+            <ui-form-field label="Last Name" for="lastName" [required]="true" [control]="form.controls.lastName">
+              <input pInputText id="lastName" formControlName="lastName" placeholder="Doe" class="w-full" />
+            </ui-form-field>
+          </div>
+
+          <!-- Email & Phone -->
+          <div class="grid gap-4 sm:grid-cols-2">
+            <ui-form-field label="Email" for="email" [required]="true" [control]="form.controls.email">
+              <input pInputText id="email" type="email" formControlName="email" placeholder="john@company.com" class="w-full" />
+            </ui-form-field>
+            <ui-form-field label="Phone" for="phone" hint="Optional">
+              <input pInputText id="phone" type="tel" formControlName="phone" placeholder="(555) 123-4567" class="w-full" />
+            </ui-form-field>
+          </div>
+
+          <!-- Subject -->
+          <ui-form-field label="Subject" for="subject" [required]="true" [control]="form.controls.subject">
+            <p-select
+              id="subject"
+              formControlName="subject"
+              [options]="subjectOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Select a subject"
+              styleClass="w-full"
+            />
+          </ui-form-field>
+
+          <!-- Message -->
+          <ui-form-field label="Message" for="message" [required]="true" [control]="form.controls.message">
+            <textarea
+              pTextarea
+              id="message"
+              formControlName="message"
+              rows="5"
+              placeholder="How can we help you?"
+              class="w-full"
+            ></textarea>
+          </ui-form-field>
+
+          <!-- Error Message -->
+          @if (errorMessage()) {
+            <div class="mb-4 rounded-lg bg-red-50 p-4 text-sm text-red-600">
+              <i class="pi pi-exclamation-circle mr-2"></i>
+              {{ errorMessage() }}
+            </div>
+          }
+
+          <!-- Submit Button -->
+          <div class="text-center">
+            <p-button
+              type="submit"
+              label="Send Message"
+              icon="pi pi-send"
+              iconPos="right"
+              [loading]="isLoading()"
+              [disabled]="form.invalid"
+              [rounded]="true"
+              size="large"
+            />
+          </div>
+        </form>
+      </div>
+    }
+  </div>
+</web-section-container>
