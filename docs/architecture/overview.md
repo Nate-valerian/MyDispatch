@@ -1,6 +1,6 @@
 # Architecture Overview
 
-LogisticsX is a Domain-Driven Design (DDD) monolith with CQRS, organized into clear layers and a modular infrastructure split into focused projects. The runtime is .NET 10 on PostgreSQL 18, orchestrated by .NET Aspire.
+DispatchLoad is a Domain-Driven Design (DDD) monolith with CQRS, organized into clear layers and a modular infrastructure split into focused projects. The runtime is .NET 10 on PostgreSQL 18, orchestrated by .NET Aspire.
 
 > See [layering.md](layering.md) for the 4-layer rule and the Abstractions / Application split. See [module-layout.md](module-layout.md) for the Application `Modules/` layout.
 
@@ -331,7 +331,7 @@ Load board providers: DAT, Truckstop, 123Loadboard, and a Demo provider. Search 
     "AccountId": "...",
     "AccessKeyId": "...",
     "SecretAccessKey": "...",
-    "BucketName": "logisticsx"
+    "BucketName": "dispatchload"
   }
 }
 ```
@@ -348,7 +348,7 @@ Load board providers: DAT, Truckstop, 123Loadboard, and a Demo provider. Search 
 
 ## Multi-Tenancy
 
-LogisticsX uses **database-per-tenant** isolation. See [Multi-Tenancy](multi-tenancy.md) for the full architecture, request flow, and provisioning sequence.
+DispatchLoad uses **database-per-tenant** isolation. See [Multi-Tenancy](multi-tenancy.md) for the full architecture, request flow, and provisioning sequence.
 
 ## Next Steps
 

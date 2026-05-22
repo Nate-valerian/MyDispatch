@@ -59,12 +59,12 @@ internal sealed class StartCommand(
         var loginUrl = $"{identityUrl}/telegram/login?state={loginState}";
 
         var keyboard = new InlineKeyboardMarkup([
-            [InlineKeyboardButton.WithUrl("Login with LogisticsX", loginUrl)]
+            [InlineKeyboardButton.WithUrl("Login with DispatchLoad", loginUrl)]
         ]);
 
         var welcomeText = chatType == TelegramChatType.Group
-            ? "Welcome to *LogisticsX Bot*\\!\n\nAn owner, manager, or dispatcher must log in to connect this group\\."
-            : "Welcome to *LogisticsX Bot*\\!\n\nLog in with your LogisticsX account to get started\\.";
+            ? "Welcome to *DispatchLoad Bot*\\!\n\nAn owner, manager, or dispatcher must log in to connect this group\\."
+            : "Welcome to *DispatchLoad Bot*\\!\n\nLog in with your DispatchLoad account to get started\\.";
 
         await bot.SendMessage(
             message.Chat.Id,

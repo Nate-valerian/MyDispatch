@@ -1,8 +1,8 @@
-# LogisticsX Documentation
+# DispatchLoad Documentation
 
-Welcome to the LogisticsX docs.
+Welcome to the DispatchLoad docs.
 
-LogisticsX is a fleet management platform for trucking companies. The same system runs whether you're dry van, reefer, flatbed, tanker, box truck, dump truck, tow truck, car hauler, container/intermodal, low loader, tautliner, swap body, or curtainsider. It works in the US and Europe, with address validation, currency (USD or EUR), and map defaults that match the region a tenant is provisioned in.
+DispatchLoad is a fleet management platform for trucking companies. The same system runs whether you're dry van, reefer, flatbed, tanker, box truck, dump truck, tow truck, car hauler, container/intermodal, low loader, tautliner, swap body, or curtainsider. It works in the US and Europe, with address validation, currency (USD or EUR), and map defaults that match the region a tenant is provisioned in.
 
 ## Quick Links
 

@@ -1,12 +1,12 @@
 # Local Development Setup
 
-Step-by-step guide to run LogisticsX without Docker.
+Step-by-step guide to run DispatchLoad without Docker.
 
 ## Step 1: Clone Repository
 
 ```bash
-git clone https://github.com/suxrobgm/logistics-app.git
-cd logistics-app
+git clone https://github.com/Nate-valerian/dispatchload.git
+cd dispatchload
 ```
 
 ## Step 2: Install Angular Dependencies
@@ -24,16 +24,16 @@ cd ../../..
 Connect to PostgreSQL and create the required databases:
 
 ```sql
-CREATE DATABASE master_logisticsx;
-CREATE DATABASE default_logisticsx;
+CREATE DATABASE master_dispatchload;
+CREATE DATABASE default_dispatchload;
 ```
 
 Or via command line:
 
 ```bash
-psql -U postgres -c "CREATE DATABASE master_logisticsx;"
-psql -U postgres -c "CREATE DATABASE us_logisticsx;"
-psql -U postgres -c "CREATE DATABASE eu_logisticsx;"
+psql -U postgres -c "CREATE DATABASE master_dispatchload;"
+psql -U postgres -c "CREATE DATABASE us_dispatchload;"
+psql -U postgres -c "CREATE DATABASE eu_dispatchload;"
 ```
 
 ### Update Connection Strings
@@ -43,11 +43,11 @@ Edit `src/Presentation/Logistics.API/appsettings.json`:
 ```json
 {
   "ConnectionStrings": {
-    "MasterDatabase": "Host=localhost;Port=5432;Database=master_logisticsx;Username=postgres;Password=YOUR_PASSWORD",
-    "UsTenantDatabase": "Host=localhost;Port=5432;Database=us_logisticsx;Username=postgres;Password=YOUR_PASSWORD"
+    "MasterDatabase": "Host=localhost;Port=5432;Database=master_dispatchload;Username=postgres;Password=YOUR_PASSWORD",
+    "UsTenantDatabase": "Host=localhost;Port=5432;Database=us_dispatchload;Username=postgres;Password=YOUR_PASSWORD"
   },
   "TenantDatabaseDefaults": {
-    "NameTemplate": "{tenant}_logisticsx",
+    "NameTemplate": "{tenant}_dispatchload",
     "Host": "localhost",
     "UserId": "postgres",
     "Password": "YOUR_PASSWORD"

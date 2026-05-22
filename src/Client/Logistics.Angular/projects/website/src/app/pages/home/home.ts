@@ -27,7 +27,7 @@ export class Home implements OnInit {
         "AI-powered fleet dispatch that autonomously matches loads to trucks, verifies HOS compliance, and optimizes routes. Real-time GPS tracking, invoicing, and payroll for modern trucking companies.",
       keywords:
         "AI dispatch, AI fleet management, autonomous dispatching, TMS, trucking software, GPS tracking, load matching, HOS compliance, logistics",
-      canonicalUrl: "https://logisticsx.app/",
+      canonicalUrl: "https://dispatchload.app/",
     });
 
     this.schemaService.setOrganizationSchema();

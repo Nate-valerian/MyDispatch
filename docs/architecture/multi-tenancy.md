@@ -1,6 +1,6 @@
 # Multi-Tenancy Architecture
 
-LogisticsX uses **database-per-tenant** isolation: a single master database stores tenants, subscriptions, and super-admin accounts; every tenant company gets its own PostgreSQL database with the full operational schema.
+DispatchLoad uses **database-per-tenant** isolation: a single master database stores tenants, subscriptions, and super-admin accounts; every tenant company gets its own PostgreSQL database with the full operational schema.
 
 ## Why database-per-tenant
 
@@ -23,7 +23,7 @@ flowchart TB
         ApiKeys["API Keys<br/>(MCP)"]
     end
 
-    subgraph TenantA["Tenant A DB&nbsp;&nbsp;&nbsp;<i>acme_logisticsx</i>"]
+    subgraph TenantA["Tenant A DB&nbsp;&nbsp;&nbsp;<i>acme_dispatchload</i>"]
         UA["Users · Roles"]
         DA["Loads · Trips · Trucks"]
         FA["Customers · Invoices · Payments"]
@@ -31,7 +31,7 @@ flowchart TB
         AIA["Dispatch sessions · Decisions"]
     end
 
-    subgraph TenantB["Tenant B DB&nbsp;&nbsp;&nbsp;<i>swift_logisticsx</i>"]
+    subgraph TenantB["Tenant B DB&nbsp;&nbsp;&nbsp;<i>swift_dispatchload</i>"]
         UB["Users · Roles"]
         DB["Loads · Trips · Trucks"]
         FB["Customers · Invoices · Payments"]
@@ -39,7 +39,7 @@ flowchart TB
         AIB["Dispatch sessions · Decisions"]
     end
 
-    subgraph TenantC["Tenant C DB&nbsp;&nbsp;&nbsp;<i>eu_logisticsx</i>"]
+    subgraph TenantC["Tenant C DB&nbsp;&nbsp;&nbsp;<i>eu_dispatchload</i>"]
         UC["Users · Roles"]
         DC["Loads · Trips · Trucks"]
         FC["Customers · Invoices · Payments"]
@@ -131,10 +131,10 @@ When there is no `HttpContext` (Hangfire workers, `DbMigrator`, integration test
 ```json
 {
   "ConnectionStrings": {
-    "MasterDatabase": "Host=localhost;Port=5432;Database=master_logisticsx;Username=postgres;Password=...;Pooling=true;Maximum Pool Size=20"
+    "MasterDatabase": "Host=localhost;Port=5432;Database=master_dispatchload;Username=postgres;Password=...;Pooling=true;Maximum Pool Size=20"
   },
   "TenantDatabaseDefaults": {
-    "NameTemplate": "{tenant}_logisticsx",
+    "NameTemplate": "{tenant}_dispatchload",
     "Host": "localhost",
     "Port": 5432,
     "UserId": "postgres",
@@ -147,7 +147,7 @@ When there is no `HttpContext` (Hangfire workers, `DbMigrator`, integration test
 
 ### Naming convention
 
-Tenant databases follow `{tenant_slug}_logisticsx` - for example `acme_logisticsx`, `swift_transport_logisticsx`, `default_logisticsx`. Slugs are normalized to lowercase before lookup.
+Tenant databases follow `{tenant_slug}_dispatchload` - for example `acme_dispatchload`, `swift_transport_dispatchload`, `default_dispatchload`. Slugs are normalized to lowercase before lookup.
 
 ## Provisioning a new tenant
 
@@ -165,7 +165,7 @@ sequenceDiagram
     Admin->>API: POST /tenants (CreateTenantCommand)
     API->>Master: Insert Tenant row (slug, region, settings)
     API->>TDS: GenerateConnectionString(slug)
-    TDS-->>API: "Host=...;Database=acme_logisticsx;..."
+    TDS-->>API: "Host=...;Database=acme_dispatchload;..."
     API->>Postgres: Create database
     API->>TDS: CreateDatabaseAsync(connectionString)
     TDS->>TDb: Apply EF Core migrations

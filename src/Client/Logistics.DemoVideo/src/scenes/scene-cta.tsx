@@ -41,7 +41,7 @@ export function SceneCta(): ReactElement {
 
         <div className="mt-7">
           <AnimatedText
-            text="logisticsx.app"
+            text="dispatchload.app"
             delay={120}
             fontSize={22}
             fontWeight={500}

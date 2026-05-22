@@ -7,6 +7,6 @@
 export function getAccessToken(
   appName: "customerportal" | "tmsportal" | "adminportal",
 ): string | null {
-  const authData = JSON.parse(sessionStorage.getItem(`0-logisticsx.${appName}`) || "{}");
+  const authData = JSON.parse(sessionStorage.getItem(`0-dispatchload.${appName}`) || "{}");
   return authData?.authnResult?.access_token ?? null;
 }

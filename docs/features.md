@@ -1,6 +1,6 @@
 # Features
 
-Complete feature list for LogisticsX.
+Complete feature list for DispatchLoad.
 
 ## Supported Equipment
 

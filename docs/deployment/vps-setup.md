@@ -1,6 +1,6 @@
 # VPS Initial Setup
 
-Prepare your Ubuntu/Debian VPS for LogisticsX deployment.
+Prepare your Ubuntu/Debian VPS for DispatchLoad deployment.
 
 ## Prerequisites
 
@@ -58,8 +58,8 @@ sudo ufw enable
 ## Step 7: Clone and Deploy
 
 ```bash
-git clone https://github.com/suxrobgm/logistics-app.git
-cd logistics-app/src/Aspire/Logistics.Aspire.AppHost/aspire-output
+git clone https://github.com/Nate-valerian/dispatchload.git
+cd dispatchload/src/Aspire/Logistics.Aspire.AppHost/aspire-output
 
 # Configure environment
 cp .env.example .env

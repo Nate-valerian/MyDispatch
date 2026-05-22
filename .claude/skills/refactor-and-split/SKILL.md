@@ -197,7 +197,7 @@ Code shapes that almost always benefit from simplification. Each item lists what
 - **Nested `Select` + `SelectMany` + `ToList` chains** longer than 3 operators on a hot path — **Action:** consider rewriting as an explicit loop with named locals.
 - **`.Where(x => x != null).Select(x => x!.Foo)` in a list-of-nullable** — **Action:** `OfType<T>()` removes the bang and the predicate.
 
-### Project-specific (LogisticsX)
+### Project-specific (DispatchLoad)
 
 - **Manual tenant filter** like `.Where(x => x.TenantId == tenantId)` — `TenantDbContext` already scopes queries per tenant. **Action:** drop the redundant `Where`.
 - **`.Include(...)` for navigation properties** — lazy loading is enabled. **Action:** delete the `Include`; let lazy load fire.
@@ -206,7 +206,7 @@ Code shapes that almost always benefit from simplification. Each item lists what
 
 ## Duplication patterns to watch for
 
-LogisticsX-specific patterns that recur and are worth de-duplicating:
+DispatchLoad-specific patterns that recur and are worth de-duplicating:
 
 | Pattern                                                           | Extract to                                         |
 | ----------------------------------------------------------------- | -------------------------------------------------- |
@@ -227,7 +227,7 @@ LogisticsX-specific patterns that recur and are worth de-duplicating:
 - Tight loops where duplication is intentional (perf-sensitive paths — leave a comment if you find one).
 - Three nearly-similar lines. Three is not enough to abstract — it usually creates worse code than it removes. Wait until 4+ and the divergence isn't accidental.
 
-### Don't simplify (LogisticsX-specific)
+### Don't simplify (DispatchLoad-specific)
 
 - **MediatR command/query handlers** even for one-line operations — the project convention requires this shape so cross-cutting behaviors (validation, logging, auditing) work uniformly. Don't replace with direct service calls.
 - **`internal sealed` modifiers on handlers** — required by convention even though `public` would compile.

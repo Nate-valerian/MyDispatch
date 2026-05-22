@@ -1,6 +1,6 @@
 # Prerequisites
 
-Required software to run LogisticsX locally.
+Required software to run DispatchLoad locally.
 
 ## Required Software
 

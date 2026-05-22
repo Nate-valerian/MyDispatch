@@ -29,15 +29,15 @@
 -dontwarn java.lang.management.RuntimeMXBean
 
 # OpenAPI generated API models
--keep class com.logisticsx.driver.api.models.** { *; }
+-keep class com.dispatchload.driver.api.models.** { *; }
 
 # App models
--keep class com.logisticsx.driver.model.** { *; }
+-keep class com.dispatchload.driver.model.** { *; }
 
 # Service models
--keep class com.logisticsx.driver.service.realtime.TruckGeolocation { *; }
--keep class com.logisticsx.driver.service.auth.TokenResponse { *; }
--keep class com.logisticsx.driver.service.auth.TokenErrorResponse { *; }
+-keep class com.dispatchload.driver.service.realtime.TruckGeolocation { *; }
+-keep class com.dispatchload.driver.service.auth.TokenResponse { *; }
+-keep class com.dispatchload.driver.service.auth.TokenErrorResponse { *; }
 
 # SignalR client
 -keep class com.microsoft.signalr.** { *; }

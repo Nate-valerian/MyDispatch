@@ -19,7 +19,7 @@ export class McpIntegrationGuide {
   protected readonly claudeDesktopSnippet = JSON.stringify(
     {
       mcpServers: {
-        logisticsx: {
+        dispatchload: {
           url: this.mcpEndpoint,
           headers: { Authorization: "Bearer <your-api-key>" },
         },
@@ -29,7 +29,7 @@ export class McpIntegrationGuide {
     2,
   );
 
-  protected readonly claudeCodeSnippet = `claude mcp add logisticsx \\
+  protected readonly claudeCodeSnippet = `claude mcp add dispatchload \\
   --transport http \\
   --url ${this.mcpEndpoint} \\
   --header "Authorization: Bearer <your-api-key>"`;
@@ -37,7 +37,7 @@ export class McpIntegrationGuide {
   protected readonly cursorSnippet = JSON.stringify(
     {
       mcpServers: {
-        logisticsx: {
+        dispatchload: {
           url: this.mcpEndpoint,
           headers: { Authorization: "Bearer <your-api-key>" },
         },
@@ -50,7 +50,7 @@ export class McpIntegrationGuide {
   protected readonly copilotSnippet = JSON.stringify(
     {
       servers: {
-        logisticsx: {
+        dispatchload: {
           type: "http",
           url: this.mcpEndpoint,
           headers: { Authorization: "Bearer <your-api-key>" },

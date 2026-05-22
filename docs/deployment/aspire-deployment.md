@@ -1,6 +1,6 @@
 # Docker Compose Deployment
 
-Deploy LogisticsX using the pre-generated Docker Compose configuration from .NET Aspire.
+Deploy DispatchLoad using the pre-generated Docker Compose configuration from .NET Aspire.
 
 ## Overview
 
@@ -26,8 +26,8 @@ The `aspire-output` directory contains production-ready configurations:
 ### Step 1: Clone Repository
 
 ```bash
-git clone https://github.com/suxrobgm/logistics-app.git
-cd logistics-app/src/Aspire/Logistics.Aspire.AppHost/aspire-output
+git clone https://github.com/Nate-valerian/dispatchload.git
+cd dispatchload/src/Aspire/Logistics.Aspire.AppHost/aspire-output
 ```
 
 ### Step 2: Configure Environment
@@ -117,7 +117,7 @@ docker compose pull && docker compose up -d
 ## Updating
 
 ```bash
-cd logistics-app
+cd dispatchload
 git pull
 cd src/Aspire/Logistics.Aspire.AppHost/aspire-output
 docker compose pull

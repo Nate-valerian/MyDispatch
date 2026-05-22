@@ -1,6 +1,6 @@
 # Layering
 
-LogisticsX follows a Clean / Onion architecture with four conceptual layers. Dependency arrows only point inward — outer layers know about inner layers, never the reverse.
+DispatchLoad follows a Clean / Onion architecture with four conceptual layers. Dependency arrows only point inward — outer layers know about inner layers, never the reverse.
 
 ```text
 Presentation  →  Application                   →  Domain

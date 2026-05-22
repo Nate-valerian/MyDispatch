@@ -29,9 +29,9 @@ else
         .WithVolume("logistics-pg-data", "/var/lib/postgresql")
         .WithEndpoint("tcp", endpoint => endpoint.IsExternal = true);
 
-    masterDb = postgres.AddDatabase("master", "master_logisticsx");
-    usTenantDb = postgres.AddDatabase("us-tenant", "us_logisticsx");
-    euTenantDb = postgres.AddDatabase("eu-tenant", "eu_logisticsx");
+    masterDb = postgres.AddDatabase("master", "master_dispatchload");
+    usTenantDb = postgres.AddDatabase("us-tenant", "us_dispatchload");
+    euTenantDb = postgres.AddDatabase("eu-tenant", "eu_dispatchload");
 }
 
 var identityServer = builder.AddProject<Logistics_IdentityServer>("identity-server")
@@ -131,7 +131,7 @@ if (isDevEnv)
 // Use BunApp for local dev, Container for publishing
 if (isProdEnv)
 {
-    builder.AddContainer("admin-portal", "ghcr.io/suxrobgm/logistics-app/admin-portal")
+    builder.AddContainer("admin-portal", "ghcr.io/nate-valerian/dispatchload/admin-portal")
         .WithImageTag("latest")
         .WithHttpEndpoint(7002, 80, "admin-http")
         .WithExternalHttpEndpoints()
@@ -139,7 +139,7 @@ if (isProdEnv)
         .WaitFor(identityServer)
         .WithComposeRestartPolicy();
 
-    builder.AddContainer("tms-portal", "ghcr.io/suxrobgm/logistics-app/tms-portal")
+    builder.AddContainer("tms-portal", "ghcr.io/nate-valerian/dispatchload/tms-portal")
         .WithImageTag("latest")
         .WithHttpEndpoint(7003, 80, "tms-http")
         .WithExternalHttpEndpoints()
@@ -148,7 +148,7 @@ if (isProdEnv)
         .WaitFor(identityServer)
         .WithComposeRestartPolicy();
 
-    builder.AddContainer("customer-portal", "ghcr.io/suxrobgm/logistics-app/customer-portal")
+    builder.AddContainer("customer-portal", "ghcr.io/nate-valerian/dispatchload/customer-portal")
         .WithImageTag("latest")
         .WithHttpEndpoint(7004, 80, "customer-http")
         .WithExternalHttpEndpoints()
@@ -156,7 +156,7 @@ if (isProdEnv)
         .WaitFor(identityServer)
         .WithComposeRestartPolicy();
 
-    builder.AddContainer("website", "ghcr.io/suxrobgm/logistics-app/website")
+    builder.AddContainer("website", "ghcr.io/nate-valerian/dispatchload/website")
         .WithImageTag("latest")
         .WithHttpEndpoint(7005, 7005, "website-http")
         .WithExternalHttpEndpoints()

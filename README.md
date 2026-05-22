@@ -1,4 +1,4 @@
-﻿# Dispatch
+# DispatchLoad
 
 [![FSL-1.1-Apache-2.0][fsl-shield]][fsl]
 
@@ -9,17 +9,7 @@
 
 ![AI Dispatch - Sessions & Decisions](docs/images/tms-portal/ai-dispatch-sessions.png)
 
-<!-- markdownlint-disable MD033 -->
-<p align="center">
-  <a href=""></a>
-  <a href=""></a>
-</p>
-
 ## Try it
-
-| Portal          | URL                                                        |
-| --------------- | ---------------------------------------------------------- |
-
 
 **US tenant** (Default Logistics):
 
@@ -45,7 +35,7 @@
 
 ## Who it's for
 
-LogisticsX is built first-class for **freight, vehicle transport, and intermodal drayage** operations. Other fleet types (refrigerated, flatbed, tanker, etc.) are supported experimentally and may need workflow tweaks. The platform replaces the patchwork of spreadsheets, group chats, and standalone TMS/accounting tools - dispatch, driver mobile app, customer tracking, invoicing, and payroll all run from the same system, in real time. Works across both **US and EU** operations, with multi-tenant isolation so each company gets its own database.
+DispatchLoad is built first-class for **freight, vehicle transport, and intermodal drayage** operations. Other fleet types (refrigerated, flatbed, tanker, etc.) are supported experimentally and may need workflow tweaks. The platform replaces the patchwork of spreadsheets, group chats, and standalone TMS/accounting tools - dispatch, driver mobile app, customer tracking, invoicing, and payroll all run from the same system, in real time. Works across both **US and EU** operations, with multi-tenant isolation so each company gets its own database.
 
 Roles:
 
@@ -168,11 +158,11 @@ Pull requests welcome. Fork, branch off `main`, open a PR. See the [development 
 
 [Functional Source License, Version 1.1, Apache 2.0 Future License][fsl] (FSL-1.1-Apache-2.0).
 
-Free for internal use, non-commercial use, and professional services. Commercial use that competes with LogisticsX (e.g. offering it as a hosted TMS) is not permitted during the 2-year change period. The license auto-converts to **Apache 2.0** on the second anniversary of each release. For earlier commercial licensing, contact the author.
+Free for internal use, non-commercial use, and professional services. Commercial use that competes with DispatchLoad (e.g. offering it as a hosted TMS) is not permitted during the 2-year change period. The license auto-converts to **Apache 2.0** on the second anniversary of each release. For earlier commercial licensing, contact the author.
 
 ## Contact
 
 Created by **Nate**
 
-- Email: [n.nate1544@gmail.com]
-
+- Email: [n.nate1544@gmail.com](mailto:n.nate1544@gmail.com)
+- GitHub: [github.com/Nate-valerian](https://github.com/Nate-valerian)

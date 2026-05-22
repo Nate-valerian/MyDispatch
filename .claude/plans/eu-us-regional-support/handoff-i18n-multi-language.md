@@ -2,7 +2,7 @@
 
 > **Priority:** MEDIUM (do BEFORE adding more pages — touches every component). **Effort:** L (~1 week scaffold + ongoing translation work).
 >
-> All Angular labels are hardcoded English. The mobile driver app already declares a `Language` enum (`en`/`ru`/`uz`) in [Settings.kt](../../src/Client/Logistics.DriverApp/composeApp/src/commonMain/kotlin/com/logisticsx/driver/model/Settings.kt) but only one `strings.xml` exists. We need a real i18n pipeline before the codebase grows further.
+> All Angular labels are hardcoded English. The mobile driver app already declares a `Language` enum (`en`/`ru`/`uz`) in [Settings.kt](../../src/Client/Logistics.DriverApp/composeApp/src/commonMain/kotlin/com/dispatchload/driver/model/Settings.kt) but only one `strings.xml` exists. We need a real i18n pipeline before the codebase grows further.
 
 ## Status
 
@@ -149,7 +149,7 @@ Treat the rest of this plan as the gradual-phase backlog.
 
 - [ ] User with `PreferredLanguage = 'de'` logs in → entire UI in German
 - [ ] User can change language from settings; saved to backend
-- [ ] Email "Welcome to LogisticsX" arrives in German for German user
+- [ ] Email "Welcome to DispatchLoad" arrives in German for German user
 - [ ] Invoice PDF renders in tenant language
 - [ ] Mobile app honors `Language` setting across all screens (currently only the enum exists)
 - [ ] Date/currency formatting follows locale (e.g., `1.234,56 €` for de-DE, `$1,234.56` for en-US)

@@ -42,7 +42,7 @@ The repo includes a pre-configured [.mcp.json](../.mcp.json) file. Just replace 
 ```json
 {
   "mcpServers": {
-    "logisticsx": {
+    "dispatchload": {
       "type": "http",
       "url": "http://localhost:7000/mcp",
       "headers": {
@@ -62,8 +62,8 @@ Add to your Claude Desktop config (`claude_desktop_config.json`):
 ```json
 {
   "mcpServers": {
-    "logisticsx": {
-      "url": "https://api.logisticsx.app/mcp",
+    "dispatchload": {
+      "url": "https://api.dispatchload.app/mcp",
       "headers": {
         "Authorization": "Bearer <your-api-key>"
       }
@@ -76,9 +76,9 @@ Add to your Claude Desktop config (`claude_desktop_config.json`):
 
 In Cursor settings, add an MCP server:
 
-- **Name**: logisticsx
+- **Name**: dispatchload
 - **Type**: Streamable HTTP
-- **URL**: `https://api.logisticsx.app/mcp`
+- **URL**: `https://api.dispatchload.app/mcp`
 - **Headers**: `Authorization: Bearer <your-api-key>`
 
 #### Windsurf
@@ -88,8 +88,8 @@ Add to your Windsurf MCP config (`mcp_config.json`):
 ```json
 {
   "mcpServers": {
-    "logisticsx": {
-      "serverUrl": "https://api.logisticsx.app/mcp",
+    "dispatchload": {
+      "serverUrl": "https://api.dispatchload.app/mcp",
       "headers": {
         "Authorization": "Bearer <your-api-key>"
       }
@@ -103,7 +103,7 @@ Add to your Windsurf MCP config (`mcp_config.json`):
 The server uses **Streamable HTTP** transport at:
 
 ```text
-POST https://api.logisticsx.app/mcp
+POST https://api.dispatchload.app/mcp
 Authorization: Bearer <your-api-key>
 ```
 

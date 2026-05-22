@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.logisticsx.driver"
+    namespace = "com.dispatchload.driver"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.logisticsx.driver"
+        applicationId = "com.dispatchload.driver"
         minSdk = 26
         targetSdk = 36
         versionCode = 4
@@ -32,8 +32,8 @@ android {
         }
         create("prod") {
             dimension = "environment"
-            buildConfigField("String", "API_BASE_URL", "\"https://api.logisticsx.app\"")
-            buildConfigField("String", "IDENTITY_SERVER_URL", "\"https://id.logisticsx.app\"")
+            buildConfigField("String", "API_BASE_URL", "\"https://api.dispatchload.app\"")
+            buildConfigField("String", "IDENTITY_SERVER_URL", "\"https://id.dispatchload.app\"")
             manifestPlaceholders["allowCleartext"] = "false"
         }
     }
@@ -41,9 +41,9 @@ android {
     signingConfigs {
         create("release") {
             storeFile = rootProject.file("release-keystore.jks")
-            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "logisticsx"
+            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "dispatchload"
             keyAlias = "release"
-            keyPassword = System.getenv("KEY_PASSWORD") ?: "logisticsx"
+            keyPassword = System.getenv("KEY_PASSWORD") ?: "dispatchload"
         }
     }
 

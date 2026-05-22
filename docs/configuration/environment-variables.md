@@ -1,6 +1,6 @@
 # Environment Variables
 
-Configuration reference for LogisticsX Docker deployment.
+Configuration reference for DispatchLoad Docker deployment.
 
 ## Docker Compose Environment (.env)
 
@@ -9,10 +9,10 @@ The `.env` file in `src/Aspire/Logistics.Aspire.AppHost/aspire-output/` configur
 ### Container Images and Ports
 
 ```bash
-API_IMAGE="ghcr.io/suxrobgm/logistics-app/api:latest"
-ADMIN_APP_IMAGE="ghcr.io/suxrobgm/logistics-app/admin:latest"
-IDENTITY_SERVER_IMAGE="ghcr.io/suxrobgm/logistics-app/identity:latest"
-MIGRATOR_IMAGE="ghcr.io/suxrobgm/logistics-app/migrator:latest"
+API_IMAGE="ghcr.io/nate-valerian/dispatchload/api:latest"
+ADMIN_APP_IMAGE="ghcr.io/nate-valerian/dispatchload/admin:latest"
+IDENTITY_SERVER_IMAGE="ghcr.io/nate-valerian/dispatchload/identity:latest"
+MIGRATOR_IMAGE="ghcr.io/nate-valerian/dispatchload/migrator:latest"
 
 API_PORT=7000
 IDENTITY_SERVER_PORT=7001
@@ -31,9 +31,9 @@ ADMIN_APP_PORT=7002
 Production uses an external (installed) PostgreSQL instance instead of a containerized one.
 
 ```bash
-ConnectionStrings__MasterDatabase="Host=localhost;Port=5432;Database=master_logisticsx;Username=postgres;Password=your-secure-password"
-ConnectionStrings__UsTenantDatabase="Host=localhost;Port=5432;Database=us_logisticsx;Username=postgres;Password=your-secure-password"
-ConnectionStrings__EuTenantDatabase="Host=localhost;Port=5432;Database=eu_logisticsx;Username=postgres;Password=your-secure-password"
+ConnectionStrings__MasterDatabase="Host=localhost;Port=5432;Database=master_dispatchload;Username=postgres;Password=your-secure-password"
+ConnectionStrings__UsTenantDatabase="Host=localhost;Port=5432;Database=us_dispatchload;Username=postgres;Password=your-secure-password"
+ConnectionStrings__EuTenantDatabase="Host=localhost;Port=5432;Database=eu_dispatchload;Username=postgres;Password=your-secure-password"
 ```
 
 | Variable                              | Description                                            |
@@ -67,8 +67,8 @@ GoogleRecaptcha__SecretKey="your-secret-key"
 
 ```bash
 Resend__ApiKey="re_your_api_key_here"
-Resend__SenderEmail="noreply@logisticsx.app"
-Resend__SenderName="LogisticsX"
+Resend__SenderEmail="noreply@dispatchload.app"
+Resend__SenderName="DispatchLoad"
 ```
 
 | Variable              | Description                                           |
@@ -134,19 +134,19 @@ ASPNETCORE_ENVIRONMENT="Production"
 
 ```bash
 # Container Images and Ports
-API_IMAGE="ghcr.io/suxrobgm/logistics-app/api:latest"
-ADMIN_APP_IMAGE="ghcr.io/suxrobgm/logistics-app/admin:latest"
-IDENTITY_SERVER_IMAGE="ghcr.io/suxrobgm/logistics-app/identity:latest"
-MIGRATOR_IMAGE="ghcr.io/suxrobgm/logistics-app/migrator:latest"
+API_IMAGE="ghcr.io/nate-valerian/dispatchload/api:latest"
+ADMIN_APP_IMAGE="ghcr.io/nate-valerian/dispatchload/admin:latest"
+IDENTITY_SERVER_IMAGE="ghcr.io/nate-valerian/dispatchload/identity:latest"
+MIGRATOR_IMAGE="ghcr.io/nate-valerian/dispatchload/migrator:latest"
 
 API_PORT=7000
 IDENTITY_SERVER_PORT=7001
 ADMIN_APP_PORT=7002
 
 # Database (external PostgreSQL)
-ConnectionStrings__MasterDatabase="Host=localhost;Port=5432;Database=master_logisticsx;Username=postgres;Password=your-secure-password"
-ConnectionStrings__UsTenantDatabase="Host=localhost;Port=5432;Database=us_logisticsx;Username=postgres;Password=your-secure-password"
-ConnectionStrings__EuTenantDatabase="Host=localhost;Port=5432;Database=eu_logisticsx;Username=postgres;Password=your-secure-password"
+ConnectionStrings__MasterDatabase="Host=localhost;Port=5432;Database=master_dispatchload;Username=postgres;Password=your-secure-password"
+ConnectionStrings__UsTenantDatabase="Host=localhost;Port=5432;Database=us_dispatchload;Username=postgres;Password=your-secure-password"
+ConnectionStrings__EuTenantDatabase="Host=localhost;Port=5432;Database=eu_dispatchload;Username=postgres;Password=your-secure-password"
 
 # Stripe
 Stripe__SecretKey="sk_live_xxx"
@@ -161,8 +161,8 @@ TenantDatabaseDefaults__Password="your-secure-tenant-db-password"
 
 # Resend (Email)
 Resend__ApiKey="re_your_api_key_here"
-Resend__SenderEmail="noreply@logisticsx.app"
-Resend__SenderName="LogisticsX"
+Resend__SenderEmail="noreply@dispatchload.app"
+Resend__SenderName="DispatchLoad"
 
 # Optional: Mapbox
 Mapbox__AccessToken="pk.xxx"
@@ -180,11 +180,11 @@ For local development, configure `src/Presentation/Logistics.API/appsettings.jso
 ```json
 {
   "ConnectionStrings": {
-    "MasterDatabase": "Host=localhost;Port=5432;Database=master_logisticsx;Username=postgres;Password=password",
-    "UsTenantDatabase": "Host=localhost;Port=5432;Database=us_logisticsx;Username=postgres;Password=password"
+    "MasterDatabase": "Host=localhost;Port=5432;Database=master_dispatchload;Username=postgres;Password=password",
+    "UsTenantDatabase": "Host=localhost;Port=5432;Database=us_dispatchload;Username=postgres;Password=password"
   },
   "TenantDatabaseDefaults": {
-    "NameTemplate": "{tenant}_logisticsx",
+    "NameTemplate": "{tenant}_dispatchload",
     "Host": "localhost",
     "UserId": "postgres",
     "Password": "password"
@@ -198,7 +198,7 @@ For local development, configure `src/Presentation/Logistics.API/appsettings.jso
 {
   "IdentityServer": {
     "Authority": "http://localhost:7001",
-    "Audience": "logisticsx.api",
+    "Audience": "dispatchload.api",
     "ValidIssuers": [
       "http://localhost:7001",
       "https://localhost:7001",

@@ -38,7 +38,7 @@ public static class Config
         [
             new ApiScope
             {
-                Name = "logisticsx.api.admin",
+                Name = "dispatchload.api.admin",
                 DisplayName = "Logistics Admin API",
                 UserClaims = {
                     JwtClaimTypes.GivenName,
@@ -48,7 +48,7 @@ public static class Config
             },
             new ApiScope
             {
-                Name = "logisticsx.api.tenant",
+                Name = "dispatchload.api.tenant",
                 DisplayName = "Logistics Tenant API",
                 UserClaims = {
                     JwtClaimTypes.GivenName,
@@ -66,11 +66,11 @@ public static class Config
         [
             new ApiResource
             {
-                Name = "logisticsx.api",
+                Name = "dispatchload.api",
                 DisplayName = "Logistics API",
                 Scopes = {
-                    "logisticsx.api.admin",
-                    "logisticsx.api.tenant"
+                    "dispatchload.api.admin",
+                    "dispatchload.api.tenant"
                 },
                 UserClaims = {
                     JwtClaimTypes.GivenName,

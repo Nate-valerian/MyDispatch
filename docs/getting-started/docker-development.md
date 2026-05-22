@@ -11,8 +11,8 @@ Run the entire stack with a single command using .NET Aspire.
 
 ```bash
 # Clone repository
-git clone https://github.com/suxrobgm/logistics-app.git
-cd logistics-app
+git clone https://github.com/Nate-valerian/dispatchload.git
+cd dispatchload
 
 # Run everything
 dotnet run --project src/Aspire/Logistics.Aspire.AppHost
@@ -57,8 +57,8 @@ From `src/Aspire/Logistics.Aspire.AppHost/Program.cs`:
 │                    Aspire AppHost                           │
 ├─────────────────────────────────────────────────────────────┤
 │  PostgreSQL Container (port 5432)                          │
-│    ├── master_logisticsx database                          │
-│    └── default_logisticsx database                         │
+│    ├── master_dispatchload database                          │
+│    └── default_dispatchload database                         │
 │                                                             │
 │  pgAdmin Container (port 5050)                             │
 │                                                             │

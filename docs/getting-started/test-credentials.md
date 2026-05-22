@@ -4,7 +4,7 @@ Default accounts available after seeding the database.
 
 ## Live Demo
 
-A live demo is available at [https://tms.logisticsx.app](https://tms.logisticsx.app)
+A live demo is available at [https://tms.dispatchload.app](https://tms.dispatchload.app)
 
 > **Warning**: The demo uses test Stripe keys. Do not enter real payment information.
 
@@ -80,7 +80,7 @@ The default tenant (company) for testing:
 
 - **Tenant ID**: default
 - **Company Name**: Default Logistics
-- **Database**: default_logisticsx
+- **Database**: default_dispatchload
 
 ## Creating Additional Test Users
 
@@ -105,10 +105,10 @@ To reset to initial test data:
 
 ```bash
 # Drop and recreate databases
-psql -U postgres -c "DROP DATABASE IF EXISTS master_logisticsx;"
-psql -U postgres -c "DROP DATABASE IF EXISTS default_logisticsx;"
-psql -U postgres -c "CREATE DATABASE master_logisticsx;"
-psql -U postgres -c "CREATE DATABASE default_logisticsx;"
+psql -U postgres -c "DROP DATABASE IF EXISTS master_dispatchload;"
+psql -U postgres -c "DROP DATABASE IF EXISTS default_dispatchload;"
+psql -U postgres -c "CREATE DATABASE master_dispatchload;"
+psql -U postgres -c "CREATE DATABASE default_dispatchload;"
 
 # Re-run migrations and seeding
 dotnet run --project src/Presentation/Logistics.DbMigrator

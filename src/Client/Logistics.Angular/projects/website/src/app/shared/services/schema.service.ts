@@ -28,13 +28,13 @@ export interface BreadcrumbItem {
 @Injectable({ providedIn: "root" })
 export class SchemaService {
   private readonly document = inject(DOCUMENT);
-  private readonly baseUrl = "https://logisticsx.app";
+  private readonly baseUrl = "https://dispatchload.app";
 
   public setOrganizationSchema(): void {
     this.setSchema("organization", {
       "@context": "https://schema.org",
       "@type": "Organization",
-      name: "LogisticsX",
+      name: "DispatchLoad",
       url: this.baseUrl,
       logo: `${this.baseUrl}/images/logo.png`,
       description: "Modern fleet management platform for trucking companies",
@@ -42,7 +42,7 @@ export class SchemaService {
         "@type": "ContactPoint",
         contactType: "sales",
       },
-      sameAs: ["https://www.linkedin.com/in/suxrobgm"],
+      sameAs: ["https://github.com/Nate-valerian"],
     });
   }
 
@@ -61,7 +61,7 @@ export class SchemaService {
       url: `${this.baseUrl}/blog/${post.slug}`,
       publisher: {
         "@type": "Organization",
-        name: "LogisticsX",
+        name: "DispatchLoad",
         logo: {
           "@type": "ImageObject",
           url: `${this.baseUrl}/images/logo.png`,
@@ -102,7 +102,7 @@ export class SchemaService {
     this.setSchema("software", {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
-      name: "LogisticsX",
+      name: "DispatchLoad",
       applicationCategory: "BusinessApplication",
       operatingSystem: "Web",
       description: "Fleet management and dispatching software for trucking companies",

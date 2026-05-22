@@ -9,9 +9,9 @@ import { ScrollAnimateDirective } from "@/shared/directives";
 })
 export class AccountDeletion {
   protected readonly lastUpdated = "May 19, 2026";
-  protected readonly developerName = "LogisticsX";
-  protected readonly appName = "LogisticsX Driver";
-  protected readonly contactEmail = "privacy@logisticsx.app";
+  protected readonly developerName = "DispatchLoad";
+  protected readonly appName = "DispatchLoad Driver";
+  protected readonly contactEmail = "privacy@dispatchload.app";
   protected readonly gracePeriodDays = 30;
 
   protected readonly sections = [

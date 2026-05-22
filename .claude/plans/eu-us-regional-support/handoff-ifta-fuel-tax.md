@@ -13,7 +13,7 @@
 
 ## Why now
 
-- Larger US fleets won't switch to LogisticsX without it; today they pay separate IFTA software
+- Larger US fleets won't switch to DispatchLoad without it; today they pay separate IFTA software
 - Same data (per-jurisdiction miles + fuel) feeds non-IFTA reports too (per-state revenue analysis)
 - EU equivalent does not exist — fuel duty is national-level, no inter-state allocation
 

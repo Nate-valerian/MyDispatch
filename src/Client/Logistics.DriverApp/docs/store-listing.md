@@ -1,11 +1,11 @@
-# LogisticsX Driver - App Store & Play Store Listing
+# DispatchLoad Driver - App Store & Play Store Listing
 
 ---
 
 ## Promotional Text (170 chars max - iOS only, shown above description)
 
 ```text
-Stay on the road. Stay connected. LogisticsX Driver puts your loads, routes, and dispatcher in the palm of your hand.
+Stay on the road. Stay connected. DispatchLoad Driver puts your loads, routes, and dispatcher in the palm of your hand.
 ```
 
 ---
@@ -21,7 +21,7 @@ Manage loads, track routes, and stay connected with your dispatcher.
 ## Description (4000 chars max - iOS & Android)
 
 ```text
-LogisticsX Driver is the professional companion app for truck drivers working with the LogisticsX fleet management platform. Built for speed and reliability on the road, it gives drivers instant access to everything they need - without the paperwork.
+DispatchLoad Driver is the professional companion app for truck drivers working with the DispatchLoad fleet management platform. Built for speed and reliability on the road, it gives drivers instant access to everything they need - without the paperwork.
 
 KNOW YOUR LOADS BEFORE YOU ROLL
 View all assigned loads and trips at a glance. See pickup and delivery details, stop-by-stop instructions, customer information, and status updates - all in one place.
@@ -37,15 +37,15 @@ Receive instant notifications from dispatchers. Chat directly within the app. Ne
 
 BUILT FOR PROFESSIONAL DRIVERS
 - Clean, distraction-free interface designed for use on the go
-- Works with your company's LogisticsX account - no separate signup
+- Works with your company's DispatchLoad account - no separate signup
 - Secure login and role-based access
 - Background location tracking for real-time delivery visibility
 - Supports intermodal container and vehicle transport operations
 
 HOW IT WORKS
-Your dispatcher assigns loads through the LogisticsX TMS portal. You receive them instantly in the app, complete with route details and instructions. Update statuses as you deliver. Your dispatcher sees everything in real time.
+Your dispatcher assigns loads through the DispatchLoad TMS portal. You receive them instantly in the app, complete with route details and instructions. Update statuses as you deliver. Your dispatcher sees everything in real time.
 
-LogisticsX Driver is available to drivers whose trucking company uses the LogisticsX platform. Contact your fleet manager or dispatcher to get access.
+DispatchLoad Driver is available to drivers whose trucking company uses the DispatchLoad platform. Contact your fleet manager or dispatcher to get access.
 ```
 
 ---
@@ -95,4 +95,4 @@ truck driver,load tracking,fleet management,dispatch,delivery,logistics,freight,
 
 - Screenshots should show: Login screen, Loads list, Load detail, Trip detail with stops, Map navigation
 - App is invite-only (requires company account) - mention this clearly to avoid bad reviews from random users
-- Consider adding "For LogisticsX platform users only" to the first line of description if getting irrelevant installs
+- Consider adding "For DispatchLoad platform users only" to the first line of description if getting irrelevant installs

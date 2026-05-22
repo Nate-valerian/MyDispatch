@@ -5,7 +5,7 @@ description: Add a new plan-gated tenant feature flag (e.g. "ContainerTracking",
 
 # Add a Tenant Feature Flag
 
-LogisticsX uses a layered feature-flag system that resolves in this priority order:
+DispatchLoad uses a layered feature-flag system that resolves in this priority order:
 
 1. **Admin-locked override** (super admin sets `IsAdminLocked = true`)
 2. **Plan gating** (the tenant's subscription plan grants the feature via `PlanFeature`)

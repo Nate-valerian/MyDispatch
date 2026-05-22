@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">LogisticsX Driver</string>
+    <string name="app_name">DispatchLoad Driver</string>
 
     <!-- Notifications (Android-only: used by services and manifest) -->
-    <string name="default_notification_channel_id">logisticsx_driver_channel</string>
-    <string name="notification_channel_name">LogisticsX Notifications</string>
+    <string name="default_notification_channel_id">dispatchload_driver_channel</string>
+    <string name="notification_channel_name">DispatchLoad Notifications</string>
     <string name="notification_channel_description">Notifications for load updates</string>
     <string name="location_tracking_channel_name">Location Tracking</string>
     <string name="location_tracking_channel_description">Active while you are On Duty</string>

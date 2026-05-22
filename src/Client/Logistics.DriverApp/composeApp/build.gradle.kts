@@ -17,9 +17,9 @@ openApiGenerate {
             .getOrElse("http://localhost:7000/swagger/v1/swagger.json")
     )
     outputDir.set(layout.buildDirectory.dir("generated/openapi").get().asFile.absolutePath)
-    packageName.set("com.logisticsx.driver")
-    apiPackage.set("com.logisticsx.driver.api")
-    modelPackage.set("com.logisticsx.driver.api.models")
+    packageName.set("com.dispatchload.driver")
+    apiPackage.set("com.dispatchload.driver.api")
+    modelPackage.set("com.dispatchload.driver.api.models")
     configOptions.set(
         mapOf(
             "library" to "multiplatform",
@@ -68,7 +68,7 @@ kotlin {
     }
 
     android {
-        namespace = "com.logisticsx.driver.shared"
+        namespace = "com.dispatchload.driver.shared"
         compileSdk = 37
         minSdk = 26
 

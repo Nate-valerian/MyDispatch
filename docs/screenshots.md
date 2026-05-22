@@ -1,6 +1,6 @@
-﻿# Screenshots
+# Screenshots
 
-Visual tour of LogisticsX applications.
+Visual tour of DispatchLoad applications.
 
 ## TMS Portal (Angular)
 

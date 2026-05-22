@@ -18,11 +18,11 @@ interface TeamMember {
 export class Team {
   protected readonly members: TeamMember[] = [
     {
-      name: "Sukhrob Ilyosbekov",
+      name: "Nate",
       role: "CEO & Founder",
-      bio: "Software engineer and founder. Spends his time building tools for the logistics industry.",
-      initials: "SI",
-      linkedIn: "https://www.linkedin.com/in/suxrobgm",
+      bio: "Software engineer and founder. Builds tools for the logistics industry.",
+      initials: "N",
+      linkedIn: "https://github.com/Nate-valerian",
     },
     {
       name: "Co-Founder",

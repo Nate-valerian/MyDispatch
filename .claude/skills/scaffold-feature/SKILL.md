@@ -1,6 +1,6 @@
 ---
 name: scaffold-feature
-description: Scaffold a full vertical slice for a new domain feature in LogisticsX — entity, EF configuration, migration, command/query handlers, controller, DTO/mapper, Angular page, and feature-map row. Use when the user asks to add a new top-level feature (e.g., "add a Subcontractor entity with CRUD"). Outputs an ordered checklist tailored to the LogisticsX folder structure.
+description: Scaffold a full vertical slice for a new domain feature in DispatchLoad — entity, EF configuration, migration, command/query handlers, controller, DTO/mapper, Angular page, and feature-map row. Use when the user asks to add a new top-level feature (e.g., "add a Subcontractor entity with CRUD"). Outputs an ordered checklist tailored to the DispatchLoad folder structure.
 ---
 
 # Scaffold a Feature (Vertical Slice)

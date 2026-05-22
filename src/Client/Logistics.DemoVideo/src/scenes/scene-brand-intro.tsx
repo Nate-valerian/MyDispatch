@@ -12,7 +12,7 @@ export function SceneBrandIntro(): ReactElement {
         </Sequence>
 
         <div className="mt-7">
-          <AnimatedText text="LogisticsX" delay={25} fontSize={64} fontWeight={700} />
+          <AnimatedText text="DispatchLoad" delay={25} fontSize={64} fontWeight={700} />
         </div>
 
         <div className="mt-4">

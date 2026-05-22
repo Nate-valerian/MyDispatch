@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "logisticsx": {
+    "dispatchload": {
       "type": "http",
       "url": "http://localhost:7000/mcp",
       "headers": {

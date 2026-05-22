@@ -180,7 +180,7 @@ internal static class Setup
             options.AddPolicy("DefaultCors", cors =>
             {
                 cors.SetIsOriginAllowedToAllowWildcardSubdomains()
-                    .WithOrigins("https://logisticsx.app", "https://*.logisticsx.app")
+                    .WithOrigins("https://dispatchload.app", "https://*.dispatchload.app")
                     .AllowAnyHeader()
                     .AllowAnyMethod();
             });

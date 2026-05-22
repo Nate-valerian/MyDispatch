@@ -1,4 +1,4 @@
-# LogisticsX Driver App - Kotlin Multiplatform
+# DispatchLoad Driver App - Kotlin Multiplatform
 
 A cross-platform driver application built with **Kotlin Multiplatform (KMP)** and **Compose Multiplatform**, running on both **Android** and **iOS** from a single codebase.
 
@@ -85,7 +85,7 @@ Logistics.DriverApp/
 ├── composeApp/                     # KMP Application Module
 │   ├── src/
 │   │   ├── commonMain/             # Shared code (~90%)
-│   │   │   └── kotlin/com/logisticsx/driver/
+│   │   │   └── kotlin/com/dispatchload/driver/
 │   │   │       ├── api/            # API clients & networking
 │   │   │       ├── model/          # Domain models
 │   │   │       ├── navigation/     # Navigation routes & graphs
@@ -172,7 +172,7 @@ To manually regenerate the API client (e.g., after updating the OpenAPI spec):
 Generated API clients and models are output to:
 
 ```text
-composeApp/build/generated/openapi/src/main/kotlin/com/logisticsx/driver/api/
+composeApp/build/generated/openapi/src/main/kotlin/com/dispatchload/driver/api/
 ```
 
 > **Note**: Generated files are in the `build/` directory and should not be committed to version control.

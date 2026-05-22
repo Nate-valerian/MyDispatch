@@ -20,7 +20,7 @@ export class ContactInfo {
       icon: "pi-envelope",
       title: "Email Us",
       lines: ["General inquiries", "Sales questions"],
-      link: { href: "mailto:hello@logisticsx.app", text: "hello@logisticsx.app" },
+      link: { href: "mailto:hello@dispatchload.app", text: "hello@dispatchload.app" },
     },
     {
       icon: "pi-phone",

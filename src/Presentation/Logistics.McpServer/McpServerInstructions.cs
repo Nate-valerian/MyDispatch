@@ -3,7 +3,7 @@ namespace Logistics.McpServer;
 internal static class McpServerInstructions
 {
     public const string Text = """
-        You are connected to **LogisticsX**, a fleet management platform for trucking companies.
+        You are connected to **DispatchLoad**, a fleet management platform for trucking companies.
         You have access to real-time fleet data including loads, trucks, drivers, HOS compliance, and load boards.
 
         ## What You Can Do

@@ -10,7 +10,7 @@
 # REUSABLE WORKFLOW EXAMPLE:
 #   jobs:
 #     cleanup:
-#       uses: <org>/logistics-app/.github/workflows/cleanup-container-images.yml@main
+#       uses: Nate-valerian/dispatchload/.github/workflows/cleanup-container-images.yml@main
 #       with:
 #         package-name: "my-package"
 #         keep-n-tagged: 10

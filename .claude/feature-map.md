@@ -21,7 +21,7 @@ Stable starting points for finding code by feature. Read this before grepping. I
 - **EF configurations**: `src/Infrastructure/Logistics.Infrastructure.Persistence/Configurations/{Feature}/`
 - **Frontend pages**: `src/Client/Logistics.Angular/projects/{portal}/src/app/pages/{feature}/`
   - Portals: `tms-portal` (dispatchers), `customer-portal` (shippers), `admin-portal` (super admin), `website` (marketing)
-- **Mobile (driver)**: `src/Client/Logistics.DriverApp/composeApp/src/commonMain/kotlin/com/logisticsx/driver/`
+- **Mobile (driver)**: `src/Client/Logistics.DriverApp/composeApp/src/commonMain/kotlin/com/dispatchload/driver/`
 - **Address inputs**: every form that captures an `Address` value object MUST use `<ui-address-form>` from `@logistics/shared`. Do not build addresses from raw `<input>`s. Country drives the State / Region / Province label (US/CA/AU/MX/DE/NL/etc., see `state-labels.ts`); State stays required across all countries. Reusable server-side validator: `Logistics.Application.Validators.AddressValidator`.
 
 ## Operations

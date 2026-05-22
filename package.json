@@ -1,6 +1,6 @@
 {
-  "name": "logisticsx",
-  "author": "nate <n.nate1544@gmail.com>",
+  "name": "dispatchload",
+  "author": "Nate <n.nate1544@gmail.com>",
   "private": true,
   "type": "module",
   "workspaces": [

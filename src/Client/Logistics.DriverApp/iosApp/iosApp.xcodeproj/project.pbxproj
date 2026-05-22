@@ -155,7 +155,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -e\ncd \"$SRCROOT/..\"\n./gradlew :composeApp:embedAndSignAppleFrameworkForXcode\n\n# Sync app icon from composeResources (single source of truth)\nICON_SRC=\"$SRCROOT/../composeApp/src/commonMain/composeResources/drawable-xxxhdpi/logisticsx_app_icon.png\"\nICON_DST=\"$SRCROOT/iosApp/Assets.xcassets/AppIcon.appiconset/app-icon-1024.png\"\nsips -z 1024 1024 \"$ICON_SRC\" --out \"$ICON_DST\"\n";
+			shellScript = "set -e\ncd \"$SRCROOT/..\"\n./gradlew :composeApp:embedAndSignAppleFrameworkForXcode\n\n# Sync app icon from composeResources (single source of truth)\nICON_SRC=\"$SRCROOT/../composeApp/src/commonMain/composeResources/drawable-xxxhdpi/dispatchload_app_icon.png\"\nICON_DST=\"$SRCROOT/iosApp/Assets.xcassets/AppIcon.appiconset/app-icon-1024.png\"\nsips -z 1024 1024 \"$ICON_SRC\" --out \"$ICON_DST\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -189,7 +189,7 @@
 				);
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = iosApp/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "LogisticsX Driver";
+				INFOPLIST_KEY_CFBundleDisplayName = "DispatchLoad Driver";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -201,10 +201,10 @@
 					"-framework",
 					ComposeApp,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.logisticsx.driver;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dispatchload.driver;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "LogisticsX Driver Profile";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "DispatchLoad Driver Profile";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -344,7 +344,7 @@
 				);
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = iosApp/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "LogisticsX Driver";
+				INFOPLIST_KEY_CFBundleDisplayName = "DispatchLoad Driver";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -356,10 +356,10 @@
 					"-framework",
 					ComposeApp,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.logisticsx.driver;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dispatchload.driver;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "LogisticsX Driver Profile";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "DispatchLoad Driver Profile";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";

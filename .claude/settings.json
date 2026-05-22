@@ -28,7 +28,7 @@
       "Bash(set:*)",
       "Skill(frontend-design:*)",
       "mcp__plugin_playwright_playwright__*",
-      "mcp__logisticsx__*"
+      "mcp__dispatchload__*"
     ],
     "deny": [],
     "ask": []
