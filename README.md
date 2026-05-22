@@ -173,8 +173,7 @@ Free for internal use, non-commercial use, and professional services. Commercial
 
 ## Contact
 
-Created by **Sukhrob Ilyosbekov**
+Created by **Nate**
 
-- Email: [suxrobgm@gmail.com](mailto:suxrobgm@gmail.com)
-- LinkedIn: [linkedin.com/in/suxrobgm](https://www.linkedin.com/in/suxrobgm)
-- Telegram: [@suxrobgm](https://t.me/suxrobgm)
+- Email: [n.nate1544@gmail.com]
+
