@@ -31,7 +31,10 @@ public static class Registrar
 
         var botOptions = section.Get<TelegramBotOptions>();
         if (string.IsNullOrEmpty(botOptions?.BotToken))
+        {
+            services.AddSingleton<ITelegramNotificationService, NoOpTelegramNotificationService>();
             return services;
+        }
 
         // Telegram bot client (singleton - thread-safe)
         services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(botOptions.BotToken));
