@@ -1,5 +1,4 @@
 using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using System.Text.Json;
 using Logistics.Domain.Entities;
 using Logistics.Domain.Primitives.Enums;
@@ -23,6 +22,7 @@ internal class DatLoadBoardService(
     ILogger<DatLoadBoardService> logger)
     : ILoadBoardProviderService
 {
+    private readonly LoadBoardOptions loadBoardOptions = options.Value;
     private readonly DatOptions options = options.Value.Dat ?? new DatOptions();
     private string? accessToken;
     private DateTime tokenExpiry = DateTime.MinValue;
@@ -49,29 +49,32 @@ internal class DatLoadBoardService(
     {
         try
         {
-            using var authClient = new HttpClient();
-            var response = await authClient.PostAsJsonAsync(options.AuthUrl, new { clientId = apiKey, clientSecret = apiSecret });
-            if (response.IsSuccessStatusCode)
+            using var authClient = new HttpClient
             {
-                var tokenResult = await response.Content.ReadFromJsonAsync<DatTokenResponse>();
-                if (tokenResult?.AccessToken is null)
-                {
-                    logger.LogWarning("DAT credential validation succeeded but no access token was returned");
-                    return LoadBoardCredentialValidationResult.Invalid();
-                }
+                Timeout = TimeSpan.FromSeconds(Math.Max(1, loadBoardOptions.RequestTimeoutSeconds))
+            };
 
-                logger.LogInformation("DAT credentials validated successfully");
-                return LoadBoardCredentialValidationResult.Valid(
-                    tokenResult.AccessToken,
-                    tokenResult.RefreshToken,
-                    tokenResult.ExpiresIn.HasValue
-                        ? DateTime.UtcNow.AddSeconds(tokenResult.ExpiresIn.Value)
-                        : null,
-                    tokenResult.OrganizationId);
+            var result = await authClient.TryPostAsJsonAsync<object, DatTokenResponse>(
+                options.AuthUrl,
+                new { clientId = apiKey, clientSecret = apiSecret },
+                logger,
+                "DAT validate credentials",
+                loadBoardOptions);
+
+            if (result.Value?.AccessToken is null)
+            {
+                logger.LogWarning("DAT credential validation failed: {StatusCode}", result.StatusCode);
+                return LoadBoardCredentialValidationResult.Invalid();
             }
 
-            logger.LogWarning("DAT credential validation failed: {StatusCode}", response.StatusCode);
-            return LoadBoardCredentialValidationResult.Invalid();
+            logger.LogInformation("DAT credentials validated successfully");
+            return LoadBoardCredentialValidationResult.Valid(
+                result.Value.AccessToken,
+                result.Value.RefreshToken,
+                result.Value.ExpiresIn.HasValue
+                    ? DateTime.UtcNow.AddSeconds(result.Value.ExpiresIn.Value)
+                    : null,
+                result.Value.OrganizationId);
         }
         catch (Exception ex) when (ex is HttpRequestException or JsonException or TaskCanceledException)
         {
@@ -117,7 +120,7 @@ internal class DatLoadBoardService(
         };
 
         var result = await httpClient.TryPostAsJsonAsync<object, DatSearchResponse>(
-            "/freight/v3/loads/search", searchRequest, logger, "DAT search loads");
+            "/freight/v3/loads/search", searchRequest, logger, "DAT search loads", loadBoardOptions);
 
         return result.Value?.Loads?.Select(DatMapper.ToListingDto) ?? [];
     }
@@ -125,7 +128,7 @@ internal class DatLoadBoardService(
     public async Task<LoadBoardListingDto?> GetLoadDetailsAsync(string externalListingId)
     {
         var load = await httpClient.TryGetFromJsonAsync<DatLoad>(
-            $"/freight/v3/loads/{externalListingId}", logger, $"DAT get load {externalListingId}");
+            $"/freight/v3/loads/{externalListingId}", logger, $"DAT get load {externalListingId}", loadBoardOptions);
 
         return load != null ? DatMapper.ToListingDto(load) : null;
     }
@@ -141,7 +144,11 @@ internal class DatLoadBoardService(
         };
 
         var result = await httpClient.TryPostAsJsonAsync<object, DatBookingResponse>(
-            $"/freight/v3/loads/{externalListingId}/book", bookRequest, logger, $"DAT book load {externalListingId}");
+            $"/freight/v3/loads/{externalListingId}/book",
+            bookRequest,
+            logger,
+            $"DAT book load {externalListingId}",
+            loadBoardOptions);
 
         return result.IsSuccess
             ? new LoadBoardBookingResultDto { Success = true, ExternalConfirmationId = result.Value?.ConfirmationId }
@@ -151,7 +158,11 @@ internal class DatLoadBoardService(
     public Task<bool> CancelBookingAsync(string externalListingId, string? reason)
     {
         return httpClient.TryPostAsync(
-            $"/freight/v3/loads/{externalListingId}/cancel", new { reason }, logger, $"DAT cancel booking {externalListingId}");
+            $"/freight/v3/loads/{externalListingId}/cancel",
+            new { reason },
+            logger,
+            $"DAT cancel booking {externalListingId}",
+            loadBoardOptions);
     }
 
     public async Task<PostTruckResultDto> PostTruckAsync(PostTruckRequest request)
@@ -186,7 +197,7 @@ internal class DatLoadBoardService(
         };
 
         var result = await httpClient.TryPostAsJsonAsync<object, DatPostTruckResponse>(
-            "/freight/v3/trucks", postRequest, logger, $"DAT post truck {request.TruckId}");
+            "/freight/v3/trucks", postRequest, logger, $"DAT post truck {request.TruckId}", loadBoardOptions);
 
         return result.IsSuccess
             ? new PostTruckResultDto
@@ -211,19 +222,26 @@ internal class DatLoadBoardService(
         };
 
         return httpClient.TryPutAsync(
-            $"/freight/v3/trucks/{externalPostId}", updateRequest, logger, $"DAT update truck post {externalPostId}");
+            $"/freight/v3/trucks/{externalPostId}",
+            updateRequest,
+            logger,
+            $"DAT update truck post {externalPostId}",
+            loadBoardOptions);
     }
 
     public Task<bool> RemoveTruckPostAsync(string externalPostId)
     {
         return httpClient.TryDeleteAsync(
-            $"/freight/v3/trucks/{externalPostId}", logger, $"DAT remove truck post {externalPostId}");
+            $"/freight/v3/trucks/{externalPostId}",
+            logger,
+            $"DAT remove truck post {externalPostId}",
+            loadBoardOptions);
     }
 
     public async Task<IEnumerable<PostedTruckDto>> GetPostedTrucksAsync()
     {
         var result = await httpClient.TryGetFromJsonAsync<DatTrucksResponse>(
-            "/freight/v3/trucks", logger, "DAT get posted trucks");
+            "/freight/v3/trucks", logger, "DAT get posted trucks", loadBoardOptions);
 
         return result?.Trucks?.Select(DatMapper.ToPostedTruckDto) ?? [];
     }

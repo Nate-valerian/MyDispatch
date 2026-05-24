@@ -1,5 +1,4 @@
 using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using System.Text.Json;
 using Logistics.Domain.Entities;
 using Logistics.Domain.Primitives.Enums;
@@ -22,6 +21,7 @@ internal class TruckstopLoadBoardService(
     ILogger<TruckstopLoadBoardService> logger)
     : ILoadBoardProviderService
 {
+    private readonly LoadBoardOptions loadBoardOptions = options.Value;
     private readonly TruckstopOptions options = options.Value.Truckstop ?? new TruckstopOptions();
     private string? accessToken;
     private string? refreshToken;
@@ -71,34 +71,34 @@ internal class TruckstopLoadBoardService(
     {
         try
         {
-            using var authClient = new HttpClient();
+            using var authClient = CreateAuthClient();
             var tokenRequest = new Dictionary<string, string>
             {
                 ["grant_type"] = "refresh_token", ["refresh_token"] = refreshToken
             };
 
-            var response = await authClient.PostAsync(options.TokenUrl, new FormUrlEncodedContent(tokenRequest));
-            if (!response.IsSuccessStatusCode)
+            var result = await authClient.TryPostFormAsync<TruckstopTokenResponse>(
+                options.TokenUrl,
+                tokenRequest,
+                logger,
+                "Truckstop refresh token",
+                loadBoardOptions);
+
+            if (result.Value == null)
             {
-                logger.LogWarning("Truckstop token refresh failed: {StatusCode}", response.StatusCode);
+                logger.LogWarning("Truckstop token refresh failed: {StatusCode}", result.StatusCode);
                 return null;
             }
 
-            var result = await response.Content.ReadFromJsonAsync<TruckstopTokenResponse>();
-            if (result == null)
-            {
-                return null;
-            }
-
-            accessToken = result.AccessToken;
-            this.refreshToken = result.RefreshToken;
-            tokenExpiry = DateTime.UtcNow.AddSeconds(result.ExpiresIn);
+            accessToken = result.Value.AccessToken;
+            this.refreshToken = result.Value.RefreshToken;
+            tokenExpiry = DateTime.UtcNow.AddSeconds(result.Value.ExpiresIn);
 
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
             return new OAuthTokenResultDto
             {
-                AccessToken = result.AccessToken, RefreshToken = result.RefreshToken, ExpiresAt = tokenExpiry
+                AccessToken = result.Value.AccessToken, RefreshToken = result.Value.RefreshToken, ExpiresAt = tokenExpiry
             };
         }
         catch (Exception ex) when (ex is HttpRequestException or JsonException or TaskCanceledException)
@@ -137,7 +137,7 @@ internal class TruckstopLoadBoardService(
         };
 
         var result = await httpClient.TryPostAsJsonAsync<object, TruckstopSearchResponse>(
-            "/loadmanagement-v2/load/search", searchRequest, logger, "Truckstop search loads");
+            "/loadmanagement-v2/load/search", searchRequest, logger, "Truckstop search loads", loadBoardOptions);
 
         return result.Value?.Loads?.Select(TruckstopMapper.ToListingDto) ?? [];
     }
@@ -146,7 +146,10 @@ internal class TruckstopLoadBoardService(
     {
         await EnsureValidTokenAsync();
         var load = await httpClient.TryGetFromJsonAsync<TruckstopLoad>(
-            $"/loadmanagement-v2/load/{externalListingId}", logger, $"Truckstop get load {externalListingId}");
+            $"/loadmanagement-v2/load/{externalListingId}",
+            logger,
+            $"Truckstop get load {externalListingId}",
+            loadBoardOptions);
 
         return load != null ? TruckstopMapper.ToListingDto(load) : null;
     }
@@ -162,7 +165,7 @@ internal class TruckstopLoadBoardService(
 
         var result = await httpClient.TryPostAsJsonAsync<object, TruckstopBookingResponse>(
             $"/loadmanagement-v2/load/{externalListingId}/contact", bookRequest, logger,
-            $"Truckstop book load {externalListingId}");
+            $"Truckstop book load {externalListingId}", loadBoardOptions);
 
         return result.IsSuccess
             ? new LoadBoardBookingResultDto { Success = true, ExternalConfirmationId = result.Value?.ConfirmationNumber }
@@ -174,7 +177,7 @@ internal class TruckstopLoadBoardService(
         await EnsureValidTokenAsync();
         return await httpClient.TryPostAsync(
             $"/loadmanagement-v2/load/{externalListingId}/cancel", new { reason }, logger,
-            $"Truckstop cancel booking {externalListingId}");
+            $"Truckstop cancel booking {externalListingId}", loadBoardOptions);
     }
 
     public async Task<PostTruckResultDto> PostTruckAsync(PostTruckRequest request)
@@ -209,7 +212,7 @@ internal class TruckstopLoadBoardService(
         };
 
         var result = await httpClient.TryPostAsJsonAsync<object, TruckstopPostTruckResponse>(
-            "/truckposting-v2/truck", postRequest, logger, $"Truckstop post truck {request.TruckId}");
+            "/truckposting-v2/truck", postRequest, logger, $"Truckstop post truck {request.TruckId}", loadBoardOptions);
 
         return result.IsSuccess
             ? new PostTruckResultDto
@@ -233,21 +236,24 @@ internal class TruckstopLoadBoardService(
 
         return await httpClient.TryPutAsync(
             $"/truckposting-v2/truck/{externalPostId}", updateRequest, logger,
-            $"Truckstop update truck post {externalPostId}");
+            $"Truckstop update truck post {externalPostId}", loadBoardOptions);
     }
 
     public async Task<bool> RemoveTruckPostAsync(string externalPostId)
     {
         await EnsureValidTokenAsync();
         return await httpClient.TryDeleteAsync(
-            $"/truckposting-v2/truck/{externalPostId}", logger, $"Truckstop remove truck post {externalPostId}");
+            $"/truckposting-v2/truck/{externalPostId}",
+            logger,
+            $"Truckstop remove truck post {externalPostId}",
+            loadBoardOptions);
     }
 
     public async Task<IEnumerable<PostedTruckDto>> GetPostedTrucksAsync()
     {
         await EnsureValidTokenAsync();
         var result = await httpClient.TryGetFromJsonAsync<TruckstopTrucksResponse>(
-            "/truckposting-v2/truck", logger, "Truckstop get posted trucks");
+            "/truckposting-v2/truck", logger, "Truckstop get posted trucks", loadBoardOptions);
 
         return result?.Trucks?.Select(TruckstopMapper.ToPostedTruckDto) ?? [];
     }
@@ -277,20 +283,27 @@ internal class TruckstopLoadBoardService(
 
     private async Task<TruckstopTokenResponse?> GetTokenAsync(string username, string? password)
     {
-        using var authClient = new HttpClient();
+        using var authClient = CreateAuthClient();
         var tokenRequest = new Dictionary<string, string>
         {
             ["grant_type"] = "password", ["username"] = username, ["password"] = password ?? string.Empty
         };
 
-        var response = await authClient.PostAsync(options.TokenUrl, new FormUrlEncodedContent(tokenRequest));
-        if (!response.IsSuccessStatusCode)
-        {
-            return null;
-        }
+        var result = await authClient.TryPostFormAsync<TruckstopTokenResponse>(
+            options.TokenUrl,
+            tokenRequest,
+            logger,
+            "Truckstop get token",
+            loadBoardOptions);
 
-        return await response.Content.ReadFromJsonAsync<TruckstopTokenResponse>();
+        return result.Value;
     }
+
+    private HttpClient CreateAuthClient() =>
+        new()
+        {
+            Timeout = TimeSpan.FromSeconds(Math.Max(1, loadBoardOptions.RequestTimeoutSeconds))
+        };
 
     private async Task EnsureValidTokenAsync()
     {

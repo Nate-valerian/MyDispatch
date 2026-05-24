@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Logistics.Application.Abstractions.LoadBoard;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.Options;
 
 namespace Logistics.Infrastructure.Integrations.LoadBoard;
 
@@ -24,9 +25,9 @@ public static class Registrar
         services.AddDataProtection();
 
         // LoadBoard providers (with HttpClient for external APIs)
-        services.AddHttpClient<DatLoadBoardService>();
-        services.AddHttpClient<TruckstopLoadBoardService>();
-        services.AddHttpClient<OneTwo3LoadBoardService>();
+        services.AddHttpClient<DatLoadBoardService>(ConfigureProviderClient);
+        services.AddHttpClient<TruckstopLoadBoardService>(ConfigureProviderClient);
+        services.AddHttpClient<OneTwo3LoadBoardService>(ConfigureProviderClient);
         services.AddScoped<DemoLoadBoardService>();
 
         // Factory pattern for provider selection
@@ -34,5 +35,11 @@ public static class Registrar
         services.AddScoped<ILoadBoardProviderFactory, LoadBoardProviderFactory>();
 
         return services;
+    }
+
+    private static void ConfigureProviderClient(IServiceProvider serviceProvider, HttpClient client)
+    {
+        var options = serviceProvider.GetRequiredService<IOptions<LoadBoardOptions>>().Value;
+        client.Timeout = TimeSpan.FromSeconds(Math.Max(1, options.RequestTimeoutSeconds));
     }
 }

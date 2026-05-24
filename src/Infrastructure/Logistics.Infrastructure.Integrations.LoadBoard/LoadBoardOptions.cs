@@ -7,6 +7,9 @@ namespace Logistics.Infrastructure.Integrations.LoadBoard;
 public record LoadBoardOptions
 {
     public const string SectionName = "LoadBoard";
+    public int RequestTimeoutSeconds { get; set; } = 30;
+    public int MaxRetryAttempts { get; set; } = 2;
+    public int RetryBaseDelayMilliseconds { get; set; } = 250;
     public DatOptions? Dat { get; set; }
     public TruckstopOptions? Truckstop { get; set; }
     public OneTwo3LoadboardOptions? OneTwo3Loadboard { get; set; }

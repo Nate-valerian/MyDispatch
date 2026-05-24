@@ -20,6 +20,7 @@ internal class OneTwo3LoadBoardService(
     ILogger<OneTwo3LoadBoardService> logger)
     : ILoadBoardProviderService
 {
+    private readonly LoadBoardOptions loadBoardOptions = options.Value;
     private readonly OneTwo3LoadboardOptions options = options.Value.OneTwo3Loadboard ?? new OneTwo3LoadboardOptions();
     private readonly Lock rateLimitLock = new();
     private int dailySearchCount;
@@ -47,18 +48,27 @@ internal class OneTwo3LoadBoardService(
     {
         try
         {
-            using var testClient = new HttpClient();
-            testClient.BaseAddress = new Uri(options.BaseUrl);
+            using var testClient = new HttpClient
+            {
+                BaseAddress = new Uri(options.BaseUrl),
+                Timeout = TimeSpan.FromSeconds(Math.Max(1, loadBoardOptions.RequestTimeoutSeconds))
+            };
+
             testClient.DefaultRequestHeaders.Add("X-API-Key", apiKey);
 
-            var response = await testClient.GetAsync("/v1/account");
-            if (response.IsSuccessStatusCode)
+            var result = await testClient.TryGetSuccessAsync(
+                "/v1/account",
+                logger,
+                "123Loadboard validate credentials",
+                loadBoardOptions);
+
+            if (result.IsSuccess)
             {
                 logger.LogInformation("123Loadboard credentials validated successfully");
                 return LoadBoardCredentialValidationResult.Valid();
             }
 
-            logger.LogWarning("123Loadboard credential validation failed: {StatusCode}", response.StatusCode);
+            logger.LogWarning("123Loadboard credential validation failed: {StatusCode}", result.StatusCode);
             return LoadBoardCredentialValidationResult.Invalid();
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
@@ -108,7 +118,7 @@ internal class OneTwo3LoadBoardService(
         };
 
         var result = await httpClient.TryPostAsJsonAsync<object, OneTwo3SearchResponse>(
-            "/v1/loads/search", searchRequest, logger, "123Loadboard search loads");
+            "/v1/loads/search", searchRequest, logger, "123Loadboard search loads", loadBoardOptions);
 
         IncrementSearchCount();
         return result.Value?.Loads?.Select(OneTwo3Mapper.ToListingDto) ?? [];
@@ -117,7 +127,10 @@ internal class OneTwo3LoadBoardService(
     public async Task<LoadBoardListingDto?> GetLoadDetailsAsync(string externalListingId)
     {
         var load = await httpClient.TryGetFromJsonAsync<OneTwo3Load>(
-            $"/v1/loads/{externalListingId}", logger, $"123Loadboard get load {externalListingId}");
+            $"/v1/loads/{externalListingId}",
+            logger,
+            $"123Loadboard get load {externalListingId}",
+            loadBoardOptions);
 
         return load != null ? OneTwo3Mapper.ToListingDto(load) : null;
     }
@@ -132,7 +145,7 @@ internal class OneTwo3LoadBoardService(
 
         var result = await httpClient.TryPostAsJsonAsync<object, OneTwo3BookingResponse>(
             $"/v1/loads/{externalListingId}/contact", bookRequest, logger,
-            $"123Loadboard book load {externalListingId}");
+            $"123Loadboard book load {externalListingId}", loadBoardOptions);
 
         return result.IsSuccess
             ? new LoadBoardBookingResultDto { Success = true, ExternalConfirmationId = result.Value?.ReferenceId }
@@ -143,7 +156,7 @@ internal class OneTwo3LoadBoardService(
     {
         return httpClient.TryPostAsync(
             $"/v1/loads/{externalListingId}/cancel", new { reason }, logger,
-            $"123Loadboard cancel booking {externalListingId}");
+            $"123Loadboard cancel booking {externalListingId}", loadBoardOptions);
     }
 
     public async Task<PostTruckResultDto> PostTruckAsync(PostTruckRequest request)
@@ -176,7 +189,7 @@ internal class OneTwo3LoadBoardService(
         };
 
         var result = await httpClient.TryPostAsJsonAsync<object, OneTwo3PostTruckResponse>(
-            "/v1/trucks", postRequest, logger, $"123Loadboard post truck {request.TruckId}");
+            "/v1/trucks", postRequest, logger, $"123Loadboard post truck {request.TruckId}", loadBoardOptions);
 
         return result.IsSuccess
             ? new PostTruckResultDto
@@ -198,19 +211,26 @@ internal class OneTwo3LoadBoardService(
         };
 
         return httpClient.TryPutAsync(
-            $"/v1/trucks/{externalPostId}", updateRequest, logger, $"123Loadboard update truck post {externalPostId}");
+            $"/v1/trucks/{externalPostId}",
+            updateRequest,
+            logger,
+            $"123Loadboard update truck post {externalPostId}",
+            loadBoardOptions);
     }
 
     public Task<bool> RemoveTruckPostAsync(string externalPostId)
     {
         return httpClient.TryDeleteAsync(
-            $"/v1/trucks/{externalPostId}", logger, $"123Loadboard remove truck post {externalPostId}");
+            $"/v1/trucks/{externalPostId}",
+            logger,
+            $"123Loadboard remove truck post {externalPostId}",
+            loadBoardOptions);
     }
 
     public async Task<IEnumerable<PostedTruckDto>> GetPostedTrucksAsync()
     {
         var result = await httpClient.TryGetFromJsonAsync<OneTwo3TrucksResponse>(
-            "/v1/trucks", logger, "123Loadboard get posted trucks");
+            "/v1/trucks", logger, "123Loadboard get posted trucks", loadBoardOptions);
 
         return result?.Trucks?.Select(OneTwo3Mapper.ToPostedTruckDto) ?? [];
     }
