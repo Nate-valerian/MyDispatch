@@ -239,19 +239,29 @@ internal static class Setup
 
     public static WebApplication ScheduleJobs(this WebApplication app)
     {
-        PayrollGenerationJob.ScheduleJobs();
-        EldSyncJob.ScheduleJobs();
-        LoadBoardSyncJob.ScheduleJobs();
-        MaintenanceReminderJob.ScheduleJobs();
-        LicenseExpiryReminderJob.ScheduleJobs();
-        InvitationExpiryJob.ScheduleJobs();
-        DataExportProcessingJob.ScheduleJobs();
-        DataDeletionJob.ScheduleJobs();
-        DataRetentionJob.ScheduleJobs();
-        DataExportExpiryJob.ScheduleJobs();
+        try
+        {
+            PayrollGenerationJob.ScheduleJobs();
+            EldSyncJob.ScheduleJobs();
+            LoadBoardSyncJob.ScheduleJobs();
+            MaintenanceReminderJob.ScheduleJobs();
+            LicenseExpiryReminderJob.ScheduleJobs();
+            InvitationExpiryJob.ScheduleJobs();
+            DataExportProcessingJob.ScheduleJobs();
+            DataDeletionJob.ScheduleJobs();
+            DataRetentionJob.ScheduleJobs();
+            DataExportExpiryJob.ScheduleJobs();
 
-        // Remove old stale dispatch agent job if it exists
-        RecurringJob.RemoveIfExists("ai-dispatch");
+            // Remove old stale dispatch agent job if it exists
+            RecurringJob.RemoveIfExists("ai-dispatch");
+        }
+        catch (Exception ex) when (app.Environment.IsDevelopment())
+        {
+            app.Logger.LogWarning(
+                ex,
+                "Skipping recurring job scheduling because Hangfire storage is unavailable");
+        }
+
         return app;
     }
 
