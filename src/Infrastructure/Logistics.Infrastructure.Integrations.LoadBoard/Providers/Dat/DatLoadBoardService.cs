@@ -45,7 +45,7 @@ internal class DatLoadBoardService(
         logger.LogInformation("Initialized DAT Load Board provider");
     }
 
-    public async Task<bool> ValidateCredentialsAsync(string apiKey, string? apiSecret)
+    public async Task<LoadBoardCredentialValidationResult> ValidateCredentialsAsync(string apiKey, string? apiSecret)
     {
         try
         {
@@ -53,17 +53,30 @@ internal class DatLoadBoardService(
             var response = await authClient.PostAsJsonAsync(options.AuthUrl, new { clientId = apiKey, clientSecret = apiSecret });
             if (response.IsSuccessStatusCode)
             {
+                var tokenResult = await response.Content.ReadFromJsonAsync<DatTokenResponse>();
+                if (tokenResult?.AccessToken is null)
+                {
+                    logger.LogWarning("DAT credential validation succeeded but no access token was returned");
+                    return LoadBoardCredentialValidationResult.Invalid();
+                }
+
                 logger.LogInformation("DAT credentials validated successfully");
-                return true;
+                return LoadBoardCredentialValidationResult.Valid(
+                    tokenResult.AccessToken,
+                    tokenResult.RefreshToken,
+                    tokenResult.ExpiresIn.HasValue
+                        ? DateTime.UtcNow.AddSeconds(tokenResult.ExpiresIn.Value)
+                        : null,
+                    tokenResult.OrganizationId);
             }
 
             logger.LogWarning("DAT credential validation failed: {StatusCode}", response.StatusCode);
-            return false;
+            return LoadBoardCredentialValidationResult.Invalid();
         }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        catch (Exception ex) when (ex is HttpRequestException or JsonException or TaskCanceledException)
         {
             logger.LogError(ex, "Error validating DAT credentials");
-            return false;
+            return LoadBoardCredentialValidationResult.Invalid();
         }
     }
 

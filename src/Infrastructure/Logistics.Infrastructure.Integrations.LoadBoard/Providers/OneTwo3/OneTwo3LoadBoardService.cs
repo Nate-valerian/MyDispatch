@@ -43,7 +43,7 @@ internal class OneTwo3LoadBoardService(
         logger.LogInformation("Initialized 123Loadboard provider");
     }
 
-    public async Task<bool> ValidateCredentialsAsync(string apiKey, string? apiSecret)
+    public async Task<LoadBoardCredentialValidationResult> ValidateCredentialsAsync(string apiKey, string? apiSecret)
     {
         try
         {
@@ -55,16 +55,16 @@ internal class OneTwo3LoadBoardService(
             if (response.IsSuccessStatusCode)
             {
                 logger.LogInformation("123Loadboard credentials validated successfully");
-                return true;
+                return LoadBoardCredentialValidationResult.Valid();
             }
 
             logger.LogWarning("123Loadboard credential validation failed: {StatusCode}", response.StatusCode);
-            return false;
+            return LoadBoardCredentialValidationResult.Invalid();
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
         {
             logger.LogError(ex, "Error validating 123Loadboard credentials");
-            return false;
+            return LoadBoardCredentialValidationResult.Invalid();
         }
     }
 

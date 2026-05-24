@@ -12,6 +12,7 @@ namespace Logistics.Application.Modules.Integrations.LoadBoard.Commands;
 internal sealed class BookLoadBoardLoadHandler(
     ITenantUnitOfWork tenantUow,
     ILoadBoardProviderFactory providerFactory,
+    ILoadBoardCredentialProtector credentialProtector,
     ILogger<BookLoadBoardLoadHandler> logger)
     : IAppRequestHandler<BookLoadBoardLoadCommand, Result<LoadBoardBookingResultDto>>
 {
@@ -81,6 +82,17 @@ internal sealed class BookLoadBoardLoadHandler(
                 };
                 await tenantUow.Repository<Customer>().AddAsync(customer, ct);
             }
+        }
+
+        var credentialError = await LoadBoardProviderCredentials.RefreshIfNeededAsync(
+            providerConfig,
+            providerFactory,
+            credentialProtector,
+            logger);
+
+        if (credentialError is not null)
+        {
+            return Result<LoadBoardBookingResultDto>.Fail(credentialError);
         }
 
         // Book the load with the provider

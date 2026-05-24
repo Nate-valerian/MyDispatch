@@ -10,6 +10,7 @@ namespace Logistics.Application.Modules.Integrations.LoadBoard.Commands;
 internal sealed class CreateLoadBoardConfigurationHandler(
     ITenantUnitOfWork tenantUow,
     ILoadBoardProviderFactory providerFactory,
+    ILoadBoardCredentialProtector credentialProtector,
     ILogger<CreateLoadBoardConfigurationHandler> logger)
     : IAppRequestHandler<CreateLoadBoardConfigurationCommand, Result>
 {
@@ -33,9 +34,9 @@ internal sealed class CreateLoadBoardConfigurationHandler(
 
         // Validate credentials with the provider
         var providerService = providerFactory.GetProvider(req.ProviderType);
-        var isValid = await providerService.ValidateCredentialsAsync(req.ApiKey, req.ApiSecret);
+        var validation = await providerService.ValidateCredentialsAsync(req.ApiKey, req.ApiSecret);
 
-        if (!isValid)
+        if (!validation.IsValid)
         {
             return Result.Fail("Invalid API credentials. Please verify your API key and try again.");
         }
@@ -44,9 +45,15 @@ internal sealed class CreateLoadBoardConfigurationHandler(
         var config = new LoadBoardConfiguration
         {
             ProviderType = req.ProviderType,
-            ApiKey = req.ApiKey,
-            ApiSecret = req.ApiSecret,
-            WebhookSecret = req.WebhookSecret,
+            ApiKey = credentialProtector.Protect(req.ApiKey) ?? string.Empty,
+            ApiSecret = credentialProtector.Protect(req.ApiSecret),
+            AccessToken = credentialProtector.Protect(validation.AccessToken),
+            RefreshToken = credentialProtector.Protect(validation.RefreshToken),
+            TokenExpiresAt = validation.ExpiresAt,
+            WebhookSecret = credentialProtector.Protect(req.WebhookSecret),
+            LastConnectionTestedAt = DateTime.UtcNow,
+            LastConnectionError = null,
+            ExternalAccountId = validation.ExternalAccountId,
             CompanyDotNumber = req.CompanyDotNumber,
             CompanyMcNumber = req.CompanyMcNumber,
             IsActive = true

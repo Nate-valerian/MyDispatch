@@ -68,14 +68,15 @@ export class LoadBoardSearchComponent implements OnInit {
 
   protected async onBook(body: LoadBoardBookingRequest): Promise<void> {
     const listing = this.selectedListing();
-    if (!listing?.externalListingId) {
+    if (!listing?.id) {
+      this.toast.showError("Load board listing is missing its internal booking ID");
       return;
     }
 
     this.booking.set(true);
     try {
       await this.api.invoke(bookLoadBoardListing, {
-        listingId: listing.externalListingId,
+        listingId: listing.id,
         body,
       });
       this.showBookDialog.set(false);

@@ -11,6 +11,7 @@ namespace Logistics.Application.Modules.Integrations.LoadBoard.Commands;
 internal sealed class PostTruckToLoadBoardHandler(
     ITenantUnitOfWork tenantUow,
     ILoadBoardProviderFactory providerFactory,
+    ILoadBoardCredentialProtector credentialProtector,
     ILogger<PostTruckToLoadBoardHandler> logger)
     : IAppRequestHandler<PostTruckToLoadBoardCommand, Result<PostTruckResultDto>>
 {
@@ -51,6 +52,17 @@ internal sealed class PostTruckToLoadBoardHandler(
         {
             return Result<PostTruckResultDto>.Fail(
                 $"Truck is already posted to {req.ProviderType}. Remove the existing post first or update it.");
+        }
+
+        var credentialError = await LoadBoardProviderCredentials.RefreshIfNeededAsync(
+            providerConfig,
+            providerFactory,
+            credentialProtector,
+            logger);
+
+        if (credentialError is not null)
+        {
+            return Result<PostTruckResultDto>.Fail(credentialError);
         }
 
         // Post to the load board provider

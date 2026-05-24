@@ -1,4 +1,21 @@
+using System.Text.Json.Serialization;
+
 namespace Logistics.Infrastructure.Integrations.LoadBoard.Providers.Dat;
+
+internal record DatTokenResponse
+{
+    [JsonPropertyName("access_token")]
+    public string? AccessToken { get; set; }
+
+    [JsonPropertyName("refresh_token")]
+    public string? RefreshToken { get; set; }
+
+    [JsonPropertyName("expires_in")]
+    public int? ExpiresIn { get; set; }
+
+    [JsonPropertyName("organization_id")]
+    public string? OrganizationId { get; set; }
+}
 
 internal record DatSearchResponse
 {

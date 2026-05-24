@@ -12,6 +12,7 @@ namespace Logistics.Infrastructure.Integrations.LoadBoard;
 
 internal class LoadBoardProviderFactory(
     IServiceProvider serviceProvider,
+    ILoadBoardCredentialProtector credentialProtector,
     ILogger<LoadBoardProviderFactory> logger)
     : ILoadBoardProviderFactory
 {
@@ -33,7 +34,7 @@ internal class LoadBoardProviderFactory(
     public ILoadBoardProviderService GetProvider(LoadBoardConfiguration configuration)
     {
         var service = GetProvider(configuration.ProviderType);
-        service.Initialize(configuration);
+        service.Initialize(Unprotect(configuration));
         return service;
     }
 
@@ -44,4 +45,21 @@ internal class LoadBoardProviderFactory(
             or LoadBoardProviderType.OneTwo3Loadboard
             or LoadBoardProviderType.Demo;
     }
+
+    private LoadBoardConfiguration Unprotect(LoadBoardConfiguration configuration) => new()
+    {
+        Id = configuration.Id,
+        ProviderType = configuration.ProviderType,
+        ApiKey = credentialProtector.Unprotect(configuration.ApiKey) ?? string.Empty,
+        ApiSecret = credentialProtector.Unprotect(configuration.ApiSecret),
+        AccessToken = credentialProtector.Unprotect(configuration.AccessToken),
+        RefreshToken = credentialProtector.Unprotect(configuration.RefreshToken),
+        TokenExpiresAt = configuration.TokenExpiresAt,
+        WebhookSecret = credentialProtector.Unprotect(configuration.WebhookSecret),
+        IsActive = configuration.IsActive,
+        LastSyncedAt = configuration.LastSyncedAt,
+        ExternalAccountId = configuration.ExternalAccountId,
+        CompanyDotNumber = configuration.CompanyDotNumber,
+        CompanyMcNumber = configuration.CompanyMcNumber
+    };
 }

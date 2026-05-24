@@ -19,6 +19,7 @@ export class ProvidersTable {
 
   public readonly providers = input.required<LoadBoardConfigurationDto[]>();
   public readonly delete = output<string>();
+  public readonly test = output<string>();
 
   protected readonly getProviderLabel = getProviderLabel;
 
@@ -30,5 +31,13 @@ export class ProvidersTable {
       acceptButtonStyleClass: "p-button-danger",
       accept: () => this.delete.emit(provider.id!),
     });
+  }
+
+  protected testConnection(provider: LoadBoardConfigurationDto): void {
+    if (!provider.id) {
+      return;
+    }
+
+    this.test.emit(provider.id);
   }
 }

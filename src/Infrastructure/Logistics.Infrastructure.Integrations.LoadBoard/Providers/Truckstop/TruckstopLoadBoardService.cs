@@ -45,17 +45,25 @@ internal class TruckstopLoadBoardService(
         logger.LogInformation("Initialized Truckstop Load Board provider");
     }
 
-    public async Task<bool> ValidateCredentialsAsync(string apiKey, string? apiSecret)
+    public async Task<LoadBoardCredentialValidationResult> ValidateCredentialsAsync(string apiKey, string? apiSecret)
     {
         try
         {
             var tokenResult = await GetTokenAsync(apiKey, apiSecret);
-            return tokenResult != null;
+            if (tokenResult?.AccessToken is null)
+            {
+                return LoadBoardCredentialValidationResult.Invalid();
+            }
+
+            return LoadBoardCredentialValidationResult.Valid(
+                tokenResult.AccessToken,
+                tokenResult.RefreshToken,
+                DateTime.UtcNow.AddSeconds(tokenResult.ExpiresIn));
         }
         catch (Exception ex) when (ex is HttpRequestException or JsonException or TaskCanceledException)
         {
             logger.LogError(ex, "Error validating Truckstop credentials");
-            return false;
+            return LoadBoardCredentialValidationResult.Invalid();
         }
     }
 

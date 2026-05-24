@@ -9,11 +9,22 @@ public record LoadBoardConfigurationDto
     public string? ProviderName { get; set; }
     public bool IsActive { get; set; }
     public DateTime? LastSyncedAt { get; set; }
+    public DateTime? LastConnectionTestedAt { get; set; }
+    public string? LastConnectionError { get; set; }
     public bool IsConnected { get; set; }
     public int ActiveListingsCount { get; set; }
     public int PostedTrucksCount { get; set; }
     public string? CompanyDotNumber { get; set; }
     public string? CompanyMcNumber { get; set; }
+}
+
+public record LoadBoardProviderConnectionTestResultDto
+{
+    public Guid ProviderId { get; set; }
+    public LoadBoardProviderType ProviderType { get; set; }
+    public bool IsConnected { get; set; }
+    public DateTime TestedAt { get; set; }
+    public string? ErrorMessage { get; set; }
 }
 
 public record CreateLoadBoardConfigurationDto

@@ -3,6 +3,7 @@ using Logistics.Shared.Models;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Logistics.API.Extensions;
 using Logistics.Application.Modules.Integrations.LoadBoard.Commands;
 using Logistics.Application.Modules.Integrations.LoadBoard.Queries;
 
@@ -44,6 +45,16 @@ public class LoadBoardController(IMediator mediator) : ControllerBase
         return result.IsSuccess ? NoContent() : BadRequest(ErrorResponse.FromResult(result));
     }
 
+    [HttpPost("providers/{providerId:guid}/test", Name = "TestLoadBoardProviderConnection")]
+    [ProducesResponseType(typeof(LoadBoardProviderConnectionTestResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [Authorize(Policy = Permission.LoadBoard.Manage)]
+    public async Task<IActionResult> TestProviderConnection(Guid providerId)
+    {
+        var result = await mediator.Send(new TestLoadBoardProviderConnectionCommand { ProviderId = providerId });
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(ErrorResponse.FromResult(result));
+    }
+
     #endregion
 
     #region Load Search & Booking
@@ -64,11 +75,20 @@ public class LoadBoardController(IMediator mediator) : ControllerBase
     [Authorize(Policy = Permission.LoadBoard.Book)]
     public async Task<IActionResult> BookListing(Guid listingId, [FromBody] LoadBoardBookingRequest request)
     {
+        var dispatcherId = request.DispatcherId == Guid.Empty
+            ? User.GetUserId()
+            : request.DispatcherId;
+
+        if (dispatcherId is null)
+        {
+            return BadRequest(new ErrorResponse("User not authenticated"));
+        }
+
         var result = await mediator.Send(new BookLoadBoardLoadCommand
         {
             ListingId = listingId,
             TruckId = request.TruckId,
-            DispatcherId = request.DispatcherId,
+            DispatcherId = dispatcherId.Value,
             CustomerId = request.CustomerId,
             CustomerName = request.CustomerName,
             Notes = request.Notes

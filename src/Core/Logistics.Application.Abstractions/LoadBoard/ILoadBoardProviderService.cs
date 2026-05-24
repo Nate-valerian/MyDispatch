@@ -24,7 +24,7 @@ public interface ILoadBoardProviderService
     /// <summary>
     /// Validate that the provided credentials are correct
     /// </summary>
-    Task<bool> ValidateCredentialsAsync(string apiKey, string? apiSecret);
+    Task<LoadBoardCredentialValidationResult> ValidateCredentialsAsync(string apiKey, string? apiSecret);
 
     /// <summary>
     /// Refresh an OAuth access token using a refresh token

@@ -51,6 +51,16 @@ public class LoadBoardConfiguration : Entity, ITenantEntity
     public DateTime? LastSyncedAt { get; set; }
 
     /// <summary>
+    /// When credentials/API access were last tested
+    /// </summary>
+    public DateTime? LastConnectionTestedAt { get; set; }
+
+    /// <summary>
+    /// Last connection error shown to administrators; null means last test succeeded
+    /// </summary>
+    public string? LastConnectionError { get; set; }
+
+    /// <summary>
     /// The account/organization ID in the load board provider's system
     /// </summary>
     public string? ExternalAccountId { get; set; }

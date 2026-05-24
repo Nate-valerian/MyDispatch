@@ -2,6 +2,7 @@ using Logistics.Application.Abstractions;
 using Logistics.Domain.Entities;
 using Logistics.Domain.Persistence;
 using Logistics.Domain.Primitives.Enums;
+using Logistics.Domain.Primitives.ValueObjects;
 using Logistics.Shared.Models;
 using Microsoft.Extensions.Logging;
 using Logistics.Application.Abstractions.LoadBoard;
@@ -11,6 +12,7 @@ namespace Logistics.Application.Modules.Integrations.LoadBoard.Commands;
 internal sealed class SearchLoadBoardHandler(
     ITenantUnitOfWork tenantUow,
     ILoadBoardProviderFactory providerFactory,
+    ILoadBoardCredentialProtector credentialProtector,
     ILogger<SearchLoadBoardHandler> logger)
     : IAppRequestHandler<SearchLoadBoardCommand, Result<LoadBoardSearchResultDto>>
 {
@@ -57,12 +59,32 @@ internal sealed class SearchLoadBoardHandler(
         {
             try
             {
+                var credentialError = await LoadBoardProviderCredentials.RefreshIfNeededAsync(
+                    config,
+                    providerFactory,
+                    credentialProtector,
+                    logger);
+
+                if (credentialError is not null)
+                {
+                    errors[config.ProviderType] = credentialError;
+                    countByProvider[config.ProviderType] = 0;
+                    continue;
+                }
+
                 var provider = providerFactory.GetProvider(config);
                 var listings = await provider.SearchLoadsAsync(criteria);
-                var listingsList = listings.ToList();
+                var listingsList = new List<LoadBoardListingDto>();
+
+                foreach (var listing in listings)
+                {
+                    var persistedListing = await UpsertListingAsync(config.ProviderType, listing, ct);
+                    listingsList.Add(ToDto(persistedListing));
+                }
 
                 allListings.AddRange(listingsList);
                 countByProvider[config.ProviderType] = listingsList.Count;
+                config.LastSyncedAt = DateTime.UtcNow;
 
                 logger.LogDebug("Found {Count} listings from {Provider}", listingsList.Count, config.ProviderType);
             }
@@ -88,6 +110,97 @@ internal sealed class SearchLoadBoardHandler(
             Errors = errors.Count > 0 ? errors : null
         };
 
+        await tenantUow.SaveChangesAsync(ct);
+
         return Result<LoadBoardSearchResultDto>.Ok(result);
     }
+
+    private async Task<LoadBoardListing> UpsertListingAsync(
+        LoadBoardProviderType providerType,
+        LoadBoardListingDto dto,
+        CancellationToken ct)
+    {
+        var listing = await tenantUow.Repository<LoadBoardListing>()
+            .GetAsync(l => l.ProviderType == providerType && l.ExternalListingId == dto.ExternalListingId, ct);
+
+        if (listing is null)
+        {
+            listing = new LoadBoardListing
+            {
+                ProviderType = providerType,
+                ExternalListingId = dto.ExternalListingId,
+                OriginAddress = dto.OriginAddress,
+                OriginLocation = dto.OriginLocation,
+                DestinationAddress = dto.DestinationAddress,
+                DestinationLocation = dto.DestinationLocation,
+                ExpiresAt = dto.ExpiresAt
+            };
+
+            await tenantUow.Repository<LoadBoardListing>().AddAsync(listing, ct);
+        }
+
+        listing.OriginAddress = dto.OriginAddress;
+        listing.OriginLocation = dto.OriginLocation;
+        listing.DestinationAddress = dto.DestinationAddress;
+        listing.DestinationLocation = dto.DestinationLocation;
+        listing.RatePerMile = dto.RatePerMile;
+        listing.TotalRate = dto.TotalRate.HasValue
+            ? new Money { Amount = dto.TotalRate.Value, Currency = dto.Currency ?? "USD" }
+            : null;
+        listing.Distance = dto.Distance;
+        listing.Weight = dto.Weight;
+        listing.Length = dto.Length;
+        listing.PickupDateStart = dto.PickupDateStart;
+        listing.PickupDateEnd = dto.PickupDateEnd;
+        listing.DeliveryDateStart = dto.DeliveryDateStart;
+        listing.DeliveryDateEnd = dto.DeliveryDateEnd;
+        listing.EquipmentType = dto.EquipmentType;
+        listing.Commodity = dto.Commodity;
+        listing.BrokerName = dto.BrokerName;
+        listing.BrokerPhone = dto.BrokerPhone;
+        listing.BrokerEmail = dto.BrokerEmail;
+        listing.BrokerMcNumber = dto.BrokerMcNumber;
+        listing.ExpiresAt = dto.ExpiresAt;
+
+        if (listing.Status != LoadBoardListingStatus.Booked)
+        {
+            listing.Status = dto.Status;
+            listing.BookedAt = dto.BookedAt;
+        }
+
+        return listing;
+    }
+
+    private static LoadBoardListingDto ToDto(LoadBoardListing listing) => new()
+    {
+        Id = listing.Id,
+        ExternalListingId = listing.ExternalListingId,
+        ProviderType = listing.ProviderType,
+        ProviderName = listing.ProviderType.ToString(),
+        OriginAddress = listing.OriginAddress,
+        OriginLocation = listing.OriginLocation,
+        DestinationAddress = listing.DestinationAddress,
+        DestinationLocation = listing.DestinationLocation,
+        RatePerMile = listing.RatePerMile,
+        TotalRate = listing.TotalRate?.Amount,
+        Currency = listing.TotalRate?.Currency,
+        Distance = listing.Distance,
+        Weight = listing.Weight,
+        Length = listing.Length,
+        PickupDateStart = listing.PickupDateStart,
+        PickupDateEnd = listing.PickupDateEnd,
+        DeliveryDateStart = listing.DeliveryDateStart,
+        DeliveryDateEnd = listing.DeliveryDateEnd,
+        EquipmentType = listing.EquipmentType,
+        Commodity = listing.Commodity,
+        BrokerName = listing.BrokerName,
+        BrokerPhone = listing.BrokerPhone,
+        BrokerEmail = listing.BrokerEmail,
+        BrokerMcNumber = listing.BrokerMcNumber,
+        Status = listing.Status,
+        BookedAt = listing.BookedAt,
+        ExpiresAt = listing.ExpiresAt,
+        LoadId = listing.LoadId,
+        Notes = listing.Notes
+    };
 }

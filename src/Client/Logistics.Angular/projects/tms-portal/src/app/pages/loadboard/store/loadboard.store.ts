@@ -1,6 +1,8 @@
+import { HttpClient } from "@angular/common/http";
 import { computed, inject } from "@angular/core";
 import {
   Api,
+  ApiConfiguration,
   createLoadBoardProvider,
   deleteLoadBoardProvider,
   getLoadBoardProviders,
@@ -16,6 +18,7 @@ import {
   type TruckDto,
 } from "@logistics/shared/api";
 import { patchState, signalStore, withComputed, withMethods, withState } from "@ngrx/signals";
+import { firstValueFrom } from "rxjs";
 import { ToastService } from "@/core/services";
 import { getProviderLabel } from "../_components/loadboard.constants";
 
@@ -26,6 +29,14 @@ interface LoadBoardState {
   loaded: boolean;
   loading: boolean;
   error: string | null;
+}
+
+interface LoadBoardProviderConnectionTestResult {
+  providerId: string;
+  providerType: LoadBoardProviderType;
+  isConnected: boolean;
+  testedAt: string;
+  errorMessage?: string | null;
 }
 
 const initialState: LoadBoardState = {
@@ -57,7 +68,13 @@ export const LoadBoardStore = signalStore(
         })),
     ),
   })),
-  withMethods((store, api = inject(Api), toast = inject(ToastService)) => {
+  withMethods((
+    store,
+    api = inject(Api),
+    toast = inject(ToastService),
+    http = inject(HttpClient),
+    apiConfig = inject(ApiConfiguration),
+  ) => {
     async function refreshProviders(): Promise<void> {
       const data = await api.invoke(getLoadBoardProviders);
       patchState(store, { providers: data ?? [] });
@@ -133,6 +150,28 @@ export const LoadBoardStore = signalStore(
         } catch (err) {
           console.error("Error deleting provider:", err);
           toast.showError("Failed to delete provider");
+        }
+      },
+
+      async testProvider(providerId: string): Promise<void> {
+        try {
+          const result = await firstValueFrom(
+            http.post<LoadBoardProviderConnectionTestResult>(
+              `${apiConfig.rootUrl}/loadboard/providers/${providerId}/test`,
+              {},
+            ),
+          );
+          await refreshProviders();
+
+          if (result.isConnected) {
+            toast.showSuccess("Provider connection verified");
+            return;
+          }
+
+          toast.showError(result.errorMessage ?? "Provider connection failed");
+        } catch (err) {
+          console.error("Error testing provider connection:", err);
+          toast.showError("Failed to test provider connection");
         }
       },
 

@@ -14,20 +14,23 @@ internal sealed class LoadBoardConfigurationEntityConfiguration : IEntityTypeCon
             .IsUnique();
 
         builder.Property(i => i.ApiKey)
-            .HasMaxLength(500)
+            .HasMaxLength(4000)
             .IsRequired();
 
         builder.Property(i => i.ApiSecret)
-            .HasMaxLength(500);
+            .HasMaxLength(4000);
 
         builder.Property(i => i.AccessToken)
-            .HasMaxLength(2000);
+            .HasMaxLength(4000);
 
         builder.Property(i => i.RefreshToken)
-            .HasMaxLength(2000);
+            .HasMaxLength(4000);
 
         builder.Property(i => i.WebhookSecret)
-            .HasMaxLength(500);
+            .HasMaxLength(4000);
+
+        builder.Property(i => i.LastConnectionError)
+            .HasMaxLength(1000);
 
         builder.Property(i => i.ExternalAccountId)
             .HasMaxLength(100);

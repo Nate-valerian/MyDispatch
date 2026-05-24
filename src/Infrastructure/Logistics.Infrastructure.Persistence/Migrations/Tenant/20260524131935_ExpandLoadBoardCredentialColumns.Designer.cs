@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Logistics.Infrastructure.Persistence.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Logistics.Infrastructure.Persistence.Migrations.Tenant
 {
     [DbContext(typeof(TenantDbContext))]
-    partial class TenantDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260524131935_ExpandLoadBoardCredentialColumns")]
+    partial class ExpandLoadBoardCredentialColumns
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1916,15 +1919,6 @@ namespace Logistics.Infrastructure.Persistence.Migrations.Tenant
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
-
-                    b.Property<string>("LastConnectionError")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)")
-                        .HasColumnName("last_connection_error");
-
-                    b.Property<DateTime?>("LastConnectionTestedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("last_connection_tested_at");
 
                     b.Property<DateTime?>("LastSyncedAt")
                         .HasColumnType("timestamp with time zone")

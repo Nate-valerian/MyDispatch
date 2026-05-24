@@ -46,10 +46,12 @@ internal class DemoLoadBoardService(ILogger<DemoLoadBoardService> logger) : ILoa
         logger.LogInformation("Initialized Demo Load Board provider");
     }
 
-    public Task<bool> ValidateCredentialsAsync(string apiKey, string? apiSecret)
+    public Task<LoadBoardCredentialValidationResult> ValidateCredentialsAsync(string apiKey, string? apiSecret)
     {
         // Demo provider always validates successfully with any non-empty key
-        return Task.FromResult(!string.IsNullOrEmpty(apiKey));
+        return Task.FromResult(!string.IsNullOrEmpty(apiKey)
+            ? LoadBoardCredentialValidationResult.Valid()
+            : LoadBoardCredentialValidationResult.Invalid());
     }
 
     public Task<OAuthTokenResultDto?> RefreshTokenAsync(string refreshToken)

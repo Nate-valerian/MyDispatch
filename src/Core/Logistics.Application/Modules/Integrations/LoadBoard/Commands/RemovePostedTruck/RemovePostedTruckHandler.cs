@@ -11,6 +11,7 @@ namespace Logistics.Application.Modules.Integrations.LoadBoard.Commands;
 internal sealed class RemovePostedTruckHandler(
     ITenantUnitOfWork tenantUow,
     ILoadBoardProviderFactory providerFactory,
+    ILoadBoardCredentialProtector credentialProtector,
     ILogger<RemovePostedTruckHandler> logger)
     : IAppRequestHandler<RemovePostedTruckCommand, Result>
 {
@@ -36,15 +37,30 @@ internal sealed class RemovePostedTruckHandler(
 
         if (providerConfig is not null && !string.IsNullOrEmpty(postedTruck.ExternalPostId))
         {
-            // Try to remove from the load board provider
-            var provider = providerFactory.GetProvider(providerConfig);
-            var removed = await provider.RemoveTruckPostAsync(postedTruck.ExternalPostId);
+            var credentialError = await LoadBoardProviderCredentials.RefreshIfNeededAsync(
+                providerConfig,
+                providerFactory,
+                credentialProtector,
+                logger);
 
-            if (!removed)
+            if (credentialError is not null)
             {
                 logger.LogWarning(
-                    "Failed to remove truck post {ExternalPostId} from {Provider}, removing local record anyway",
-                    postedTruck.ExternalPostId, postedTruck.ProviderType);
+                    "Unable to refresh credentials for {Provider}; removing local posted truck record only",
+                    postedTruck.ProviderType);
+            }
+            else
+            {
+                // Try to remove from the load board provider
+                var provider = providerFactory.GetProvider(providerConfig);
+                var removed = await provider.RemoveTruckPostAsync(postedTruck.ExternalPostId);
+
+                if (!removed)
+                {
+                    logger.LogWarning(
+                        "Failed to remove truck post {ExternalPostId} from {Provider}, removing local record anyway",
+                        postedTruck.ExternalPostId, postedTruck.ProviderType);
+                }
             }
         }
 

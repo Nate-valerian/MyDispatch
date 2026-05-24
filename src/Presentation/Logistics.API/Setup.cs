@@ -20,6 +20,7 @@ using Logistics.Infrastructure.Integrations.LoadBoard;
 using Logistics.Infrastructure.Payments;
 using Logistics.Infrastructure.Persistence;
 using Logistics.Infrastructure.Persistence.Builder;
+using Logistics.Infrastructure.Persistence.Data;
 using Logistics.Infrastructure.Tax;
 using Logistics.Infrastructure.Vin;
 using Logistics.Infrastructure.Routing;
@@ -30,6 +31,7 @@ using Logistics.TelegramBot;
 using Logistics.Shared.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -72,6 +74,9 @@ internal static class Setup
             .AddMasterDatabase()
             .AddTenantDatabase()
             .AddIdentity();
+
+        services.AddDataProtection()
+            .PersistKeysToDbContext<MasterDbContext>();
 
         services.AddHttpContextAccessor();
         services.AddMemoryCache();

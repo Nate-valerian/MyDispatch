@@ -23,8 +23,10 @@
         </ui-stack>
       </td>
       <td>
-        @if (provider.isActive) {
-          <p-tag value="Active" severity="success" />
+        @if (provider.isActive && provider.isConnected) {
+          <p-tag value="Connected" severity="success" />
+        } @else if (provider.isActive) {
+          <p-tag value="Needs Test" severity="warn" />
         } @else {
           <p-tag value="Inactive" severity="danger" />
         }
@@ -43,6 +45,14 @@
         }
       </td>
       <td>
+        <p-button
+          icon="pi pi-refresh"
+          [rounded]="true"
+          [text]="true"
+          severity="secondary"
+          pTooltip="Test Connection"
+          (onClick)="testConnection(provider)"
+        />
         <p-button
           icon="pi pi-trash"
           [rounded]="true"

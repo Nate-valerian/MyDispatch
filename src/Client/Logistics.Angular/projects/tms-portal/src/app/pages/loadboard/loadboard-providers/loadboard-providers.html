@@ -35,6 +35,7 @@
   } @else {
     <app-providers-table
       [providers]="store.providers()"
+      (test)="store.testProvider($event)"
       (delete)="store.deleteProvider($event)"
     />
   }

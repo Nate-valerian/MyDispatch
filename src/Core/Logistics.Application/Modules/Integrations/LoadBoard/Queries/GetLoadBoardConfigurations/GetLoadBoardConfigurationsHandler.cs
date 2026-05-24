@@ -34,7 +34,11 @@ internal sealed class GetLoadBoardConfigurationsHandler(ITenantUnitOfWork tenant
                 ProviderName = config.ProviderType.ToString(),
                 IsActive = config.IsActive,
                 LastSyncedAt = config.LastSyncedAt,
-                IsConnected = config.IsActive && !string.IsNullOrEmpty(config.ApiKey),
+                LastConnectionTestedAt = config.LastConnectionTestedAt,
+                LastConnectionError = config.LastConnectionError,
+                IsConnected = config.IsActive
+                    && !string.IsNullOrEmpty(config.ApiKey)
+                    && string.IsNullOrEmpty(config.LastConnectionError),
                 ActiveListingsCount = activeListingsCount,
                 PostedTrucksCount = postedTrucksCount,
                 CompanyDotNumber = config.CompanyDotNumber,
