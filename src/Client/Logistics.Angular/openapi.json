@@ -8388,6 +8388,47 @@
         }
       }
     },
+    "/loadboard/providers/{providerId}/test": {
+      "post": {
+        "tags": [
+          "LoadBoard"
+        ],
+        "operationId": "TestLoadBoardProviderConnection",
+        "parameters": [
+          {
+            "name": "providerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoadBoardProviderConnectionTestResultDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/loadboard/search": {
       "post": {
         "tags": [
@@ -20768,6 +20809,15 @@
             "format": "date-time",
             "nullable": true
           },
+          "lastConnectionTestedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastConnectionError": {
+            "type": "string",
+            "nullable": true
+          },
           "isConnected": {
             "type": "boolean"
           },
@@ -20939,6 +20989,30 @@
           "expired"
         ],
         "type": "string"
+      },
+      "LoadBoardProviderConnectionTestResultDto": {
+        "type": "object",
+        "properties": {
+          "providerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "providerType": {
+            "$ref": "#/components/schemas/LoadBoardProviderType"
+          },
+          "isConnected": {
+            "type": "boolean"
+          },
+          "testedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "errorMessage": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
       },
       "LoadBoardProviderType": {
         "enum": [
