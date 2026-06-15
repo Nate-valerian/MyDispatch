@@ -1,13 +1,26 @@
 # DispatchLoad
 
 [![FSL-1.1-Apache-2.0][fsl-shield]][fsl]
+![.NET](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white)
+![Angular](https://img.shields.io/badge/Angular-21-DD0031?logo=angular&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-4169E1?logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
+![AI Dispatch](https://img.shields.io/badge/AI-Dispatch_Agent-111827)
 
 [fsl]: https://fsl.software/
 [fsl-shield]: https://img.shields.io/badge/License-FSL--1.1--Apache--2.0-blue.svg
 
-> Fleet management platform for trucking companies. An AI driven dispatch agent matches loads to trucks, checks HOS compliance, plans routes, and pulls leads from load boards - every decision logged so a human can review or override it.
+> AI-powered multi-tenant logistics SaaS for trucking companies. DispatchLoad combines dispatch, fleet operations, customer tracking, driver mobile workflows, invoicing, payroll, Stripe payments, ELD/HOS compliance, load boards, and an AI dispatch agent in one platform.
 
 ![AI Dispatch - Sessions & Decisions](docs/images/tms-portal/ai-dispatch-sessions.png)
+
+## Portfolio highlights
+
+- **Full-stack SaaS architecture**: .NET 10, ASP.NET Core, PostgreSQL, EF Core, Angular 21, Kotlin Multiplatform, Docker, and .NET Aspire.
+- **Multi-tenant design**: master database for tenants/subscriptions plus isolated tenant databases for each trucking company.
+- **Production patterns**: Clean Architecture, DDD, CQRS with MediatR, background jobs, OpenTelemetry, SignalR, and API key/JWT tenant resolution.
+- **Real integrations**: Stripe + Stripe Connect, Mapbox routing/geocoding, Firebase notifications, ELD providers, load board providers, and AI/LLM tooling.
+- **AI dispatch workflow**: agent decisions are logged, explainable, reviewable, and exposed through both the TMS portal and MCP server.
 
 ## Try it
 
