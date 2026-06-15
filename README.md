@@ -22,6 +22,8 @@
 - **Real integrations**: Stripe + Stripe Connect, Mapbox routing/geocoding, Firebase notifications, ELD providers, load board providers, and AI/LLM tooling.
 - **AI dispatch workflow**: agent decisions are logged, explainable, reviewable, and exposed through both the TMS portal and MCP server.
 
+For a portfolio-style technical overview, read the [case study](CASE_STUDY.md).
+
 ## Try it
 
 **US tenant** (Default Logistics):
