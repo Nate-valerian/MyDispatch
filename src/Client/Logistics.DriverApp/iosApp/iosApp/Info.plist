@@ -35,8 +35,12 @@
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>We need camera access to scan documents and capture delivery photos.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Used to share your truck's location with dispatch while you are On Duty, including when the app is in the background during an active route. You can stop sharing by tapping Off Duty.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Used to share your truck's location with your dispatcher while you are On Duty. You stop sharing by tapping Off Duty in the app.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Used to select existing delivery, inspection, and document photos when camera capture is not available.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>

@@ -1,0 +1,7 @@
+﻿ M src/Client/Logistics.DriverApp/README.md
+ M src/Client/Logistics.DriverApp/androidApp/build.gradle.kts
+ M src/Client/Logistics.DriverApp/iosApp/iosApp/Info.plist
+ M src/Presentation/Logistics.DbMigrator/Seeders/Infrastructure/StripeSeeder.cs
+ M src/Presentation/Logistics.DbMigrator/Seeders/Infrastructure/StripeSubscriptionSyncSeeder.cs
+?? .codex/
+?? src/Client/Logistics.DriverApp/docs/iphone-runbook.md

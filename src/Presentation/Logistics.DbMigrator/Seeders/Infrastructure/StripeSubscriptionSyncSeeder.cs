@@ -24,7 +24,7 @@ internal class StripeSubscriptionSyncSeeder(ILogger<StripeSubscriptionSyncSeeder
     public override Task<bool> ShouldSkipAsync(SeederContext context, CancellationToken cancellationToken = default)
     {
         var stripeKey = context.Configuration["Stripe:SecretKey"];
-        if (string.IsNullOrEmpty(stripeKey))
+        if (string.IsNullOrWhiteSpace(stripeKey) || stripeKey.TrimStart().StartsWith('<'))
         {
             LogSkipping("Stripe API key not configured");
             return Task.FromResult(true);

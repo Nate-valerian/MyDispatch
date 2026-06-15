@@ -1,8 +1,27 @@
 plugins {
     alias(libs.plugins.androidApplication)
-    alias(libs.plugins.googleServices)
-    alias(libs.plugins.firebaseCrashlytics)
     alias(libs.plugins.composeCompiler)
+}
+
+val googleServicesCandidates = listOf(
+    "google-services.json",
+    "src/dev/google-services.json",
+    "src/debug/google-services.json",
+    "src/devDebug/google-services.json",
+    "src/prod/google-services.json",
+    "src/release/google-services.json",
+    "src/prodRelease/google-services.json"
+).map { file(it) }
+
+val hasGoogleServicesConfig = googleServicesCandidates.any { it.exists() }
+
+if (hasGoogleServicesConfig) {
+    apply(plugin = "com.google.gms.google-services")
+    apply(plugin = "com.google.firebase.crashlytics")
+} else {
+    logger.lifecycle(
+        "google-services.json not found; Firebase Google Services and Crashlytics plugins are skipped for this build."
+    )
 }
 
 android {

@@ -1,0 +1,121 @@
+diff --git a/src/Client/Logistics.DriverApp/README.md b/src/Client/Logistics.DriverApp/README.md
+index 3c47eeb..224bf88 100644
+--- a/src/Client/Logistics.DriverApp/README.md
++++ b/src/Client/Logistics.DriverApp/README.md
+@@ -52,6 +52,7 @@ The complete project report can be found in the [report.pdf](docs/report.pdf) fi
+    - Open the `iosApp` folder in Xcode.
+    - Connect an iOS device or start a simulator.
+    - Click "Run" to build and deploy the app.
++   - For physical iPhone setup, staging URLs, signing, permissions, and TestFlight notes, see the [iPhone runbook](docs/iphone-runbook.md).
+ 
+ ## Tech Stack
+ 
+@@ -154,6 +155,29 @@ compilation.
+ ./gradlew assembleDebug
+ ```
+ 
++For local Android builds, the Logistics API must be running because the generated client is created
++from Swagger:
++
++```bash
++./gradlew :androidApp:assembleDevDebug
++```
++
++Default OpenAPI source:
++
++```text
++http://localhost:7000/swagger/v1/swagger.json
++```
++
++If the API is exposed somewhere else, pass it explicitly:
++
++```bash
++./gradlew :androidApp:assembleDevDebug -PopenApiSpecUrl=https://your-api-host/swagger/v1/swagger.json
++```
++
++Firebase is optional for local dev builds. If `google-services.json` is missing, the Android app
++skips the Google Services and Crashlytics Gradle plugins, but Firebase messaging dependencies remain
++available for builds that include the config file.
++
+ #### Manual Generation
+ 
+ To manually regenerate the API client (e.g., after updating the OpenAPI spec):
+diff --git a/src/Client/Logistics.DriverApp/androidApp/build.gradle.kts b/src/Client/Logistics.DriverApp/androidApp/build.gradle.kts
+index d0d9bf5..34c68eb 100644
+--- a/src/Client/Logistics.DriverApp/androidApp/build.gradle.kts
++++ b/src/Client/Logistics.DriverApp/androidApp/build.gradle.kts
+@@ -1,10 +1,29 @@
+ plugins {
+     alias(libs.plugins.androidApplication)
+-    alias(libs.plugins.googleServices)
+-    alias(libs.plugins.firebaseCrashlytics)
+     alias(libs.plugins.composeCompiler)
+ }
+ 
++val googleServicesCandidates = listOf(
++    "google-services.json",
++    "src/dev/google-services.json",
++    "src/debug/google-services.json",
++    "src/devDebug/google-services.json",
++    "src/prod/google-services.json",
++    "src/release/google-services.json",
++    "src/prodRelease/google-services.json"
++).map { file(it) }
++
++val hasGoogleServicesConfig = googleServicesCandidates.any { it.exists() }
++
++if (hasGoogleServicesConfig) {
++    apply(plugin = "com.google.gms.google-services")
++    apply(plugin = "com.google.firebase.crashlytics")
++} else {
++    logger.lifecycle(
++        "google-services.json not found; Firebase Google Services and Crashlytics plugins are skipped for this build."
++    )
++}
++
+ android {
+     namespace = "com.dispatchload.driver"
+     compileSdk = 37
+diff --git a/src/Client/Logistics.DriverApp/iosApp/iosApp/Info.plist b/src/Client/Logistics.DriverApp/iosApp/iosApp/Info.plist
+index 5f96f5e..4179d7a 100644
+--- a/src/Client/Logistics.DriverApp/iosApp/iosApp/Info.plist
++++ b/src/Client/Logistics.DriverApp/iosApp/iosApp/Info.plist
+@@ -35,8 +35,12 @@
+ 	</dict>
+ 	<key>NSCameraUsageDescription</key>
+ 	<string>We need camera access to scan documents and capture delivery photos.</string>
++	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
++	<string>Used to share your truck's location with dispatch while you are On Duty, including when the app is in the background during an active route. You can stop sharing by tapping Off Duty.</string>
+ 	<key>NSLocationWhenInUseUsageDescription</key>
+ 	<string>Used to share your truck's location with your dispatcher while you are On Duty. You stop sharing by tapping Off Duty in the app.</string>
++	<key>NSPhotoLibraryUsageDescription</key>
++	<string>Used to select existing delivery, inspection, and document photos when camera capture is not available.</string>
+ 	<key>UIBackgroundModes</key>
+ 	<array>
+ 		<string>location</string>
+diff --git a/src/Presentation/Logistics.DbMigrator/Seeders/Infrastructure/StripeSeeder.cs b/src/Presentation/Logistics.DbMigrator/Seeders/Infrastructure/StripeSeeder.cs
+index 0d91029..40246c4 100644
+--- a/src/Presentation/Logistics.DbMigrator/Seeders/Infrastructure/StripeSeeder.cs
++++ b/src/Presentation/Logistics.DbMigrator/Seeders/Infrastructure/StripeSeeder.cs
+@@ -25,7 +25,7 @@ internal class StripeSeeder(ILogger<StripeSeeder> logger) : SeederBase(logger)
+     public override Task<bool> ShouldSkipAsync(SeederContext context, CancellationToken cancellationToken = default)
+     {
+         var stripeKey = context.Configuration["Stripe:SecretKey"];
+-        if (string.IsNullOrEmpty(stripeKey))
++        if (string.IsNullOrWhiteSpace(stripeKey) || stripeKey.TrimStart().StartsWith('<'))
+         {
+             LogSkipping("Stripe API key not configured");
+             return Task.FromResult(true);
+diff --git a/src/Presentation/Logistics.DbMigrator/Seeders/Infrastructure/StripeSubscriptionSyncSeeder.cs b/src/Presentation/Logistics.DbMigrator/Seeders/Infrastructure/StripeSubscriptionSyncSeeder.cs
+index b3eca48..7c7197a 100644
+--- a/src/Presentation/Logistics.DbMigrator/Seeders/Infrastructure/StripeSubscriptionSyncSeeder.cs
++++ b/src/Presentation/Logistics.DbMigrator/Seeders/Infrastructure/StripeSubscriptionSyncSeeder.cs
+@@ -24,7 +24,7 @@ internal class StripeSubscriptionSyncSeeder(ILogger<StripeSubscriptionSyncSeeder
+     public override Task<bool> ShouldSkipAsync(SeederContext context, CancellationToken cancellationToken = default)
+     {
+         var stripeKey = context.Configuration["Stripe:SecretKey"];
+-        if (string.IsNullOrEmpty(stripeKey))
++        if (string.IsNullOrWhiteSpace(stripeKey) || stripeKey.TrimStart().StartsWith('<'))
+         {
+             LogSkipping("Stripe API key not configured");
+             return Task.FromResult(true);

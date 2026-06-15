@@ -52,6 +52,7 @@ The complete project report can be found in the [report.pdf](docs/report.pdf) fi
    - Open the `iosApp` folder in Xcode.
    - Connect an iOS device or start a simulator.
    - Click "Run" to build and deploy the app.
+   - For physical iPhone setup, staging URLs, signing, permissions, and TestFlight notes, see the [iPhone runbook](docs/iphone-runbook.md).
 
 ## Tech Stack
 
@@ -153,6 +154,29 @@ compilation.
 # Build triggers automatic API generation
 ./gradlew assembleDebug
 ```
+
+For local Android builds, the Logistics API must be running because the generated client is created
+from Swagger:
+
+```bash
+./gradlew :androidApp:assembleDevDebug
+```
+
+Default OpenAPI source:
+
+```text
+http://localhost:7000/swagger/v1/swagger.json
+```
+
+If the API is exposed somewhere else, pass it explicitly:
+
+```bash
+./gradlew :androidApp:assembleDevDebug -PopenApiSpecUrl=https://your-api-host/swagger/v1/swagger.json
+```
+
+Firebase is optional for local dev builds. If `google-services.json` is missing, the Android app
+skips the Google Services and Crashlytics Gradle plugins, but Firebase messaging dependencies remain
+available for builds that include the config file.
 
 #### Manual Generation
 
