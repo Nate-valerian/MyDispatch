@@ -34,25 +34,56 @@ The complete project report can be found in the [report.pdf](docs/report.pdf) fi
 - **Kotlin Multiplatform Mobile Plugin**: Installed in Android Studio
 - **CocoaPods**: For iOS dependency management
 - **Simulator/Device**: Android device/emulator (API 26+) and iOS device/simulator (iOS 15.0+)
+- **Docker Desktop**: Required for the Aspire backend stack used by local mobile development
 
-### Setup Instructions
+### Local Development
 
-1. **Run Backend Services**:
+Start Docker Desktop, then run the backend from the repository root first. The mobile app needs both
+the API and Identity Server:
 
-   - Ensure the Logistics backend services (API and Identity servers) are running and accessible.
-     Refer to the main project [README](../../../README.md) for backend setup.
+```bash
+dotnet run --project src/Aspire/Logistics.Aspire.AppHost
+```
 
-2. **Run Android App**:
+Service URLs used by local mobile builds:
 
-   - Open the `Logistics.DriverApp` folder in Android Studio.
-   - Connect an Android device or start an emulator.
-   - Click "Run" to build and deploy the app. Ensure the `composeApp` module is selected.
+| Target                       | API                                | Identity Server                    |
+| ---------------------------- | ---------------------------------- | ---------------------------------- |
+| Android emulator, dev flavor | `http://10.0.2.2:7000`             | `http://10.0.2.2:7001`             |
+| iOS simulator, dev config    | `http://localhost:7000`            | `http://localhost:7001`            |
+| Physical phone               | Use HTTPS staging/prod or a tunnel | Use HTTPS staging/prod or a tunnel |
 
-3. **Run iOS App**:
-   - Open the `iosApp` folder in Xcode.
-   - Connect an iOS device or start a simulator.
-   - Click "Run" to build and deploy the app.
-   - For physical iPhone setup, staging URLs, signing, permissions, and TestFlight notes, see the [iPhone runbook](docs/iphone-runbook.md).
+From `src/Client/Logistics.DriverApp`, build the Android dev app with:
+
+```bash
+./gradlew :androidApp:assembleDevDebug
+```
+
+On Windows PowerShell:
+
+```powershell
+.\gradlew.bat :androidApp:assembleDevDebug
+```
+
+The build regenerates the KMP API client from Swagger before Kotlin compilation. By default it
+reads:
+
+```text
+http://localhost:7000/swagger/v1/swagger.json
+```
+
+If the API is available somewhere else, pass the Swagger URL explicitly:
+
+```bash
+./gradlew :androidApp:assembleDevDebug -PopenApiSpecUrl=https://your-api-host/swagger/v1/swagger.json
+```
+
+Firebase config is optional for local Android builds. If `google-services.json` is missing, the
+Google Services and Crashlytics Gradle plugins are skipped.
+
+For iOS simulator work, open `iosApp/iosApp.xcodeproj` in Xcode and run the dev configuration. For
+physical iPhone setup, staging URLs, signing, permissions, and TestFlight notes, see the
+[iPhone runbook](docs/iphone-runbook.md).
 
 ## Tech Stack
 
@@ -156,27 +187,7 @@ compilation.
 ```
 
 For local Android builds, the Logistics API must be running because the generated client is created
-from Swagger:
-
-```bash
-./gradlew :androidApp:assembleDevDebug
-```
-
-Default OpenAPI source:
-
-```text
-http://localhost:7000/swagger/v1/swagger.json
-```
-
-If the API is exposed somewhere else, pass it explicitly:
-
-```bash
-./gradlew :androidApp:assembleDevDebug -PopenApiSpecUrl=https://your-api-host/swagger/v1/swagger.json
-```
-
-Firebase is optional for local dev builds. If `google-services.json` is missing, the Android app
-skips the Google Services and Crashlytics Gradle plugins, but Firebase messaging dependencies remain
-available for builds that include the config file.
+from Swagger. See [Local Development](#local-development) for the default URL and override command.
 
 #### Manual Generation
 
