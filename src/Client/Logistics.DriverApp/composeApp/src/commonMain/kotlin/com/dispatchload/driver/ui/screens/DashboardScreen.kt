@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -56,6 +57,7 @@ fun DashboardScreen(
     onLoadClick: (String) -> Unit,
     onTripClick: (String) -> Unit,
     onDvirClick: (truckId: String?) -> Unit,
+    onFindLoadsClick: () -> Unit,
     onLogout: () -> Unit,
     viewModel: DashboardViewModel = koinViewModel()
 ) {
@@ -133,6 +135,10 @@ fun DashboardScreen(
                                     }
                                 }
                             }
+                        }
+
+                        item {
+                            AiLoadFinderEntryCard(onClick = onFindLoadsClick)
                         }
 
                         // Active Loads Section
@@ -228,5 +234,34 @@ fun DashboardScreen(
                 }
             }
         )
+    }
+}
+
+@Composable
+private fun AiLoadFinderEntryCard(onClick: () -> Unit) {
+    CardContainer {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "Mira AI Load Finder",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "Enter a route and radius to find freight nearby.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Button(
+                onClick = onClick,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Default.Search, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Find loads")
+            }
+        }
     }
 }

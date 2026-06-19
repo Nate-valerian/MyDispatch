@@ -140,6 +140,8 @@ public static class TenantRolePermissions
         list.AddRange(Permission.GeneratePermissions(nameof(Permission.Message)));
         list.Add(Permission.Truck.View);
         list.Add(Permission.Load.View);
+        list.Add(Permission.LoadBoard.View);
+        list.Add(Permission.LoadBoard.Search);
         list.Add(Permission.Stat.View);
         return list;
     }

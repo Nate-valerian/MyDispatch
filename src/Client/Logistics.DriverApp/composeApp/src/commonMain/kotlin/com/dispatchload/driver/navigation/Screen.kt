@@ -28,6 +28,9 @@ data object DashboardRoute : NavKey
 data object StatsRoute : NavKey
 
 @Serializable
+data object AiLoadFinderRoute : NavKey
+
+@Serializable
 data object PastLoadsRoute : NavKey
 
 @Serializable
@@ -109,6 +112,7 @@ val navSavedStateConfiguration: SavedStateConfiguration = SavedStateConfiguratio
             subclass(LocationDisclosureRoute::class)
             subclass(DashboardRoute::class)
             subclass(StatsRoute::class)
+            subclass(AiLoadFinderRoute::class)
             subclass(PastLoadsRoute::class)
             subclass(TripsRoute::class)
             subclass(TripDetailRoute::class)

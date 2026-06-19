@@ -40,8 +40,10 @@ import com.dispatchload.driver.api.models.DataExportStatus
 import com.dispatchload.driver.ui.components.AppTopBar
 import com.dispatchload.driver.ui.components.Chip
 import com.dispatchload.driver.ui.components.DetailRow
+import com.dispatchload.driver.ui.components.DriverInfoCard
 import com.dispatchload.driver.ui.components.LoadingIndicator
 import com.dispatchload.driver.ui.components.SectionCard
+import com.dispatchload.driver.viewmodel.AccountViewModel
 import com.dispatchload.driver.viewmodel.PrivacyViewModel
 import com.dispatchload.driver.viewmodel.base.ActionState
 import org.koin.compose.viewmodel.koinViewModel
@@ -51,8 +53,10 @@ import org.koin.compose.viewmodel.koinViewModel
 fun PrivacyScreen(
     onNavigateBack: () -> Unit,
     viewModel: PrivacyViewModel = koinViewModel(),
+    driverViewModel: AccountViewModel = koinViewModel(),
 ) {
     val isLoading by viewModel.isLoading.collectAsState()
+    val driverState by driverViewModel.uiState.collectAsState()
     val exports by viewModel.exports.collectAsState()
     val deletions by viewModel.deletions.collectAsState()
     val exportAction by viewModel.exportAction.collectAsState()
@@ -88,6 +92,8 @@ fun PrivacyScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            DriverInfoCard(driverState)
+
             SectionCard(title = "Download my data") {
                 Text(
                     "We'll prepare a ZIP with your profile, organisations you have access to, " +

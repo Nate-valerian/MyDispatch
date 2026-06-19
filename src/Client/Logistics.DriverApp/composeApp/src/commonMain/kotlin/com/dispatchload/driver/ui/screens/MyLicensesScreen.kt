@@ -32,9 +32,11 @@ import com.dispatchload.driver.ui.components.AppTopBar
 import com.dispatchload.driver.ui.components.CardContainer
 import com.dispatchload.driver.ui.components.Chip
 import com.dispatchload.driver.ui.components.DetailRow
+import com.dispatchload.driver.ui.components.DriverInfoCard
 import com.dispatchload.driver.ui.components.EmptyStateView
 import com.dispatchload.driver.ui.components.UiStateContent
 import com.dispatchload.driver.util.formatShort
+import com.dispatchload.driver.viewmodel.AccountViewModel
 import com.dispatchload.driver.viewmodel.MyLicensesViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.time.ExperimentalTime
@@ -43,9 +45,11 @@ import kotlin.time.ExperimentalTime
 @Composable
 fun MyLicensesScreen(
     onNavigateBack: () -> Unit,
-    viewModel: MyLicensesViewModel = koinViewModel()
+    viewModel: MyLicensesViewModel = koinViewModel(),
+    driverViewModel: AccountViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val driverState by driverViewModel.uiState.collectAsState()
 
     Scaffold(
         topBar = {
@@ -65,21 +69,26 @@ fun MyLicensesScreen(
         }
     ) { paddingValues ->
         UiStateContent(uiState, viewModel::refresh) { licenses ->
-            if (licenses.isEmpty()) {
-                EmptyStateView(
-                    icon = Icons.Default.Badge,
-                    title = "No licenses on file",
-                    message = "Ask your dispatcher to add your driver's license.",
-                    modifier = Modifier.padding(paddingValues)
-                )
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                item {
+                    DriverInfoCard(driverState)
+                }
+
+                if (licenses.isEmpty()) {
+                    item {
+                        EmptyStateView(
+                            icon = Icons.Default.Badge,
+                            title = "No licenses on file",
+                            message = "Ask your dispatcher to add your driver's license."
+                        )
+                    }
+                } else {
                     items(licenses) { license ->
                         LicenseCard(license)
                     }

@@ -7,6 +7,7 @@ import com.dispatchload.driver.api.models.DvirType
 import com.dispatchload.driver.api.models.InspectionType
 import com.dispatchload.driver.ui.screens.AboutScreen
 import com.dispatchload.driver.ui.screens.AccountScreen
+import com.dispatchload.driver.ui.screens.AiLoadFinderScreen
 import com.dispatchload.driver.ui.screens.ConditionReportScreen
 import com.dispatchload.driver.ui.screens.ConversationScreen
 import com.dispatchload.driver.ui.screens.DashboardScreen
@@ -77,15 +78,22 @@ fun createEntryProvider(
             onDvirClick = { truckId ->
                 navigator.navigate(DvirFormRoute(truckId = truckId, dvirType = DvirType.PRE_TRIP))
             },
+            onFindLoadsClick = {
+                navigator.navigate(AiLoadFinderRoute)
+            },
             onLogout = {
                 navigator.clearAndNavigate(LoginRoute)
             }
         )
     }
 
+    entry<AiLoadFinderRoute> {
+        AiLoadFinderScreen(onNavigateBack = { navigator.goBack() })
+    }
+
     // Stats Screen
     entry<StatsRoute> {
-        StatsScreen()
+        StatsScreen(onNavigateBack = { navigator.goBack() })
     }
 
     // Past Loads Screen
@@ -223,7 +231,7 @@ fun createEntryProvider(
 
     // Settings Screen
     entry<SettingsRoute> {
-        SettingsScreen()
+        SettingsScreen(onNavigateBack = { navigator.goBack() })
     }
 
     // About Screen

@@ -9,6 +9,7 @@ import com.dispatchload.driver.api.DvirApi
 import com.dispatchload.driver.api.EmployeeApi
 import com.dispatchload.driver.api.InspectionsApi
 import com.dispatchload.driver.api.LoadApi
+import com.dispatchload.driver.api.LoadBoardApi
 import com.dispatchload.driver.api.MessageApi
 import com.dispatchload.driver.api.PrivacyApi
 import com.dispatchload.driver.api.ReportApi
@@ -24,6 +25,7 @@ import com.dispatchload.driver.service.LoadProximityWatcher
 import com.dispatchload.driver.service.PreferencesManager
 import com.dispatchload.driver.service.messaging.ConversationStateManager
 import com.dispatchload.driver.viewmodel.AccountViewModel
+import com.dispatchload.driver.viewmodel.AiLoadFinderViewModel
 import com.dispatchload.driver.viewmodel.ChatViewModel
 import com.dispatchload.driver.viewmodel.ConditionReportViewModel
 import com.dispatchload.driver.viewmodel.ConversationListViewModel
@@ -63,6 +65,7 @@ fun commonModule() = module {
     single<EmployeeApi> { get<ApiFactory>().employeeApi }
     single<InspectionsApi> { get<ApiFactory>().inspectionsApi }
     single<LoadApi> { get<ApiFactory>().loadApi }
+    single<LoadBoardApi> { get<ApiFactory>().loadBoardApi }
     single<MessageApi> { get<ApiFactory>().messageApi }
     single<PrivacyApi> { get<ApiFactory>().privacyApi }
     single<ReportApi> { get<ApiFactory>().reportApi }
@@ -81,6 +84,7 @@ fun commonModule() = module {
 
     viewModelOf(::DashboardViewModel)
     viewModelOf(::AccountViewModel)
+    viewModelOf(::AiLoadFinderViewModel)
     viewModelOf(::LoadDetailViewModel)
     viewModelOf(::PastLoadsViewModel)
     viewModelOf(::MyLicensesViewModel)

@@ -8,10 +8,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Straighten
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
@@ -30,8 +33,10 @@ import com.dispatchload.driver.model.DistanceUnit
 import com.dispatchload.driver.model.Language
 import com.dispatchload.driver.ui.components.AppTopBar
 import com.dispatchload.driver.ui.components.CardContainer
+import com.dispatchload.driver.ui.components.DriverInfoCard
 import com.dispatchload.driver.ui.components.settings.SelectableItem
 import com.dispatchload.driver.ui.components.settings.SettingsItem
+import com.dispatchload.driver.viewmodel.AccountViewModel
 import com.dispatchload.driver.viewmodel.SettingsViewModel
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
@@ -39,9 +44,12 @@ import org.koin.compose.viewmodel.koinViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    viewModel: SettingsViewModel = koinViewModel()
+    onNavigateBack: () -> Unit,
+    viewModel: SettingsViewModel = koinViewModel(),
+    driverViewModel: AccountViewModel = koinViewModel()
 ) {
     val settings by viewModel.settings.collectAsState()
+    val driverState by driverViewModel.uiState.collectAsState()
     var showDistanceUnitSheet by remember { mutableStateOf(false) }
     var showLanguageSheet by remember { mutableStateOf(false) }
 
@@ -51,7 +59,14 @@ fun SettingsScreen(
 
     Scaffold(
         topBar = {
-            AppTopBar(title = "Settings")
+            AppTopBar(
+                title = "Settings",
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                    }
+                }
+            )
         }
     ) { paddingValues ->
         Column(
@@ -62,6 +77,8 @@ fun SettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            DriverInfoCard(driverState)
+
             // Units Section
             Text(
                 text = "Preferences",
