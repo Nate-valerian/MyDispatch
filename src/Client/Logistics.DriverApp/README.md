@@ -78,6 +78,15 @@ If the API is available somewhere else, pass the Swagger URL explicitly:
 ./gradlew :androidApp:assembleDevDebug -PopenApiSpecUrl=https://your-api-host/swagger/v1/swagger.json
 ```
 
+If the app itself also needs to point at non-default local ports, override the dev flavor URLs:
+
+```bash
+./gradlew :androidApp:assembleDevDebug \
+  -PopenApiSpecUrl=http://localhost:17000/swagger/v1/swagger.json \
+  -PdriverApiBaseUrl=http://10.0.2.2:17000 \
+  -PdriverIdentityServerUrl=http://10.0.2.2:17001
+```
+
 Firebase config is optional for local Android builds. If `google-services.json` is missing, the
 Google Services and Crashlytics Gradle plugins are skipped.
 

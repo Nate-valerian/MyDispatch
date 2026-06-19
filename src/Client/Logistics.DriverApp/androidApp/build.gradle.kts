@@ -14,6 +14,12 @@ val googleServicesCandidates = listOf(
 ).map { file(it) }
 
 val hasGoogleServicesConfig = googleServicesCandidates.any { it.exists() }
+val devApiBaseUrl = providers.gradleProperty("driverApiBaseUrl")
+    .orElse("http://10.0.2.2:7000")
+    .get()
+val devIdentityServerUrl = providers.gradleProperty("driverIdentityServerUrl")
+    .orElse("http://10.0.2.2:7001")
+    .get()
 
 if (hasGoogleServicesConfig) {
     apply(plugin = "com.google.gms.google-services")
@@ -45,8 +51,8 @@ android {
         create("dev") {
             dimension = "environment"
             versionNameSuffix = "-dev"
-            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:7000\"")
-            buildConfigField("String", "IDENTITY_SERVER_URL", "\"http://10.0.2.2:7001\"")
+            buildConfigField("String", "API_BASE_URL", "\"$devApiBaseUrl\"")
+            buildConfigField("String", "IDENTITY_SERVER_URL", "\"$devIdentityServerUrl\"")
             manifestPlaceholders["allowCleartext"] = "true"
         }
         create("prod") {

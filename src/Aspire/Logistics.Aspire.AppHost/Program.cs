@@ -4,6 +4,10 @@ using Projects;
 var builder = DistributedApplication.CreateBuilder(args);
 var isProdEnv = builder.ExecutionContext.IsPublishMode;
 var isDevEnv = !isProdEnv;
+var tenantDatabaseDefaultPort = isDevEnv ? "5433" : builder.GetConfigValue("TenantDatabaseDefaults:Port");
+var tenantDatabaseDefaultHost = builder.GetConfigValue("TenantDatabaseDefaults:Host");
+var tenantDatabaseDefaultUserId = builder.GetConfigValue("TenantDatabaseDefaults:UserId");
+var tenantDatabaseDefaultPassword = builder.GetConfigValue("TenantDatabaseDefaults:Password");
 
 builder.AddDockerComposeEnvironment("compose")
     .WithDashboard(dashboard => dashboard.WithHostPort(7100));
@@ -22,7 +26,10 @@ if (isProdEnv)
 }
 else
 {
-    var postgres = builder.AddPostgres("postgres", port: 5433)
+    var postgresUser = builder.AddParameter("postgres-user", tenantDatabaseDefaultUserId);
+    var postgresPassword = builder.AddParameter("postgres-password", tenantDatabaseDefaultPassword, secret: true);
+
+    var postgres = builder.AddPostgres("postgres", postgresUser, postgresPassword, port: 5433)
         .WithImage("postgres:latest")
         .WithPgAdmin(container =>
             container.WithImage("dpage/pgadmin4:latest").WithHostPort(5434))
@@ -86,13 +93,13 @@ var logisticsApi = builder.AddProject<Logistics_API>("api")
     .WithEnvironment("TenantDatabaseDefaults__NameTemplate",
         builder.GetConfigValue("TenantDatabaseDefaults:NameTemplate"))
     .WithEnvironment("TenantDatabaseDefaults__Host",
-        builder.GetConfigValue("TenantDatabaseDefaults:Host"))
+        tenantDatabaseDefaultHost)
     .WithEnvironment("TenantDatabaseDefaults__Port",
-        builder.GetConfigValue("TenantDatabaseDefaults:Port"))
+        tenantDatabaseDefaultPort)
     .WithEnvironment("TenantDatabaseDefaults__UserId",
-        builder.GetConfigValue("TenantDatabaseDefaults:UserId"))
+        tenantDatabaseDefaultUserId)
     .WithEnvironment("TenantDatabaseDefaults__Password",
-        builder.GetConfigValue("TenantDatabaseDefaults:Password"))
+        tenantDatabaseDefaultPassword)
     .WaitFor(identityServer)
     .WithComposeRestartPolicy();
 
@@ -109,20 +116,25 @@ if (isDevEnv)
         .WithEnvironment("Tenants__0__CompanyName", "Heartland Logistics LLC")
         .WithEnvironment("Tenants__0__BillingEmail", "billing@heartlandlogistics.com")
         .WithEnvironment("Tenants__0__Region", "Us")
+        .WithEnvironment("Tenants__0__ConnectionString",
+            $"Host={tenantDatabaseDefaultHost};Port={tenantDatabaseDefaultPort};Database=us_dispatchload;Username={tenantDatabaseDefaultUserId};Password={tenantDatabaseDefaultPassword};Include Error Detail=true")
         .WithEnvironment("Tenants__1__Name", "eu")
         .WithEnvironment("Tenants__1__CompanyName", "EuroFreight GmbH")
         .WithEnvironment("Tenants__1__BillingEmail", "billing@eurofreight.de")
         .WithEnvironment("Tenants__1__Region", "Eu")
+        .WithEnvironment("Tenants__1__ConnectionString",
+            $"Host={tenantDatabaseDefaultHost};Port={tenantDatabaseDefaultPort};Database=eu_dispatchload;Username={tenantDatabaseDefaultUserId};Password={tenantDatabaseDefaultPassword};Include Error Detail=true")
         .WithEnvironment("TenantDatabaseDefaults__NameTemplate",
             builder.GetConfigValue("TenantDatabaseDefaults:NameTemplate"))
         .WithEnvironment("TenantDatabaseDefaults__Host",
-            builder.GetConfigValue("TenantDatabaseDefaults:Host"))
+            tenantDatabaseDefaultHost)
         .WithEnvironment("TenantDatabaseDefaults__Port",
-            builder.GetConfigValue("TenantDatabaseDefaults:Port"))
+            tenantDatabaseDefaultPort)
         .WithEnvironment("TenantDatabaseDefaults__UserId",
-            builder.GetConfigValue("TenantDatabaseDefaults:UserId"))
+            tenantDatabaseDefaultUserId)
         .WithEnvironment("TenantDatabaseDefaults__Password",
-            builder.GetConfigValue("TenantDatabaseDefaults:Password"));
+            tenantDatabaseDefaultPassword)
+        .WaitFor(masterDb);
 
     identityServer.WaitForCompletion(migrator);
     logisticsApi.WaitForCompletion(migrator);
