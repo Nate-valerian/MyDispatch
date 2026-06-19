@@ -116,7 +116,6 @@ class AuthService(
 
     suspend fun logout() {
         preferencesManager.clearAll()
-        close()
     }
 
     /**
