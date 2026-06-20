@@ -12,6 +12,20 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import com.dispatchload.driver.api.models.DistanceUnit as ApiDistanceUnit
 
+class AiLoadFinderSelectionStore {
+    private val listings = mutableMapOf<String, RouteLoadBoardListingDto>()
+
+    fun put(listing: RouteLoadBoardListingDto): String {
+        val key = listing.listing.id
+            ?: listing.listing.externalListingId
+            ?: "load-board-${listing.hashCode()}"
+        listings[key] = listing
+        return key
+    }
+
+    fun get(key: String): RouteLoadBoardListingDto? = listings[key]
+}
+
 data class AiLoadFinderUiState(
     val assistantName: String = "Mira",
     val assistantVoice: String = "Mira voice",
@@ -26,7 +40,8 @@ data class AiLoadFinderUiState(
 )
 
 class AiLoadFinderViewModel(
-    private val loadBoardApi: LoadBoardApi
+    private val loadBoardApi: LoadBoardApi,
+    private val selectionStore: AiLoadFinderSelectionStore
 ) : BaseViewModel() {
 
     private val _uiState = MutableStateFlow(AiLoadFinderUiState())
@@ -100,6 +115,8 @@ class AiLoadFinderViewModel(
             }
         }
     }
+
+    fun selectListing(listing: RouteLoadBoardListingDto): String = selectionStore.put(listing)
 }
 
 private fun DistanceUnit.toApiDistanceUnit(): ApiDistanceUnit {

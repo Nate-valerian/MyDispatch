@@ -7,6 +7,7 @@ import com.dispatchload.driver.api.models.DvirType
 import com.dispatchload.driver.api.models.InspectionType
 import com.dispatchload.driver.ui.screens.AboutScreen
 import com.dispatchload.driver.ui.screens.AccountScreen
+import com.dispatchload.driver.ui.screens.AiLoadBoardDetailScreen
 import com.dispatchload.driver.ui.screens.AiLoadFinderScreen
 import com.dispatchload.driver.ui.screens.ConditionReportScreen
 import com.dispatchload.driver.ui.screens.ConversationScreen
@@ -28,6 +29,7 @@ import com.dispatchload.driver.ui.screens.TripsScreen
 import com.dispatchload.driver.viewmodel.ConditionReportViewModel
 import com.dispatchload.driver.viewmodel.DocumentCaptureType
 import com.dispatchload.driver.viewmodel.DvirFormViewModel
+import com.dispatchload.driver.viewmodel.AiLoadBoardDetailViewModel
 import com.dispatchload.driver.viewmodel.LoadDetailViewModel
 import com.dispatchload.driver.viewmodel.PodCaptureViewModel
 import com.dispatchload.driver.viewmodel.TripDetailViewModel
@@ -88,7 +90,22 @@ fun createEntryProvider(
     }
 
     entry<AiLoadFinderRoute> {
-        AiLoadFinderScreen(onNavigateBack = { navigator.goBack() })
+        AiLoadFinderScreen(
+            onNavigateBack = { navigator.goBack() },
+            onLoadBoardListingClick = { listingKey ->
+                navigator.navigate(AiLoadBoardDetailRoute(listingKey))
+            }
+        )
+    }
+
+    entry<AiLoadBoardDetailRoute> { key ->
+        val viewModel: AiLoadBoardDetailViewModel = koinViewModel { parametersOf(key.listingKey) }
+
+        AiLoadBoardDetailScreen(
+            onNavigateBack = { navigator.goBack() },
+            onOpenUrl = onOpenUrl,
+            viewModel = viewModel
+        )
     }
 
     // Stats Screen

@@ -1,5 +1,6 @@
 package com.dispatchload.driver.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -53,6 +54,7 @@ import kotlin.math.roundToInt
 @Composable
 fun AiLoadFinderScreen(
     onNavigateBack: () -> Unit,
+    onLoadBoardListingClick: (String) -> Unit,
     viewModel: AiLoadFinderViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -127,7 +129,13 @@ fun AiLoadFinderScreen(
             }
 
             items(uiState.listings) { listing ->
-                RouteLoadBoardListingCard(listing, uiState.distanceUnit)
+                RouteLoadBoardListingCard(
+                    routeListing = listing,
+                    distanceUnit = uiState.distanceUnit,
+                    onClick = {
+                        onLoadBoardListingClick(viewModel.selectListing(listing))
+                    }
+                )
             }
         }
     }
@@ -247,10 +255,14 @@ private fun RouteSearchCard(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun RouteLoadBoardListingCard(routeListing: RouteLoadBoardListingDto, distanceUnit: DistanceUnit) {
+private fun RouteLoadBoardListingCard(
+    routeListing: RouteLoadBoardListingDto,
+    distanceUnit: DistanceUnit,
+    onClick: () -> Unit
+) {
     val listing = routeListing.listing
 
-    CardContainer {
+    CardContainer(modifier = Modifier.clickable(onClick = onClick)) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)

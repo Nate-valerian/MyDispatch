@@ -25,6 +25,8 @@ import com.dispatchload.driver.service.LoadProximityWatcher
 import com.dispatchload.driver.service.PreferencesManager
 import com.dispatchload.driver.service.messaging.ConversationStateManager
 import com.dispatchload.driver.viewmodel.AccountViewModel
+import com.dispatchload.driver.viewmodel.AiLoadBoardDetailViewModel
+import com.dispatchload.driver.viewmodel.AiLoadFinderSelectionStore
 import com.dispatchload.driver.viewmodel.AiLoadFinderViewModel
 import com.dispatchload.driver.viewmodel.ChatViewModel
 import com.dispatchload.driver.viewmodel.ConditionReportViewModel
@@ -81,10 +83,12 @@ fun commonModule() = module {
     // Duty status + proximity watcher (drives location tracking lifecycle)
     singleOf(::LoadProximityWatcher)
     singleOf(::DutyStatusManager)
+    singleOf(::AiLoadFinderSelectionStore)
 
     viewModelOf(::DashboardViewModel)
     viewModelOf(::AccountViewModel)
     viewModelOf(::AiLoadFinderViewModel)
+    viewModelOf(::AiLoadBoardDetailViewModel)
     viewModelOf(::LoadDetailViewModel)
     viewModelOf(::PastLoadsViewModel)
     viewModelOf(::MyLicensesViewModel)
