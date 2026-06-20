@@ -69,6 +69,16 @@ public class LoadBoardController(IMediator mediator) : ControllerBase
         return result.IsSuccess ? Ok(result.Value) : BadRequest(ErrorResponse.FromResult(result));
     }
 
+    [HttpPost("search/route", Name = "SearchRouteLoadBoard")]
+    [ProducesResponseType(typeof(RouteLoadBoardSearchResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [Authorize(Policy = Permission.LoadBoard.Search)]
+    public async Task<IActionResult> SearchRouteLoads([FromBody] SearchRouteLoadBoardCommand request)
+    {
+        var result = await mediator.Send(request);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(ErrorResponse.FromResult(result));
+    }
+
     [HttpPost("listings/{listingId:guid}/book", Name = "BookLoadBoardListing")]
     [ProducesResponseType(typeof(LoadBoardBookingResultDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]

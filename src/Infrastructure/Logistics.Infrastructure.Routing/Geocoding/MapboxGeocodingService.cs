@@ -27,6 +27,9 @@ public sealed class MapboxGeocodingService(
 
     private readonly MapboxOptions options = options.Value;
 
+    public Task<Result<GeoPoint>> GeocodeLocationAsync(string searchText, CancellationToken ct = default) =>
+        GeocodeSearchTextAsync(searchText, ct);
+
     public async Task<Result<GeoPoint>> GeocodeAddressAsync(
         string line1,
         string city,
@@ -47,6 +50,24 @@ public sealed class MapboxGeocodingService(
             addressParts.Add(country);
 
             var searchText = string.Join(", ", addressParts);
+            return await GeocodeSearchTextAsync(searchText, ct);
+        }
+        catch (HttpRequestException ex)
+        {
+            logger.LogError(ex, "HTTP error during geocoding");
+            return Result<GeoPoint>.Fail($"Geocoding service error: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error during geocoding");
+            return Result<GeoPoint>.Fail($"Geocoding error: {ex.Message}");
+        }
+    }
+
+    private async Task<Result<GeoPoint>> GeocodeSearchTextAsync(string searchText, CancellationToken ct)
+    {
+        try
+        {
             var encodedSearch = HttpUtility.UrlEncode(searchText);
 
             var (countryFilter, languageFilter) = ResolveTenantBias();

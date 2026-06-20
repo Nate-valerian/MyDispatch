@@ -2,6 +2,8 @@ package com.dispatchload.driver.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -33,10 +35,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.dispatchload.driver.api.models.LoadBoardListingDto
+import com.dispatchload.driver.api.models.RouteLoadBoardListingDto
 import com.dispatchload.driver.model.DistanceUnit
 import com.dispatchload.driver.model.toDisplayString
 import com.dispatchload.driver.ui.components.AppTopBar
@@ -124,7 +127,7 @@ fun AiLoadFinderScreen(
             }
 
             items(uiState.listings) { listing ->
-                LoadBoardListingCard(listing)
+                RouteLoadBoardListingCard(listing, uiState.distanceUnit)
             }
         }
     }
@@ -242,8 +245,11 @@ private fun RouteSearchCard(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun LoadBoardListingCard(listing: LoadBoardListingDto) {
+private fun RouteLoadBoardListingCard(routeListing: RouteLoadBoardListingDto, distanceUnit: DistanceUnit) {
+    val listing = routeListing.listing
+
     CardContainer {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -269,24 +275,24 @@ private fun LoadBoardListingCard(listing: LoadBoardListingDto) {
                 }
             }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                routeListing.fitScore?.let {
+                    ListingMetricChip("$it fit")
+                }
+                routeListing.distanceFromRoute?.let {
+                    ListingMetricChip("${it.roundToInt()} ${distanceUnit.abbreviation} off route")
+                }
                 listing.totalRate?.let {
-                    AssistChip(
-                        onClick = {},
-                        label = { Text(formatWholeDollars(it)) }
-                    )
+                    ListingMetricChip(formatWholeDollars(it))
                 }
                 listing.ratePerMile?.let {
-                    AssistChip(
-                        onClick = {},
-                        label = { Text("${formatRate(it)}/mi") }
-                    )
+                    ListingMetricChip("${formatRate(it)}/mi")
                 }
                 listing.distance?.let {
-                    AssistChip(
-                        onClick = {},
-                        label = { Text("${it.roundToInt()} mi") }
-                    )
+                    ListingMetricChip("${it.roundToInt()} mi")
                 }
             }
 
@@ -301,6 +307,21 @@ private fun LoadBoardListingCard(listing: LoadBoardListingDto) {
             )
         }
     }
+}
+
+@Composable
+private fun ListingMetricChip(text: String) {
+    AssistChip(
+        onClick = {},
+        label = {
+            Text(
+                text = text,
+                maxLines = 1,
+                overflow = TextOverflow.Clip,
+                softWrap = false
+            )
+        }
+    )
 }
 
 private fun formatWholeDollars(value: Double): String = "$${value.roundToInt()}"

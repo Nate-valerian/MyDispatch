@@ -11,6 +11,11 @@ public record LoadBoardSearchCriteria
     public Address? OriginAddress { get; set; }
 
     /// <summary>
+    /// Origin coordinate to search around when a provider supports coordinate-based search.
+    /// </summary>
+    public GeoPoint? OriginLocation { get; set; }
+
+    /// <summary>
     /// Radius in miles from origin
     /// </summary>
     public int OriginRadius { get; set; } = 50;
@@ -19,6 +24,11 @@ public record LoadBoardSearchCriteria
     /// Destination location to search around
     /// </summary>
     public Address? DestinationAddress { get; set; }
+
+    /// <summary>
+    /// Destination coordinate to search around when a provider supports coordinate-based search.
+    /// </summary>
+    public GeoPoint? DestinationLocation { get; set; }
 
     /// <summary>
     /// Radius in miles from destination

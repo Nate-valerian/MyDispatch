@@ -2,16 +2,15 @@ package com.dispatchload.driver.viewmodel
 
 import com.dispatchload.driver.api.LoadBoardApi
 import com.dispatchload.driver.api.bodyOrThrow
-import com.dispatchload.driver.api.models.Address
-import com.dispatchload.driver.api.models.LoadBoardListingDto
-import com.dispatchload.driver.api.models.SearchLoadBoardCommand
+import com.dispatchload.driver.api.models.RouteLoadBoardListingDto
+import com.dispatchload.driver.api.models.SearchRouteLoadBoardCommand
 import com.dispatchload.driver.model.DistanceUnit
 import com.dispatchload.driver.viewmodel.base.BaseViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlin.math.roundToInt
+import com.dispatchload.driver.api.models.DistanceUnit as ApiDistanceUnit
 
 data class AiLoadFinderUiState(
     val assistantName: String = "Mira",
@@ -22,7 +21,7 @@ data class AiLoadFinderUiState(
     val distanceUnit: DistanceUnit = DistanceUnit.MILES,
     val isSearching: Boolean = false,
     val hasSearched: Boolean = false,
-    val listings: List<LoadBoardListingDto> = emptyList(),
+    val listings: List<RouteLoadBoardListingDto> = emptyList(),
     val errorMessage: String? = null
 )
 
@@ -81,13 +80,12 @@ class AiLoadFinderViewModel(
         }) {
             _uiState.update { it.copy(isSearching = true, errorMessage = null) }
 
-            val radiusMiles = radius.toBackendMiles(state.distanceUnit)
-            val result = loadBoardApi.searchLoadBoard(
-                SearchLoadBoardCommand(
-                    originAddress = state.originText.toAddress(),
-                    originRadius = radiusMiles,
-                    destinationAddress = state.destinationText.toAddress(),
-                    destinationRadius = radiusMiles,
+            val result = loadBoardApi.searchRouteLoadBoard(
+                SearchRouteLoadBoardCommand(
+                    origin = state.originText.trim(),
+                    destination = state.destinationText.trim(),
+                    radius = radius,
+                    distanceUnit = state.distanceUnit.toApiDistanceUnit(),
                     maxResults = 25
                 )
             ).bodyOrThrow()
@@ -104,27 +102,9 @@ class AiLoadFinderViewModel(
     }
 }
 
-private fun Int.toBackendMiles(unit: DistanceUnit): Int {
-    return when (unit) {
-        DistanceUnit.MILES -> this
-        DistanceUnit.KILOMETERS -> (this * 0.621371).roundToInt()
-    }.coerceAtLeast(1)
-}
-
-private fun String.toAddress(): Address {
-    val parts = split(",").map { it.trim() }.filter { it.isNotBlank() }
-    val city = parts.firstOrNull().orEmpty()
-    val state = parts.getOrNull(1)
-        ?.split(" ")
-        ?.firstOrNull()
-        ?.uppercase()
-        .orEmpty()
-
-    return Address(
-        line1 = null,
-        city = city,
-        zipCode = null,
-        state = state,
-        country = "US"
-    )
+private fun DistanceUnit.toApiDistanceUnit(): ApiDistanceUnit {
+    return when (this) {
+        DistanceUnit.MILES -> ApiDistanceUnit.MILES
+        DistanceUnit.KILOMETERS -> ApiDistanceUnit.KILOMETERS
+    }
 }

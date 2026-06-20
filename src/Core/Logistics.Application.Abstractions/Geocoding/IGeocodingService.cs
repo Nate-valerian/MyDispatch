@@ -10,6 +10,14 @@ namespace Logistics.Application.Abstractions.Geocoding;
 public interface IGeocodingService
 {
     /// <summary>
+    /// Geocodes a free-form place or address query to a geographical point.
+    /// </summary>
+    /// <param name="searchText">Free-form location text.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>GeoPoint with longitude and latitude, or error.</returns>
+    Task<Result<GeoPoint>> GeocodeLocationAsync(string searchText, CancellationToken ct = default);
+
+    /// <summary>
     /// Geocodes an address to a geographical point.
     /// </summary>
     /// <param name="street">Street address.</param>

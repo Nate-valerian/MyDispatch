@@ -66,7 +66,7 @@ internal class DemoLoadBoardService(ILogger<DemoLoadBoardService> logger) : ILoa
 
         for (var i = 0; i < count; i++)
         {
-            listings.Add(GenerateListingDto());
+            listings.Add(GenerateListingDto(criteria));
         }
 
         logger.LogDebug("Demo provider returned {Count} load listings", listings.Count);
@@ -140,7 +140,7 @@ internal class DemoLoadBoardService(ILogger<DemoLoadBoardService> logger) : ILoa
 
     #region Data Generation
 
-    private LoadBoardListingDto GenerateListingDto()
+    private LoadBoardListingDto GenerateListingDto(LoadBoardSearchCriteria? criteria = null)
     {
         var originIndex = random.Next(cities.Length);
         var destinationIndex = (originIndex + random.Next(1, cities.Length)) % cities.Length;
@@ -159,26 +159,10 @@ internal class DemoLoadBoardService(ILogger<DemoLoadBoardService> logger) : ILoa
             ExternalListingId = $"DEMO-{Guid.NewGuid():N}"[..16].ToUpper(),
             ProviderType = LoadBoardProviderType.Demo,
             ProviderName = "Demo",
-            OriginAddress =
-                new Address
-                {
-                    Line1 = $"{random.Next(100, 9999)} Demo Street",
-                    City = origin.Split(',')[0].Trim(),
-                    State = origin.Split(',')[1].Trim(),
-                    Country = "US",
-                    ZipCode = $"{random.Next(10000, 99999)}"
-                },
-            OriginLocation = GenerateGeoPoint(originIndex),
-            DestinationAddress =
-                new Address
-                {
-                    Line1 = $"{random.Next(100, 9999)} Demo Avenue",
-                    City = destination.Split(',')[0].Trim(),
-                    State = destination.Split(',')[1].Trim(),
-                    Country = "US",
-                    ZipCode = $"{random.Next(10000, 99999)}"
-                },
-            DestinationLocation = GenerateGeoPoint(destinationIndex),
+            OriginAddress = BuildAddress(criteria?.OriginAddress, origin, "Demo Street"),
+            OriginLocation = GenerateGeoPoint(originIndex, criteria?.OriginLocation),
+            DestinationAddress = BuildAddress(criteria?.DestinationAddress, destination, "Demo Avenue"),
+            DestinationLocation = GenerateGeoPoint(destinationIndex, criteria?.DestinationLocation),
             RatePerMile = ratePerMile,
             TotalRate = totalRate,
             Currency = "USD",
@@ -200,8 +184,34 @@ internal class DemoLoadBoardService(ILogger<DemoLoadBoardService> logger) : ILoa
         };
     }
 
-    private static GeoPoint GenerateGeoPoint(int cityIndex)
+    private static Address BuildAddress(Address? requestedAddress, string fallbackCity, string streetName)
     {
+        var cityParts = fallbackCity.Split(',');
+        return new Address
+        {
+            Line1 = $"{random.Next(100, 9999)} {streetName}",
+            City = string.IsNullOrWhiteSpace(requestedAddress?.City)
+                ? cityParts[0].Trim()
+                : requestedAddress.City,
+            State = string.IsNullOrWhiteSpace(requestedAddress?.State)
+                ? cityParts[1].Trim()
+                : requestedAddress.State,
+            Country = string.IsNullOrWhiteSpace(requestedAddress?.Country) ? "US" : requestedAddress.Country,
+            ZipCode = string.IsNullOrWhiteSpace(requestedAddress?.ZipCode)
+                ? $"{random.Next(10000, 99999)}"
+                : requestedAddress.ZipCode
+        };
+    }
+
+    private static GeoPoint GenerateGeoPoint(int cityIndex, GeoPoint? anchor = null)
+    {
+        if (anchor is not null)
+        {
+            return new GeoPoint(
+                anchor.Longitude + ((random.NextDouble() - 0.5) * 0.4),
+                anchor.Latitude + ((random.NextDouble() - 0.5) * 0.4));
+        }
+
         // Approximate coordinates for demo cities
         var coordinates = new[]
         {
