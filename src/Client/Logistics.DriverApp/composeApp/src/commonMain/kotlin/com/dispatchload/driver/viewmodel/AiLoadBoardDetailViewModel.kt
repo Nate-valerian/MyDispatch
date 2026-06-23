@@ -1,32 +1,34 @@
 package com.dispatchload.driver.viewmodel
 
-import com.dispatchload.driver.api.DriverApi
-import com.dispatchload.driver.api.ApiException
-import com.dispatchload.driver.api.LoadBoardApi
+import com.dispatchload.driver.api.EmployeeApi
+import com.dispatchload.driver.api.MessageApi
 import com.dispatchload.driver.api.bodyOrThrow
-import com.dispatchload.driver.api.models.LoadBoardBookingRequest
-import com.dispatchload.driver.api.models.LoadBoardBookingResultDto
+import com.dispatchload.driver.api.models.CreateConversationRequest
 import com.dispatchload.driver.api.models.RouteLoadBoardListingDto
+import com.dispatchload.driver.api.models.SendMessageRequest
+import com.dispatchload.driver.model.toDisplayString
 import com.dispatchload.driver.service.PreferencesManager
 import com.dispatchload.driver.viewmodel.base.BaseViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlin.math.roundToInt
 
 data class AiLoadBoardDetailUiState(
     val listing: RouteLoadBoardListingDto? = null,
-    val isBooking: Boolean = false,
-    val bookingResult: LoadBoardBookingResultDto? = null,
+    val isRequestingDispatch: Boolean = false,
+    val dispatchRequestSent: Boolean = false,
+    val dispatchConversationId: String? = null,
     val errorMessage: String? = null
 )
 
 class AiLoadBoardDetailViewModel(
-    private val loadBoardApi: LoadBoardApi,
-    private val driverApi: DriverApi,
+    private val messageApi: MessageApi,
+    private val employeeApi: EmployeeApi,
     private val preferencesManager: PreferencesManager,
     selectionStore: AiLoadFinderSelectionStore,
-    private val listingKey: String
+    listingKey: String
 ) : BaseViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -41,59 +43,93 @@ class AiLoadBoardDetailViewModel(
     )
     val uiState: StateFlow<AiLoadBoardDetailUiState> = _uiState.asStateFlow()
 
-    fun bookLoad() {
+    fun requestDispatchBooking() {
         val routeListing = _uiState.value.listing ?: return
-        val listingId = routeListing.listing.id
-        if (listingId.isNullOrBlank()) {
-            _uiState.update { it.copy(errorMessage = "Search again before booking this load.") }
-            return
-        }
 
         launchSafely(onError = { e ->
             _uiState.update {
                 it.copy(
-                    isBooking = false,
-                    errorMessage = when {
-                        e is ApiException && e.statusCode == 403 ->
-                            "Booking requires load-board booking permission. Call or email the broker, then have dispatch book it."
-                        else -> e.message ?: "Booking failed"
-                    }
+                    isRequestingDispatch = false,
+                    errorMessage = e.message ?: "Could not send the request to dispatch"
                 )
             }
         }) {
-            _uiState.update { it.copy(isBooking = true, errorMessage = null, bookingResult = null) }
-
-            val userId = preferencesManager.getUserId()
-            val dispatcherId = userId
-                ?.takeIf { it.isNotBlank() }
-                ?.let { driverApi.getDriverByUserId(it).bodyOrThrow().id }
-            val truckId = preferencesManager.getTruckId()?.takeIf { it.isNotBlank() }
-
-            if (truckId.isNullOrBlank()) {
-                error("Truck context missing. Open the dashboard once, then try booking again.")
+            _uiState.update {
+                it.copy(
+                    isRequestingDispatch = true,
+                    dispatchRequestSent = false,
+                    dispatchConversationId = null,
+                    errorMessage = null
+                )
             }
 
-            val booking = loadBoardApi.bookLoadBoardListing(
-                listingId = listingId,
-                loadBoardBookingRequest = LoadBoardBookingRequest(
-                    truckId = truckId,
-                    dispatcherId = dispatcherId,
-                    customerName = routeListing.listing.brokerName,
-                    notes = "Driver requested booking from AI Load Finder after broker confirmation."
+            val userId = preferencesManager.getUserId()
+                ?.takeIf { it.isNotBlank() }
+                ?: error("Driver profile is missing. Sign in again, then try the request.")
+            val dispatcher = employeeApi.getEmployees(role = "Dispatcher", pageSize = 1)
+                .bodyOrThrow()
+                .items
+                ?.firstOrNull { it.id != userId }
+                ?: error("No dispatcher is available to receive this request.")
+            val dispatcherId = dispatcher.id ?: error("Dispatcher profile is missing.")
+
+            val conversation = messageApi.createConversation(
+                CreateConversationRequest(
+                    participantIds = listOf(userId, dispatcherId),
+                    name = "Load board booking request"
+                )
+            ).bodyOrThrow()
+            val conversationId = conversation.id ?: error("Could not open a dispatch conversation.")
+
+            messageApi.sendMessage(
+                SendMessageRequest(
+                    conversationId = conversationId,
+                    content = routeListing.toDispatchRequestMessage()
                 )
             ).bodyOrThrow()
 
             _uiState.update {
                 it.copy(
-                    isBooking = false,
-                    bookingResult = booking,
-                    errorMessage = if (booking.success == true) {
-                        null
-                    } else {
-                        booking.errorMessage ?: "Booking failed"
-                    }
+                    isRequestingDispatch = false,
+                    dispatchRequestSent = true,
+                    dispatchConversationId = conversationId,
+                    errorMessage = null
                 )
             }
         }
     }
+}
+
+private fun RouteLoadBoardListingDto.toDispatchRequestMessage(): String {
+    val listing = listing
+
+    return listOf(
+        "Please book this load after broker confirmation.",
+        "Route: ${listing.originAddress.toDisplayString()} to ${listing.destinationAddress.toDisplayString()}",
+        "Broker: ${listing.brokerName ?: "-"}",
+        "Phone: ${listing.brokerPhone ?: "-"}",
+        "Email: ${listing.brokerEmail ?: "-"}",
+        "MC: ${listing.brokerMcNumber ?: "-"}",
+        "Rate: ${listing.totalRate.formatDollars()}",
+        "Rate per mile: ${listing.ratePerMile.formatRatePerMile()}",
+        "Off route: ${distanceFromRoute?.roundToInt()?.let { "$it mi" } ?: "-"}",
+        "Equipment: ${listing.equipmentType ?: "-"}",
+        "Commodity: ${listing.commodity ?: "-"}",
+        "Pickup: ${listing.pickupDateStart?.toString()?.take(10) ?: "-"}",
+        "Delivery: ${listing.deliveryDateStart?.toString()?.take(10) ?: "-"}",
+        "Listing: ${listing.externalListingId ?: listing.id ?: "-"}"
+    ).joinToString("\n")
+}
+
+private fun Double?.formatDollars(): String =
+    this?.let { "$${it.roundToInt()}" } ?: "-"
+
+private fun Double?.formatRatePerMile(): String =
+    this?.let { "${it.formatCurrency()}/mi" } ?: "-"
+
+private fun Double.formatCurrency(): String {
+    val cents = (this * 100).roundToInt()
+    val dollars = cents / 100
+    val remainder = cents % 100
+    return "$$dollars.${remainder.toString().padStart(2, '0')}"
 }

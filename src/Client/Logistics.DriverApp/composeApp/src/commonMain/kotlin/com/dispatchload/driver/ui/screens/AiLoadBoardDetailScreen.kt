@@ -108,7 +108,7 @@ fun AiLoadBoardDetailScreen(
                 }
             }
 
-            uiState.bookingResult?.takeIf { it.success == true }?.let { result ->
+            if (uiState.dispatchRequestSent) {
                 item {
                     CardContainer {
                         Row(
@@ -122,15 +122,12 @@ fun AiLoadBoardDetailScreen(
                             )
                             Column {
                                 Text(
-                                    text = "Booked",
+                                    text = "Sent to dispatch",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = listOfNotNull(
-                                        result.createdLoadNumber?.let { "Load #$it" },
-                                        result.externalConfirmationId
-                                    ).joinToString(" | "),
+                                    text = "Dispatch has the load details and broker contact info.",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -142,11 +139,11 @@ fun AiLoadBoardDetailScreen(
 
             item {
                 Button(
-                    onClick = viewModel::bookLoad,
-                    enabled = !uiState.isBooking && routeListing.listing.id != null,
+                    onClick = viewModel::requestDispatchBooking,
+                    enabled = !uiState.isRequestingDispatch && !uiState.dispatchRequestSent,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    if (uiState.isBooking) {
+                    if (uiState.isRequestingDispatch) {
                         CircularProgressIndicator(
                             modifier = Modifier
                                 .height(18.dp)
@@ -155,7 +152,13 @@ fun AiLoadBoardDetailScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                     }
-                    Text(if (uiState.isBooking) "Booking" else "Book load")
+                    Text(
+                        when {
+                            uiState.isRequestingDispatch -> "Sending request"
+                            uiState.dispatchRequestSent -> "Request sent"
+                            else -> "Request dispatch to book"
+                        }
+                    )
                 }
             }
         }
