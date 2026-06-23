@@ -18,6 +18,7 @@ import kotlin.math.roundToInt
 data class AiLoadBoardDetailUiState(
     val listing: RouteLoadBoardListingDto? = null,
     val isDispatcher: Boolean = false,
+    val showBrokerInfo: Boolean = false,
     val isRequestingDispatch: Boolean = false,
     val dispatchRequestSent: Boolean = false,
     val dispatchConversationId: String? = null,
@@ -47,8 +48,12 @@ class AiLoadBoardDetailViewModel(
     init {
         launchSafely {
             val role = preferencesManager.getUserRole()
-            if (role == "Dispatcher") {
-                _uiState.update { it.copy(isDispatcher = true) }
+            val canSeeBroker = role == "tenant.dispatcher" || role == "tenant.owner" || role == "tenant.manager"
+            _uiState.update {
+                it.copy(
+                    isDispatcher = role == "tenant.dispatcher",
+                    showBrokerInfo = canSeeBroker
+                )
             }
         }
     }
@@ -76,7 +81,7 @@ class AiLoadBoardDetailViewModel(
             val userId = preferencesManager.getUserId()
                 ?.takeIf { it.isNotBlank() }
                 ?: error("Driver profile is missing. Sign in again, then try the request.")
-            val dispatchers = employeeApi.getEmployees(role = "Dispatcher", pageSize = 20)
+            val dispatchers = employeeApi.getEmployees(role = "tenant.dispatcher", pageSize = 20)
                 .bodyOrThrow()
                 .items
                 ?.filter { it.id != userId }
@@ -123,10 +128,6 @@ private fun RouteLoadBoardListingDto.toDispatchRequestMessage(): String {
     return listOf(
         "Please book this load after broker confirmation.",
         "Route: ${listing.originAddress.toDisplayString()} to ${listing.destinationAddress.toDisplayString()}",
-        "Broker: ${listing.brokerName ?: "-"}",
-        "Phone: ${listing.brokerPhone ?: "-"}",
-        "Email: ${listing.brokerEmail ?: "-"}",
-        "MC: ${listing.brokerMcNumber ?: "-"}",
         "Rate: ${listing.totalRate.formatDollars()}",
         "Rate per mile: ${listing.ratePerMile.formatRatePerMile()}",
         "Off route: ${distanceFromRoute?.roundToInt()?.let { "$it mi" } ?: "-"}",

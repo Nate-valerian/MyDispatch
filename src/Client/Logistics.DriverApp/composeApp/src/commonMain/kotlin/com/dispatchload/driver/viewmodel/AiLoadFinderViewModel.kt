@@ -5,6 +5,7 @@ import com.dispatchload.driver.api.bodyOrThrow
 import com.dispatchload.driver.api.models.RouteLoadBoardListingDto
 import com.dispatchload.driver.api.models.SearchRouteLoadBoardCommand
 import com.dispatchload.driver.model.DistanceUnit
+import com.dispatchload.driver.service.PreferencesManager
 import com.dispatchload.driver.viewmodel.base.BaseViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -36,16 +37,26 @@ data class AiLoadFinderUiState(
     val isSearching: Boolean = false,
     val hasSearched: Boolean = false,
     val listings: List<RouteLoadBoardListingDto> = emptyList(),
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val showBrokerInfo: Boolean = false
 )
 
 class AiLoadFinderViewModel(
     private val loadBoardApi: LoadBoardApi,
-    private val selectionStore: AiLoadFinderSelectionStore
+    private val selectionStore: AiLoadFinderSelectionStore,
+    private val preferencesManager: PreferencesManager
 ) : BaseViewModel() {
 
     private val _uiState = MutableStateFlow(AiLoadFinderUiState())
     val uiState: StateFlow<AiLoadFinderUiState> = _uiState.asStateFlow()
+
+    init {
+        launchSafely {
+            val role = preferencesManager.getUserRole()
+            val canSeeBroker = role == "tenant.dispatcher" || role == "tenant.owner" || role == "tenant.manager"
+            _uiState.update { it.copy(showBrokerInfo = canSeeBroker) }
+        }
+    }
 
     fun updateOrigin(value: String) {
         _uiState.update { it.copy(originText = value, errorMessage = null) }

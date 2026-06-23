@@ -138,6 +138,7 @@ fun AiLoadFinderScreen(
                 RouteLoadBoardListingCard(
                     routeListing = listing,
                     distanceUnit = uiState.distanceUnit,
+                    showBrokerInfo = uiState.showBrokerInfo,
                     onClick = {
                         onLoadBoardListingClick(viewModel.selectListing(listing))
                     }
@@ -265,6 +266,7 @@ private fun RouteSearchCard(
 private fun RouteLoadBoardListingCard(
     routeListing: RouteLoadBoardListingDto,
     distanceUnit: DistanceUnit,
+    showBrokerInfo: Boolean,
     onClick: () -> Unit
 ) {
     val listing = routeListing.listing
@@ -286,11 +288,13 @@ private fun RouteLoadBoardListingCard(
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
-                    Text(
-                        text = listing.brokerName ?: listing.providerName ?: "Load board",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    if (showBrokerInfo) {
+                        Text(
+                            text = listing.brokerName ?: listing.providerName ?: "Load board",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
 

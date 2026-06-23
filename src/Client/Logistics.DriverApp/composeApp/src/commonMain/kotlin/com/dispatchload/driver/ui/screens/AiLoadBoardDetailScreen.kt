@@ -86,17 +86,19 @@ fun AiLoadBoardDetailScreen(
                 return@LazyColumn
             }
 
-            item { LoadBoardHeaderCard(routeListing) }
-            item {
-                BrokerContactCard(
-                    listing = routeListing.listing,
-                    onCallBroker = { phone -> onOpenUrl("tel:${phone.toTelNumber()}") },
-                    onEmailBroker = { email ->
-                        onOpenUrl(
-                            "mailto:$email?subject=${urlPart("Load ${routeListing.listing.externalListingId}")}"
-                        )
-                    }
-                )
+            item { LoadBoardHeaderCard(routeListing, uiState.showBrokerInfo) }
+            if (uiState.showBrokerInfo) {
+                item {
+                    BrokerContactCard(
+                        listing = routeListing.listing,
+                        onCallBroker = { phone -> onOpenUrl("tel:${phone.toTelNumber()}") },
+                        onEmailBroker = { email ->
+                            onOpenUrl(
+                                "mailto:$email?subject=${urlPart("Load ${routeListing.listing.externalListingId}")}"
+                            )
+                        }
+                    )
+                }
             }
             item { LoadBoardDetailsCard(routeListing) }
 
@@ -177,7 +179,7 @@ fun AiLoadBoardDetailScreen(
 }
 
 @Composable
-private fun LoadBoardHeaderCard(routeListing: RouteLoadBoardListingDto) {
+private fun LoadBoardHeaderCard(routeListing: RouteLoadBoardListingDto, showBrokerInfo: Boolean) {
     val listing = routeListing.listing
 
     CardContainer {
@@ -197,11 +199,13 @@ private fun LoadBoardHeaderCard(routeListing: RouteLoadBoardListingDto) {
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
-                    Text(
-                        text = listing.brokerName ?: listing.providerName ?: "Load board",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    if (showBrokerInfo) {
+                        Text(
+                            text = listing.brokerName ?: listing.providerName ?: "Load board",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
 
