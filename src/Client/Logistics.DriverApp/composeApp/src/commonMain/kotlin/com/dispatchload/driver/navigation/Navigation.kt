@@ -104,6 +104,7 @@ fun createEntryProvider(
         AiLoadBoardDetailScreen(
             onNavigateBack = { navigator.goBack() },
             onOpenUrl = onOpenUrl,
+            onOpenConversation = { conversationId -> navigator.navigate(ConversationRoute(conversationId)) },
             viewModel = viewModel
         )
     }
