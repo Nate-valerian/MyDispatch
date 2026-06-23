@@ -29,6 +29,7 @@ import androidx.navigation3.ui.NavDisplay
 import com.dispatchload.driver.model.LocalUserSettings
 import com.dispatchload.driver.model.UserSettings
 import com.dispatchload.driver.navigation.AccountRoute
+import com.dispatchload.driver.navigation.ConversationRoute
 import com.dispatchload.driver.navigation.DashboardRoute
 import com.dispatchload.driver.navigation.LoginRoute
 import com.dispatchload.driver.navigation.MessagesRoute
@@ -49,7 +50,7 @@ import org.koin.compose.koinInject
  * The main entry composable
  */
 @Composable
-fun DriverApp(onOpenUrl: (String) -> Unit) {
+fun DriverApp(onOpenUrl: (String) -> Unit, initialConversationId: String? = null) {
     val authService = koinInject<AuthService>()
     val preferencesManager = koinInject<PreferencesManager>()
 
@@ -68,6 +69,8 @@ fun DriverApp(onOpenUrl: (String) -> Unit) {
             val isLoggedIn = authService.isLoggedIn()
             if (!isLoggedIn) {
                 navigator.clearAndNavigate(LoginRoute)
+            } else if (initialConversationId != null) {
+                navigator.navigate(ConversationRoute(initialConversationId))
             }
         } catch (_: Exception) {
             navigator.clearAndNavigate(LoginRoute)

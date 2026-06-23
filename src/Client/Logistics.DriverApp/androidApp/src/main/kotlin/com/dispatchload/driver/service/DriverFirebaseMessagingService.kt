@@ -57,52 +57,69 @@ class DriverFirebaseMessagingService : FirebaseMessagingService() {
 
         Logger.d("FCM message received from: ${message.from}")
 
-        // Handle notification payload
+        val conversationId = message.data["conversationId"]
+
+        // Handle notification payload (sent by backend for all push types)
         message.notification?.let { notification ->
             val title = notification.title ?: "DispatchLoad Driver"
             val body = notification.body ?: "New notification"
-            showNotification(title, body)
+            showNotification(title, body, conversationId)
         }
 
-        // Handle data payload
-        message.data.isNotEmpty().let {
+        // Handle data-only payloads (app in foreground or no notification block)
+        if (message.notification == null && message.data.isNotEmpty()) {
             Logger.d("Message data payload: ${message.data}")
             handleDataPayload(message.data)
         }
     }
 
     private fun handleDataPayload(data: Map<String, String>) {
-        // Handle different notification types
         when (data["type"]) {
             "load_update" -> {
                 Logger.d("Load update notification received")
-                // Trigger load refresh in the app
-                // You can use a broadcast receiver or shared flow to notify the app
             }
 
             "new_load" -> {
-                data["loadId"]
-                showNotification("New Load Assigned", "You have been assigned a new load")
+                showNotification(
+                    title = "New Load Assigned",
+                    body = "You have been assigned a new load"
+                )
+            }
+
+            "message" -> {
+                val conversationId = data["conversationId"]
+                // Notification body already shown via message.notification payload in onMessageReceived;
+                // this branch handles data-only messages as a fallback.
+                if (conversationId != null) {
+                    showNotification(
+                        title = "New Message",
+                        body = "You have a new message",
+                        conversationId = conversationId
+                    )
+                }
             }
 
             else -> {
-                Logger.d("Unknown notification type")
+                Logger.d("Unknown notification type: ${data["type"]}")
             }
         }
     }
 
-    private fun showNotification(title: String, body: String) {
+    private fun showNotification(title: String, body: String, conversationId: String? = null) {
         createNotificationChannel()
 
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            conversationId?.let { putExtra(MainActivity.EXTRA_CONVERSATION_ID, it) }
         }
+
+        val notificationId = conversationId?.hashCode() ?: NOTIFICATION_ID
 
         val pendingIntent = PendingIntent.getActivity(
             this,
-            0,
+            notificationId,
             intent,
-            PendingIntent.FLAG_IMMUTABLE
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
@@ -115,7 +132,7 @@ class DriverFirebaseMessagingService : FirebaseMessagingService() {
             .build()
 
         val notificationManager = getSystemService(NotificationManager::class.java)
-        notificationManager.notify(NOTIFICATION_ID, notification)
+        notificationManager.notify(notificationId, notification)
     }
 
     private fun createNotificationChannel() {

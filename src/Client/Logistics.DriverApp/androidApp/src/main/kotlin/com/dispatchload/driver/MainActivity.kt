@@ -16,6 +16,10 @@ import org.koin.android.ext.android.inject
 class MainActivity : ComponentActivity() {
     private val dutyStatusManager: DutyStatusManager by inject()
 
+    companion object {
+        const val EXTRA_CONVERSATION_ID = "conversationId"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -33,6 +37,8 @@ class MainActivity : ComponentActivity() {
         // On Duty without it.
         dutyStatusManager.resumeIfPersisted()
 
+        val initialConversationId = intent.getStringExtra(EXTRA_CONVERSATION_ID)
+
         setContent {
             // Request non-location startup permissions (camera, notifications).
             // Location permission is requested from the disclosure screen.
@@ -43,7 +49,8 @@ class MainActivity : ComponentActivity() {
                 onOpenUrl = { url ->
                     val intent = Intent(Intent.ACTION_VIEW, url.toUri())
                     context.startActivity(intent)
-                }
+                },
+                initialConversationId = initialConversationId
             )
         }
     }
