@@ -12,10 +12,7 @@ plugins {
 // OpenAPI Generator Configuration
 openApiGenerate {
     generatorName.set("kotlin")
-    remoteInputSpec.set(
-        providers.gradleProperty("openApiSpecUrl")
-            .getOrElse("http://localhost:7000/swagger/v1/swagger.json")
-    )
+    remoteInputSpec.set(providers.gradleProperty("openApiSpecUrl").get())
     outputDir.set(layout.buildDirectory.dir("generated/openapi").get().asFile.absolutePath)
     packageName.set("com.dispatchload.driver")
     apiPackage.set("com.dispatchload.driver.api")
