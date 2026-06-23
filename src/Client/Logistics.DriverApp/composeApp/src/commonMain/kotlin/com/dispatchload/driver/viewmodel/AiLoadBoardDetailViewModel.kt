@@ -87,7 +87,7 @@ class AiLoadBoardDetailViewModel(
             val conversation = messageApi.createConversation(
                 CreateConversationRequest(
                     participantIds = listOf(userId, dispatcherId),
-                    name = "Load board booking request"
+                    name = routeListing.conversationName()
                 )
             ).bodyOrThrow()
             val conversationId = conversation.id ?: error("Could not open a dispatch conversation.")
@@ -109,6 +109,12 @@ class AiLoadBoardDetailViewModel(
             }
         }
     }
+}
+
+private fun RouteLoadBoardListingDto.conversationName(): String {
+    val origin = listing.originAddress.let { listOfNotNull(it.city, it.state).joinToString(", ") }.takeIf { it.isNotBlank() }
+    val dest = listing.destinationAddress.let { listOfNotNull(it.city, it.state).joinToString(", ") }.takeIf { it.isNotBlank() }
+    return if (origin != null && dest != null) "Book: $origin → $dest" else "Load board booking request"
 }
 
 private fun RouteLoadBoardListingDto.toDispatchRequestMessage(): String {
