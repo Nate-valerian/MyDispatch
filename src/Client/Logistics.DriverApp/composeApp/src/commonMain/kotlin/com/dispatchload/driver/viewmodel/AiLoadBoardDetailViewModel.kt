@@ -17,6 +17,7 @@ import kotlin.math.roundToInt
 
 data class AiLoadBoardDetailUiState(
     val listing: RouteLoadBoardListingDto? = null,
+    val isDispatcher: Boolean = false,
     val isRequestingDispatch: Boolean = false,
     val dispatchRequestSent: Boolean = false,
     val dispatchConversationId: String? = null,
@@ -42,6 +43,15 @@ class AiLoadBoardDetailViewModel(
         )
     )
     val uiState: StateFlow<AiLoadBoardDetailUiState> = _uiState.asStateFlow()
+
+    init {
+        launchSafely {
+            val role = preferencesManager.getUserRole()
+            if (role == "Dispatcher") {
+                _uiState.update { it.copy(isDispatcher = true) }
+            }
+        }
+    }
 
     fun requestDispatchBooking() {
         val routeListing = _uiState.value.listing ?: return

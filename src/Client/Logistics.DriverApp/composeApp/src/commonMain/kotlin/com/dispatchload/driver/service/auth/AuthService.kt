@@ -151,6 +151,10 @@ class AuthService(
             payload["tenant"]?.let { tenantId ->
                 preferencesManager.saveTenantId(tenantId)
             }
+
+            payload["role"]?.let { role ->
+                preferencesManager.saveUserRole(role)
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }

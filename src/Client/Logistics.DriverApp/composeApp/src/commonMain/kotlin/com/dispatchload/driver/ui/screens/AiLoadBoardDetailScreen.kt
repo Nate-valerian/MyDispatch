@@ -110,7 +110,7 @@ fun AiLoadBoardDetailScreen(
                 }
             }
 
-            if (uiState.dispatchRequestSent) {
+            if (!uiState.isDispatcher && uiState.dispatchRequestSent) {
                 item {
                     CardContainer {
                         Column(modifier = Modifier.padding(16.dp)) {
@@ -146,28 +146,30 @@ fun AiLoadBoardDetailScreen(
                 }
             }
 
-            item {
-                Button(
-                    onClick = viewModel::requestDispatchBooking,
-                    enabled = !uiState.isRequestingDispatch && !uiState.dispatchRequestSent,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    if (uiState.isRequestingDispatch) {
-                        CircularProgressIndicator(
-                            modifier = Modifier
-                                .height(18.dp)
-                                .width(18.dp),
-                            strokeWidth = 2.dp
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                    }
-                    Text(
-                        when {
-                            uiState.isRequestingDispatch -> "Sending request"
-                            uiState.dispatchRequestSent -> "Request sent"
-                            else -> "Request dispatch to book"
+            if (!uiState.isDispatcher) {
+                item {
+                    Button(
+                        onClick = viewModel::requestDispatchBooking,
+                        enabled = !uiState.isRequestingDispatch && !uiState.dispatchRequestSent,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        if (uiState.isRequestingDispatch) {
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .height(18.dp)
+                                    .width(18.dp),
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
                         }
-                    )
+                        Text(
+                            when {
+                                uiState.isRequestingDispatch -> "Sending request"
+                                uiState.dispatchRequestSent -> "Request sent"
+                                else -> "Request dispatch to book"
+                            }
+                        )
+                    }
                 }
             }
         }

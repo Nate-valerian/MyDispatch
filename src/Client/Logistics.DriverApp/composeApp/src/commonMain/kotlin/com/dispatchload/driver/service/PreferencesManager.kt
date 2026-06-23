@@ -25,6 +25,7 @@ class PreferencesManager(private val dataStore: DataStore<Preferences>) {
         val ID_TOKEN = stringPreferencesKey("id_token")
         val TENANT_ID = stringPreferencesKey("tenant_id")
         val USER_ID = stringPreferencesKey("user_id")
+        val USER_ROLE = stringPreferencesKey("user_role")
         val TRUCK_ID = stringPreferencesKey("truck_id")
         val TRUCK_NUMBER = stringPreferencesKey("truck_number")
         val TOKEN_EXPIRY = longPreferencesKey("token_expiry")
@@ -78,6 +79,15 @@ class PreferencesManager(private val dataStore: DataStore<Preferences>) {
 
     suspend fun getUserId(): String? {
         return dataStore.data.first()[USER_ID]
+    }
+
+    // User Role
+    suspend fun saveUserRole(role: String) {
+        dataStore.edit { prefs -> prefs[USER_ROLE] = role }
+    }
+
+    suspend fun getUserRole(): String? {
+        return dataStore.data.first()[USER_ROLE]
     }
 
     // Truck ID
