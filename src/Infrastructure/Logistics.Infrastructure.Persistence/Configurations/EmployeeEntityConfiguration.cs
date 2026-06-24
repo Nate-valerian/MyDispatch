@@ -16,6 +16,11 @@ internal sealed class EmployeeEntityConfiguration : IEntityTypeConfiguration<Emp
             money.Property(m => m.Currency).HasMaxLength(3);
         });
 
+        builder.HasOne(i => i.AssignedDispatcher)
+            .WithMany()
+            .HasForeignKey(i => i.AssignedDispatcherId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.HasOne(i => i.Role)
             .WithMany(i => i.Employees)
             .HasForeignKey(i => i.RoleId)

@@ -75,6 +75,16 @@ internal class EmployeeSeeder(ILogger<EmployeeSeeder> logger) : SeederBase(logge
             companyEmployees.AllEmployees.Add(driverEmployee);
         }
 
+        // Assign each driver to a dispatcher (round-robin)
+        var dispatcherList = companyEmployees.Dispatchers;
+        if (dispatcherList.Count > 0)
+        {
+            for (var i = 0; i < companyEmployees.Drivers.Count; i++)
+            {
+                companyEmployees.Drivers[i].AssignedDispatcherId = dispatcherList[i % dispatcherList.Count].Id;
+            }
+        }
+
         companyEmployees.AllEmployees.Add(ownerEmployee);
         if (manager is not null)
         {

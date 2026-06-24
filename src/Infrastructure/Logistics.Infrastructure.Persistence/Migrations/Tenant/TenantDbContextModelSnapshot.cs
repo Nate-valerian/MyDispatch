@@ -1052,6 +1052,10 @@ namespace Logistics.Infrastructure.Persistence.Migrations.Tenant
                         .HasColumnType("text")
                         .HasColumnName("phone_number");
 
+                    b.Property<Guid?>("AssignedDispatcherId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("assigned_dispatcher_id");
+
                     b.Property<Guid?>("RoleId")
                         .HasColumnType("uuid")
                         .HasColumnName("role_id");
@@ -1120,6 +1124,9 @@ namespace Logistics.Infrastructure.Persistence.Migrations.Tenant
 
                     b.HasKey("Id")
                         .HasName("pk_employees");
+
+                    b.HasIndex("AssignedDispatcherId")
+                        .HasDatabaseName("ix_employees_assigned_dispatcher_id");
 
                     b.HasIndex("RoleId")
                         .HasDatabaseName("ix_employees_role_id");
@@ -5102,11 +5109,19 @@ namespace Logistics.Infrastructure.Persistence.Migrations.Tenant
 
             modelBuilder.Entity("Logistics.Domain.Entities.Employee", b =>
                 {
+                    b.HasOne("Logistics.Domain.Entities.Employee", "AssignedDispatcher")
+                        .WithMany()
+                        .HasForeignKey("AssignedDispatcherId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_employees_employees_assigned_dispatcher_id");
+
                     b.HasOne("Logistics.Domain.Entities.TenantRole", "Role")
                         .WithMany("Employees")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("fk_employees_tenant_role_role_id");
+
+                    b.Navigation("AssignedDispatcher");
 
                     b.Navigation("Role");
                 });

@@ -57,6 +57,12 @@ public class Employee : Entity, ITenantEntity
     public virtual List<TimeEntry> TimeEntries { get; set; } = [];
 
     /// <summary>
+    ///     The dispatcher personally assigned to this driver for load booking requests.
+    /// </summary>
+    public Guid? AssignedDispatcherId { get; set; }
+    public virtual Employee? AssignedDispatcher { get; set; }
+
+    /// <summary>
     ///     User tenant role
     /// </summary>
     public Guid? RoleId { get; set; }

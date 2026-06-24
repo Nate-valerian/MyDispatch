@@ -20,5 +20,6 @@ public class EmployeeDto
     public EmployeeStatus Status { get; set; }
     public DateTime JoinedDate { get; set; }
     public string? StripeConnectedAccountId { get; set; }
+    public Guid? AssignedDispatcherId { get; set; }
     public RoleDto? Role { get; set; }
 }
