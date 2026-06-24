@@ -46,6 +46,11 @@ internal sealed class UpdateEmployeeHandler(ITenantUnitOfWork tenantUow)
             employeeEntity.Address = req.Address;
         }
 
+        if (req.UpdateAssignedDispatcher)
+        {
+            employeeEntity.AssignedDispatcherId = req.AssignedDispatcherId;
+        }
+
         tenantUow.Repository<Employee>().Update(employeeEntity);
         await tenantUow.SaveChangesAsync(ct);
         return Result.Ok();

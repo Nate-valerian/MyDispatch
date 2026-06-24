@@ -58,6 +58,19 @@
       </p-inputgroup>
     </ui-form-field>
 
+    @if (isDriver()) {
+      <ui-form-field label="Assigned Dispatcher" for="assignedDispatcherId" class="mt-4" hint="The dispatcher who receives load booking requests from this driver.">
+        <p-select
+          formControlName="assignedDispatcherId"
+          id="assignedDispatcherId"
+          class="w-full"
+          [options]="dispatchers()"
+          optionLabel="label"
+          optionValue="value"
+        />
+      </ui-form-field>
+    }
+
     <ui-form-field
       label="Address"
       class="mt-4"

@@ -4,6 +4,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from "@angula
 import { regionAllowedCountries, UserRole } from "@logistics/shared";
 import {
   Api,
+  getEmployees,
   updateEmployee,
   type Address,
   type EmployeeDto,
@@ -65,6 +66,8 @@ export class EmployeeEditDialog {
   protected readonly isLoading = signal(false);
   protected readonly canChangeRole = signal(false);
   protected readonly changeRoleDialogVisible = signal(false);
+  protected readonly isDriver = computed(() => this.employee()?.role?.name === UserRole.Driver);
+  protected readonly dispatchers = signal<{ label: string; value: string | null }[]>([]);
 
   constructor() {
     this.form = new FormGroup<UpdateEmployeeForm>({
@@ -81,6 +84,7 @@ export class EmployeeEditDialog {
         nonNullable: true,
       }),
       address: new FormControl<Address | null>(null),
+      assignedDispatcherId: new FormControl<string | null>(null),
     });
 
     this.form
@@ -112,6 +116,9 @@ export class EmployeeEditDialog {
       if (emp && this.visible()) {
         this.populateForm(emp);
         this.evaluateCanChangeRole(emp);
+        if (emp.role?.name === UserRole.Driver) {
+          this.loadDispatchers();
+        }
       }
     });
   }
@@ -126,12 +133,15 @@ export class EmployeeEditDialog {
     const salary = this.form.value.salary!;
     const status = this.form.value.status!;
 
+    const isDriver = emp.role?.name === UserRole.Driver;
     const command: UpdateEmployeeCommand = {
       userId: emp.id,
       salary: salaryType === "share_of_gross" ? NumberUtils.toRatio(salary) : salary,
       salaryType: salaryType,
       status: status,
       address: this.form.value.address ?? undefined,
+      updateAssignedDispatcher: isDriver,
+      assignedDispatcherId: isDriver ? (this.form.value.assignedDispatcherId ?? null) : undefined,
     };
 
     this.isLoading.set(true);
@@ -176,7 +186,21 @@ export class EmployeeEditDialog {
       salaryType: salaryType,
       status: emp.status ?? "active",
       address: emp.address ?? null,
+      assignedDispatcherId: emp.assignedDispatcherId ?? null,
     });
+  }
+
+  private async loadDispatchers(): Promise<void> {
+    try {
+      const result = await this.api.invoke(getEmployees, { Role: "Dispatcher", PageSize: 100 });
+      const options = (result?.items ?? []).map((d) => ({
+        label: d.fullName ?? d.email ?? d.id ?? "",
+        value: d.id ?? null,
+      }));
+      this.dispatchers.set([{ label: "None", value: null }, ...options]);
+    } catch {
+      this.dispatchers.set([{ label: "None", value: null }]);
+    }
   }
 
   private evaluateCanChangeRole(emp: EmployeeDto): void {
@@ -215,4 +239,5 @@ interface UpdateEmployeeForm {
   salaryType: FormControl<SalaryType>;
   status: FormControl<EmployeeStatus>;
   address: FormControl<Address | null>;
+  assignedDispatcherId: FormControl<string | null>;
 }

@@ -12,4 +12,6 @@ public class UpdateEmployeeCommand : ICommand
     public SalaryType? SalaryType { get; set; }
     public EmployeeStatus? Status { get; set; }
     public Address? Address { get; set; }
+    public bool UpdateAssignedDispatcher { get; set; }
+    public Guid? AssignedDispatcherId { get; set; }
 }
