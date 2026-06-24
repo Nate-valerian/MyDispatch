@@ -81,13 +81,9 @@ class AiLoadBoardDetailViewModel(
             val userId = preferencesManager.getUserId()
                 ?.takeIf { it.isNotBlank() }
                 ?: error("Driver profile is missing. Sign in again, then try the request.")
-            val dispatchers = employeeApi.getEmployees(role = "tenant.dispatcher", pageSize = 20)
-                .bodyOrThrow()
-                .items
-                ?.filter { it.id != userId }
-                ?.takeIf { it.isNotEmpty() }
-                ?: error("No dispatcher is available to receive this request.")
-            val dispatcherId = dispatchers.random().id ?: error("Dispatcher profile is missing.")
+            val driverProfile = employeeApi.getEmployeeById(userId).bodyOrThrow()
+            val dispatcherId = driverProfile.assignedDispatcherId?.toString()
+                ?: error("No dispatcher is assigned to you. Contact your fleet manager.")
 
             val conversation = messageApi.createConversation(
                 CreateConversationRequest(
