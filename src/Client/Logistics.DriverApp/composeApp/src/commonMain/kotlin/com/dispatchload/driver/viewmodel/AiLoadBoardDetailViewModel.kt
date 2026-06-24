@@ -124,6 +124,10 @@ private fun RouteLoadBoardListingDto.toDispatchRequestMessage(): String {
     return listOf(
         "Please book this load after broker confirmation.",
         "Route: ${listing.originAddress.toDisplayString()} to ${listing.destinationAddress.toDisplayString()}",
+        "Broker: ${listing.brokerName ?: "-"}",
+        "Phone: ${listing.brokerPhone ?: "-"}",
+        "Email: ${listing.brokerEmail ?: "-"}",
+        "MC: ${listing.brokerMcNumber ?: "-"}",
         "Rate: ${listing.totalRate.formatDollars()}",
         "Rate per mile: ${listing.ratePerMile.formatRatePerMile()}",
         "Off route: ${distanceFromRoute?.roundToInt()?.let { "$it mi" } ?: "-"}",
