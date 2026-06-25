@@ -63,6 +63,13 @@ public class Employee : Entity, ITenantEntity
     public virtual Employee? AssignedDispatcher { get; set; }
 
     /// <summary>
+    ///     Grants this driver access to the AI load finder in the mobile app.
+    ///     Set by a dispatcher or owner. Null expiry means indefinite access.
+    /// </summary>
+    public bool IsLoadFinderEnabled { get; set; }
+    public DateTime? LoadFinderExpiresAt { get; set; }
+
+    /// <summary>
     ///     User tenant role
     /// </summary>
     public Guid? RoleId { get; set; }

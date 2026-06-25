@@ -21,5 +21,7 @@ public class EmployeeDto
     public DateTime JoinedDate { get; set; }
     public string? StripeConnectedAccountId { get; set; }
     public Guid? AssignedDispatcherId { get; set; }
+    public bool IsLoadFinderEnabled { get; set; }
+    public DateTime? LoadFinderExpiresAt { get; set; }
     public RoleDto? Role { get; set; }
 }

@@ -14,4 +14,7 @@ public class UpdateEmployeeCommand : ICommand
     public Address? Address { get; set; }
     public bool UpdateAssignedDispatcher { get; set; }
     public Guid? AssignedDispatcherId { get; set; }
+    public bool UpdateLoadFinder { get; set; }
+    public bool IsLoadFinderEnabled { get; set; }
+    public DateTime? LoadFinderExpiresAt { get; set; }
 }

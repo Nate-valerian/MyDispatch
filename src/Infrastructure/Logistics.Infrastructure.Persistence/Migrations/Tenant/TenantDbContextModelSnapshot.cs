@@ -1056,6 +1056,15 @@ namespace Logistics.Infrastructure.Persistence.Migrations.Tenant
                         .HasColumnType("uuid")
                         .HasColumnName("assigned_dispatcher_id");
 
+                    b.Property<bool>("IsLoadFinderEnabled")
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_load_finder_enabled");
+
+                    b.Property<DateTime?>("LoadFinderExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("load_finder_expires_at");
+
                     b.Property<Guid?>("RoleId")
                         .HasColumnType("uuid")
                         .HasColumnName("role_id");

@@ -22,6 +22,8 @@ public static class EmployeeMapper
             Status = entity.Status,
             StripeConnectedAccountId = entity.StripeConnectedAccountId,
             AssignedDispatcherId = entity.AssignedDispatcherId,
+            IsLoadFinderEnabled = entity.IsLoadFinderEnabled,
+            LoadFinderExpiresAt = entity.LoadFinderExpiresAt,
             Role = entity.Role?.ToDto()
         };
     }

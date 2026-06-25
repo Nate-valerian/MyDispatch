@@ -51,6 +51,12 @@ internal sealed class UpdateEmployeeHandler(ITenantUnitOfWork tenantUow)
             employeeEntity.AssignedDispatcherId = req.AssignedDispatcherId;
         }
 
+        if (req.UpdateLoadFinder)
+        {
+            employeeEntity.IsLoadFinderEnabled = req.IsLoadFinderEnabled;
+            employeeEntity.LoadFinderExpiresAt = req.LoadFinderExpiresAt;
+        }
+
         tenantUow.Repository<Employee>().Update(employeeEntity);
         await tenantUow.SaveChangesAsync(ct);
         return Result.Ok();
