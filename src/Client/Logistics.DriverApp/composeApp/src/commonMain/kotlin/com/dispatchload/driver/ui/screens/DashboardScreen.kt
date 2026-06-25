@@ -137,8 +137,10 @@ fun DashboardScreen(
                             }
                         }
 
-                        item {
-                            AiLoadFinderEntryCard(onClick = onFindLoadsClick)
+                        if (dashboardData.isLoadFinderEnabled && !dashboardData.isLoadFinderExpired()) {
+                            item {
+                                AiLoadFinderEntryCard(onClick = onFindLoadsClick)
+                            }
                         }
 
                         // Active Loads Section

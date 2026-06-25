@@ -17,11 +17,24 @@ import com.dispatchload.driver.viewmodel.base.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 
 data class DashboardData(
     val truck: TruckDto,
-    val trips: List<TripDto> = emptyList()
-)
+    val trips: List<TripDto> = emptyList(),
+    val isLoadFinderEnabled: Boolean = false,
+    val loadFinderExpiresAt: String? = null
+) {
+    fun isLoadFinderExpired(): Boolean {
+        val expiresAt = loadFinderExpiresAt ?: return false
+        return try {
+            Instant.parse(expiresAt) < Clock.System.now()
+        } catch (_: Exception) {
+            false
+        }
+    }
+}
 
 class DashboardViewModel(
     private val truckApi: TruckApi,
@@ -67,7 +80,12 @@ class DashboardViewModel(
             preferencesManager.saveDriverName(truck.mainDriver?.fullName() ?: "")
             preferencesManager.saveTruckNumber(truck.number ?: "")
 
-            DashboardData(truck, trips)
+            DashboardData(
+                truck = truck,
+                trips = trips,
+                isLoadFinderEnabled = driver.isLoadFinderEnabled ?: false,
+                loadFinderExpiresAt = driver.loadFinderExpiresAt
+            )
         }
     }
 
