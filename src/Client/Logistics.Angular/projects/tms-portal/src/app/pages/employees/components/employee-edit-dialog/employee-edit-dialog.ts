@@ -16,10 +16,12 @@ import { employeeStatusOptions, salaryTypeOptions } from "@logistics/shared/api/
 import { AddressForm, Stack } from "@logistics/shared/components";
 import { AccordionModule } from "primeng/accordion";
 import { ButtonModule } from "primeng/button";
+import { DatePickerModule } from "primeng/datepicker";
 import { DialogModule } from "primeng/dialog";
 import { InputGroupModule } from "primeng/inputgroup";
 import { InputTextModule } from "primeng/inputtext";
 import { SelectModule } from "primeng/select";
+import { ToggleSwitchModule } from "primeng/toggleswitch";
 import { AuthService } from "@/core/auth";
 import { TenantService } from "@/core/services/tenant.service";
 import { CurrencyInput, FormField, UnitInput, ValidationSummary } from "@/shared/components";
@@ -30,20 +32,22 @@ import { ChangeRoleDialog } from "../change-role-dialog/change-role-dialog";
   selector: "app-employee-edit-dialog",
   templateUrl: "./employee-edit-dialog.html",
   imports: [
-    DialogModule,
+    AccordionModule,
+    AddressForm,
     ButtonModule,
-    ReactiveFormsModule,
-    SelectModule,
+    ChangeRoleDialog,
+    CurrencyInput,
+    DatePickerModule,
+    DialogModule,
+    FormField,
     InputGroupModule,
     InputTextModule,
-    AccordionModule,
-    FormField,
-    UnitInput,
-    CurrencyInput,
-    ValidationSummary,
-    AddressForm,
-    ChangeRoleDialog,
+    ReactiveFormsModule,
+    SelectModule,
     Stack,
+    ToggleSwitchModule,
+    UnitInput,
+    ValidationSummary,
   ],
 })
 export class EmployeeEditDialog {
@@ -85,6 +89,8 @@ export class EmployeeEditDialog {
       }),
       address: new FormControl<Address | null>(null),
       assignedDispatcherId: new FormControl<string | null>(null),
+      isLoadFinderEnabled: new FormControl<boolean>(false, { nonNullable: true }),
+      loadFinderExpiresAt: new FormControl<Date | null>(null),
     });
 
     this.form
@@ -142,6 +148,11 @@ export class EmployeeEditDialog {
       address: this.form.value.address ?? undefined,
       updateAssignedDispatcher: isDriver,
       assignedDispatcherId: isDriver ? (this.form.value.assignedDispatcherId ?? null) : undefined,
+      updateLoadFinder: isDriver,
+      isLoadFinderEnabled: isDriver ? (this.form.value.isLoadFinderEnabled ?? false) : false,
+      loadFinderExpiresAt: isDriver
+        ? (this.form.value.loadFinderExpiresAt?.toISOString() ?? null)
+        : undefined,
     };
 
     this.isLoading.set(true);
@@ -187,6 +198,8 @@ export class EmployeeEditDialog {
       status: emp.status ?? "active",
       address: emp.address ?? null,
       assignedDispatcherId: emp.assignedDispatcherId ?? null,
+      isLoadFinderEnabled: emp.isLoadFinderEnabled ?? false,
+      loadFinderExpiresAt: emp.loadFinderExpiresAt ? new Date(emp.loadFinderExpiresAt) : null,
     });
   }
 
@@ -240,4 +253,6 @@ interface UpdateEmployeeForm {
   status: FormControl<EmployeeStatus>;
   address: FormControl<Address | null>;
   assignedDispatcherId: FormControl<string | null>;
+  isLoadFinderEnabled: FormControl<boolean>;
+  loadFinderExpiresAt: FormControl<Date | null>;
 }

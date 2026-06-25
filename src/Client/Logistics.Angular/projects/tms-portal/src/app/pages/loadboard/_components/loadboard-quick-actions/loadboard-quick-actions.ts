@@ -20,8 +20,15 @@ interface QuickAction {
 export class LoadBoardQuickActions {
   protected readonly actions: readonly QuickAction[] = [
     {
+      label: "AI Route Finder",
+      description: "Find loads along a corridor with fit scores",
+      icon: "route",
+      route: "/loadboard/route-search",
+      iconColor: "info",
+    },
+    {
       label: "Search Loads",
-      description: "Find available freight from load boards",
+      description: "Filter by origin, destination, equipment",
       icon: "search",
       route: "/loadboard/search",
       iconColor: "info",

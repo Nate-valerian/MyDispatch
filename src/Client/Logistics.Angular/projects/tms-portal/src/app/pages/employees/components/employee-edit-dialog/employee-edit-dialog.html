@@ -69,6 +69,23 @@
           optionValue="value"
         />
       </ui-form-field>
+
+      <ui-form-field label="AI Load Finder Access" class="mt-4" hint="Allow this driver to browse unassigned loads from the mobile app.">
+        <p-toggleswitch formControlName="isLoadFinderEnabled" />
+      </ui-form-field>
+
+      @if (form.controls.isLoadFinderEnabled.value) {
+        <ui-form-field label="Access Expires" for="loadFinderExpiresAt" class="mt-4" hint="Optional. Leave empty for indefinite access.">
+          <p-datepicker
+            formControlName="loadFinderExpiresAt"
+            id="loadFinderExpiresAt"
+            [showTime]="true"
+            [showButtonBar]="true"
+            placeholder="No expiry"
+            class="w-full"
+          />
+        </ui-form-field>
+      }
     }
 
     <ui-form-field

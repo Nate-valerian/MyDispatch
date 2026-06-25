@@ -3,6 +3,7 @@ import { Permission } from "@logistics/shared";
 import { authGuard } from "@/core/auth";
 import { LoadBoardDashboardComponent } from "./loadboard-dashboard/loadboard-dashboard";
 import { LoadBoardProvidersComponent } from "./loadboard-providers/loadboard-providers";
+import { LoadBoardRouteSearchComponent } from "./loadboard-route-search/loadboard-route-search";
 import { LoadBoardSearchComponent } from "./loadboard-search/loadboard-search";
 import { PostedTrucksComponent } from "./posted-trucks/posted-trucks";
 
@@ -31,6 +32,15 @@ export const loadBoardRoutes: Routes = [
     canActivate: [authGuard],
     data: {
       breadcrumb: "Search Loads",
+      permission: Permission.LoadBoard.Search,
+    },
+  },
+  {
+    path: "route-search",
+    component: LoadBoardRouteSearchComponent,
+    canActivate: [authGuard],
+    data: {
+      breadcrumb: "AI Route Finder",
       permission: Permission.LoadBoard.Search,
     },
   },

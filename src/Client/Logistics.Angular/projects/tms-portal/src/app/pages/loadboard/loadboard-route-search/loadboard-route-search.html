@@ -1,0 +1,134 @@
+<ui-page-header
+  title="AI Route Load Finder"
+  subtitle="Find loads along a corridor — full broker details visible."
+  backLink="/loadboard"
+/>
+
+<ui-stack direction="col" gap="6">
+  <form [formGroup]="form" (ngSubmit)="search()" class="bg-elevated border border-default rounded-lg p-6">
+    <ui-grid cols="3" gap="4">
+      <ui-form-field label="Origin" for="origin">
+        <input pInputText id="origin" formControlName="origin" placeholder="Chicago, IL" class="w-full" />
+      </ui-form-field>
+
+      <ui-form-field label="Destination" for="destination">
+        <input pInputText id="destination" formControlName="destination" placeholder="Dallas, TX" class="w-full" />
+      </ui-form-field>
+
+      <ui-form-field label="Radius ({{ distanceUnitLabel }})" for="radius">
+        <p-inputnumber inputId="radius" formControlName="radius" [min]="1" [max]="250" class="w-full" />
+      </ui-form-field>
+    </ui-grid>
+
+    <ui-stack direction="row" justify="end" class="mt-4">
+      <p-button type="submit" label="Find Loads" icon="pi pi-search" [loading]="searching()" [disabled]="searching()" />
+    </ui-stack>
+  </form>
+
+  @if (searching()) {
+    <ui-stack direction="row" justify="center" class="py-12">
+      <p-progressspinner />
+    </ui-stack>
+  }
+
+  @if (hasSearched() && !searching() && listings().length === 0) {
+    <ui-empty-state icon="pi pi-inbox" title="No loads found" message="Try a different corridor or wider radius." />
+  }
+
+  @if (!searching() && listings().length > 0) {
+    <p class="text-muted text-sm">{{ listings().length }} loads found</p>
+
+    @for (item of listings(); track item.listing.externalListingId) {
+      <div class="bg-elevated border border-default rounded-lg p-5">
+        <ui-stack direction="row" justify="between" class="mb-3">
+          <div>
+            <p class="font-semibold text-base">
+              {{ item.listing.originAddress.city }}, {{ item.listing.originAddress.state }}
+              &rarr;
+              {{ item.listing.destinationAddress.city }}, {{ item.listing.destinationAddress.state }}
+            </p>
+            <p class="text-muted text-sm mt-0.5">{{ item.listing.providerName ?? item.listing.providerType }}</p>
+          </div>
+          <ui-stack direction="row" gap="2">
+            @if (item.fitScore) {
+              <p-tag [value]="item.fitScore + ' fit'" severity="success" />
+            }
+            @if (item.distanceFromRouteMiles) {
+              <p-tag [value]="(item.distanceFromRouteMiles | number:'1.0-0') + ' mi off route'" severity="secondary" />
+            }
+          </ui-stack>
+        </ui-stack>
+
+        <ui-grid cols="4" gap="3" class="text-sm mb-4">
+          <div>
+            <p class="text-muted">Rate</p>
+            <p class="font-medium">{{ formatRate(item.listing.totalRate) }}</p>
+          </div>
+          <div>
+            <p class="text-muted">Rate/mi</p>
+            <p class="font-medium">{{ formatRatePerMile(item.listing.ratePerMile) }}</p>
+          </div>
+          <div>
+            <p class="text-muted">Equipment</p>
+            <p class="font-medium">{{ item.listing.equipmentType ?? '-' }}</p>
+          </div>
+          <div>
+            <p class="text-muted">Pickup</p>
+            <p class="font-medium">{{ (item.listing.pickupDateStart | date:'MMM d') ?? '-' }}</p>
+          </div>
+        </ui-grid>
+
+        <div class="border-t border-default pt-3 mt-3">
+          <p class="text-muted text-xs uppercase tracking-wide mb-2">Broker</p>
+          <ui-grid cols="4" gap="3" class="text-sm">
+            <div>
+              <p class="text-muted">Name</p>
+              <p class="font-medium">{{ item.listing.brokerName ?? '-' }}</p>
+            </div>
+            <div>
+              <p class="text-muted">Phone</p>
+              @if (item.listing.brokerPhone) {
+                <a [href]="'tel:' + item.listing.brokerPhone" class="font-medium hover:underline">{{ item.listing.brokerPhone }}</a>
+              } @else {
+                <p class="font-medium">-</p>
+              }
+            </div>
+            <div>
+              <p class="text-muted">Email</p>
+              @if (item.listing.brokerEmail) {
+                <a [href]="'mailto:' + item.listing.brokerEmail" class="font-medium hover:underline">{{ item.listing.brokerEmail }}</a>
+              } @else {
+                <p class="font-medium">-</p>
+              }
+            </div>
+            <div>
+              <p class="text-muted">MC#</p>
+              <p class="font-medium">{{ item.listing.brokerMcNumber ?? '-' }}</p>
+            </div>
+          </ui-grid>
+        </div>
+
+        <ui-stack direction="row" justify="end" class="mt-4">
+          @if (item.listing.isBookable) {
+            <p-button
+              label="Book Load"
+              icon="pi pi-check"
+              size="small"
+              (click)="openBookDialog(item)"
+            />
+          }
+        </ui-stack>
+      </div>
+    }
+  }
+</ui-stack>
+
+@if (selectedListing()) {
+  <app-book-load-dialog
+    [(visible)]="showBookDialog"
+    [listing]="selectedListing()!.listing"
+    [booking]="booking()"
+    [trucks]="store.trucks()"
+    (submitted)="onBook($event)"
+  />
+}
