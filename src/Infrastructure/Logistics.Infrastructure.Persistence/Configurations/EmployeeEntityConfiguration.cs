@@ -16,6 +16,8 @@ internal sealed class EmployeeEntityConfiguration : IEntityTypeConfiguration<Emp
             money.Property(m => m.Currency).HasMaxLength(3);
         });
 
+        builder.Property(e => e.IsLoadFinderEnabled).HasDefaultValue(false);
+
         builder.HasOne(i => i.AssignedDispatcher)
             .WithMany()
             .HasForeignKey(i => i.AssignedDispatcherId)

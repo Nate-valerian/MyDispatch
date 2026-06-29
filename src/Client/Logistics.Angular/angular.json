@@ -60,7 +60,8 @@
                 "input": "projects/tms-portal/public"
               }
             ],
-            "styles": ["projects/tms-portal/src/styles.css", "mapbox-gl/dist/mapbox-gl.css"]
+            "styles": ["projects/tms-portal/src/styles.css", "mapbox-gl/dist/mapbox-gl.css"],
+            "allowedCommonJsDependencies": ["ngx-mapbox-gl", "mapbox-gl"]
           },
           "configurations": {
             "production": {
