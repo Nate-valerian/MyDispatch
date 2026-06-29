@@ -185,7 +185,7 @@ internal static class Setup
             options.AddPolicy("DefaultCors", cors =>
             {
                 cors.SetIsOriginAllowedToAllowWildcardSubdomains()
-                    .WithOrigins("https://dispatchload.app", "https://*.dispatchload.app")
+                    .WithOrigins("https://dispatchload.app", "https://*.dispatchload.app", "https://my-dispatch-logistics-angular.vercel.app")
                     .AllowAnyHeader()
                     .AllowAnyMethod();
             });
