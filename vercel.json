@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd src/Client/Logistics.Angular && sed -i \"s|\\${MAPBOX_TOKEN}|$MAPBOX_TOKEN|g\" projects/tms-portal/src/environments/environment.prod.ts && bun run build:tms",
+  "buildCommand": "cd src/Client/Logistics.Angular && sed -i \"s|\\${MAPBOX_TOKEN}|$MAPBOX_TOKEN|g\" projects/tms-portal/src/environments/environment.prod.ts && bun run gen:api && bun run build:shared && bun run build:tms",
   "outputDirectory": "src/Client/Logistics.Angular/dist/tms-portal/browser",
   "installCommand": "bun install",
   "framework": null,
