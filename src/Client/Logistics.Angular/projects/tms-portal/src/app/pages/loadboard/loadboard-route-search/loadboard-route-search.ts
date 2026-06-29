@@ -1,12 +1,13 @@
-import { DatePipe, DecimalPipe } from "@angular/common";
+import { DatePipe } from "@angular/common";
 import { Component, inject, signal, type OnInit } from "@angular/core";
 import { FormBuilder, ReactiveFormsModule } from "@angular/forms";
 import {
   Api,
   bookLoadBoardListing,
-  searchRouteLoadBoard,
+  searchLoadBoard,
   type LoadBoardBookingRequest,
-  type RouteLoadBoardListingDto,
+  type LoadBoardListingDto,
+  type SearchLoadBoardCommand,
 } from "@logistics/shared/api";
 import { Grid, Stack } from "@logistics/shared/components";
 import { LocalizationService } from "@logistics/shared/services";
@@ -27,7 +28,6 @@ import { LoadBoardStore } from "../store";
     BookLoadDialog,
     ButtonModule,
     DatePipe,
-    DecimalPipe,
     EmptyState,
     FormField,
     Grid,
@@ -50,9 +50,9 @@ export class LoadBoardRouteSearchComponent implements OnInit {
   protected readonly searching = signal(false);
   protected readonly booking = signal(false);
   protected readonly hasSearched = signal(false);
-  protected readonly listings = signal<RouteLoadBoardListingDto[]>([]);
+  protected readonly listings = signal<LoadBoardListingDto[]>([]);
   protected readonly showBookDialog = signal(false);
-  protected readonly selectedListing = signal<RouteLoadBoardListingDto | null>(null);
+  protected readonly selectedListing = signal<LoadBoardListingDto | null>(null);
 
   protected readonly form = inject(FormBuilder).group({
     origin: [""],
@@ -73,13 +73,14 @@ export class LoadBoardRouteSearchComponent implements OnInit {
 
     this.searching.set(true);
     try {
-      const result = await this.api.invoke(searchRouteLoadBoard, {
+      const result = await this.api.invoke(searchLoadBoard, {
         body: {
-          origin: v.origin.trim(),
-          destination: v.destination.trim(),
-          radius: v.radius ?? 50,
+          originCity: v.origin?.trim(),
+          destinationCity: v.destination?.trim(),
+          originRadius: v.radius ?? 50,
+          destinationRadius: v.radius ?? 50,
           maxResults: 50,
-        },
+        } as SearchLoadBoardCommand,
       });
       this.listings.set(result?.listings ?? []);
       this.hasSearched.set(true);
@@ -90,14 +91,14 @@ export class LoadBoardRouteSearchComponent implements OnInit {
     }
   }
 
-  protected openBookDialog(listing: RouteLoadBoardListingDto): void {
+  protected openBookDialog(listing: LoadBoardListingDto): void {
     this.selectedListing.set(listing);
     this.showBookDialog.set(true);
   }
 
   protected async onBook(body: LoadBoardBookingRequest): Promise<void> {
     const listing = this.selectedListing();
-    if (!listing?.listing?.id) {
+    if (!listing?.id) {
       this.toast.showError("Load board listing is missing its internal booking ID");
       return;
     }
@@ -105,13 +106,13 @@ export class LoadBoardRouteSearchComponent implements OnInit {
     this.booking.set(true);
     try {
       await this.api.invoke(bookLoadBoardListing, {
-        listingId: listing.listing.id,
+        listingId: listing.id,
         body,
       });
       this.showBookDialog.set(false);
       this.toast.showSuccess("Load booked successfully! A new load has been created in your TMS.");
       this.listings.update((cur) =>
-        cur.filter((l) => l.listing.externalListingId !== listing.listing.externalListingId),
+        cur.filter((l) => l.externalListingId !== listing.externalListingId),
       );
     } catch {
       this.toast.showError("Failed to book load");

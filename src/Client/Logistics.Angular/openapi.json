@@ -19341,6 +19341,18 @@
           },
           "role": {
             "$ref": "#/components/schemas/RoleDto"
+          },
+          "assignedDispatcherId": {
+            "type": "string",
+            "nullable": true
+          },
+          "isLoadFinderEnabled": {
+            "type": "boolean"
+          },
+          "loadFinderExpiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -25670,6 +25682,24 @@
           },
           "address": {
             "$ref": "#/components/schemas/Address"
+          },
+          "updateAssignedDispatcher": {
+            "type": "boolean"
+          },
+          "assignedDispatcherId": {
+            "type": "string",
+            "nullable": true
+          },
+          "updateLoadFinder": {
+            "type": "boolean"
+          },
+          "isLoadFinderEnabled": {
+            "type": "boolean"
+          },
+          "loadFinderExpiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           }
         },
         "additionalProperties": false
